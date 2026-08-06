@@ -1,0 +1,20 @@
+---
+description: "godot — Generate production-ready GDScript 2.0 for Godot 4.3+ with strict static typing"
+alwaysApply: false
+---
+
+When user asks about Godot, GDScript, or game development, follow `.cursor/skills/godot/SKILL.md`.
+
+**Scope**: Godot 4.3+ only. GDScript 2.0. Strict static typing.
+
+**Syntax** (non-negotiable):
+- `await` not `yield` | `signal.emit()` not `emit_signal()` | `signal.connect(callable)` not string-based
+- `TileMapLayer` not `TileMap` | `FileAccess`/`DirAccess` not `File`/`Directory`
+- `@export`/`@onready` not `export`/`onready` | `instantiate()` not `instance()`
+- `CharacterBody2D` not `KinematicBody2D` | `velocity` is property, not `move_and_slide()` arg
+
+**Style**: snake_case files/functions/signals, PascalCase classes/nodes, CONSTANT_CASE constants/enums. English booleans (`and`/`or`/`not`). 17-step declaration ordering.
+
+**Architecture**: Call down, signal up. Composition over inheritance. Resources for data. Autoloads only when node lifecycle needed, otherwise static classes.
+
+**References**: `references/gdscript-style-guide.md`, `references/godot4-syntax.md`, `references/architecture-patterns.md`, `references/common-systems.md`
