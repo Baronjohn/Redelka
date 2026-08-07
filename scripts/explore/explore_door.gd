@@ -8,6 +8,7 @@ signal door_exited(door: Node3D)
 @export var target_spawn: Vector3 = Vector3.ZERO
 @export var target_rotation_y: float = 0.0
 @export var door_label: String = "next room"
+@export var required_item_id: String = ""
 
 var _player_inside: bool = false
 
@@ -37,9 +38,9 @@ func _on_body_exited(body: Node3D) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _player_inside or target_area_id.is_empty():
+	if not can_use():
 		return
-	if not event.is_action_pressed("use_door"):
+	if not event.is_action_pressed("interact"):
 		return
 	GameState.travel_to_area(target_area_id, target_spawn, target_rotation_y)
 	SceneTransition.go_to_explore()
@@ -47,4 +48,25 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func can_use() -> bool:
-	return _player_inside and not target_area_id.is_empty()
+	if not _player_inside or target_area_id.is_empty():
+		return false
+	if is_locked():
+		return false
+	return true
+
+
+func is_locked() -> bool:
+	if required_item_id.is_empty():
+		return false
+	return _player_inside and not GameState.has_item(required_item_id)
+
+
+func get_lock_prompt() -> String:
+	return "Locked — requires %s" % _get_required_item_name()
+
+
+func _get_required_item_name() -> String:
+	var items := DataLoader.load_items()
+	if items.has(required_item_id):
+		return (items[required_item_id] as ItemData).display_name
+	return required_item_id

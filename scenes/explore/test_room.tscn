@@ -180,6 +180,8 @@ shape = SubResource("BoxShape3D_zone")
 
 [node name="Enemies" type="Node3D" parent="."]
 
+[node name="Pickups" type="Node3D" parent="."]
+
 [node name="Doors" type="Node3D" parent="."]
 
 [node name="DoorToAdjacent" type="Node3D" parent="Doors"]
@@ -188,6 +190,7 @@ target_area_id = "adjacent_room"
 target_spawn = Vector3(-8, 0, 0)
 target_rotation_y = -1.5707964
 door_label = "Adjacent Room"
+required_item_id = "adjacent_room_key"
 
 [node name="Panel" type="StaticBody3D" parent="Doors/DoorToAdjacent"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 1.2, 0)

@@ -14,6 +14,7 @@ var hit: int = 0
 var def_stat: int = 0
 var res: int = 0
 var fire_resist: int = 0
+var drops: Array[Dictionary] = []
 
 
 static func from_dict(data: Dictionary) -> EnemyData:
@@ -32,4 +33,6 @@ static func from_dict(data: Dictionary) -> EnemyData:
 	enemy.def_stat = int(stats.get("def", 5))
 	enemy.res = int(stats.get("res", 5))
 	enemy.fire_resist = int(stats.get("fire_resist", 0))
+	for drop_entry: Variant in data.get("drops", []) as Array:
+		enemy.drops.append(drop_entry as Dictionary)
 	return enemy

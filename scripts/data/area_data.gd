@@ -11,6 +11,7 @@ var map_position: Vector2 = Vector2.ZERO
 var map_size: Vector2 = Vector2(120, 80)
 var map_connections: Array[String] = []
 var enemies: Array[Dictionary] = []
+var pickups: Array[Dictionary] = []
 
 
 static func from_dict(data: Dictionary) -> AreaData:
@@ -33,6 +34,8 @@ static func from_dict(data: Dictionary) -> AreaData:
 		area.map_connections.append(str(connection))
 	for enemy_entry: Variant in data.get("enemies", []) as Array:
 		area.enemies.append(enemy_entry as Dictionary)
+	for pickup_entry: Variant in data.get("pickups", []) as Array:
+		area.pickups.append(pickup_entry as Dictionary)
 	return area
 
 

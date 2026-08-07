@@ -1,53 +1,63 @@
 [
   {
-    "id": "enemy_1",
-    "name": "Hollow",
-    "move_range": 2,
-    "attack_range": 1,
-    "damage_min": 5,
-    "damage_max": 9,
-    "damage_type": "physical",
-    "stats": {
-      "hp": 45,
-      "agi": 8,
-      "hit": 75,
-      "def": 8,
-      "res": 6,
-      "fire_resist": 0
-    }
+	"id": "enemy_1",
+	"name": "Hollow",
+	"move_range": 2,
+	"attack_range": 1,
+	"damage_min": 5,
+	"damage_max": 9,
+	"damage_type": "physical",
+	"stats": {
+	  "hp": 45,
+	  "agi": 8,
+	  "hit": 75,
+	  "def": 8,
+	  "res": 6,
+	  "fire_resist": 0
+	},
+	"drops": [
+	  { "item_id": "heal_potion", "chance": 40, "count": 1 },
+	  { "item_id": "iron_helm", "chance": 25, "count": 1 }
+	]
   },
   {
-    "id": "enemy_2",
-    "name": "Wretch",
-    "move_range": 3,
-    "attack_range": 1,
-    "damage_min": 4,
-    "damage_max": 8,
-    "damage_type": "physical",
-    "stats": {
-      "hp": 38,
-      "agi": 11,
-      "hit": 70,
-      "def": 6,
-      "res": 5,
-      "fire_resist": 0
-    }
+	"id": "enemy_2",
+	"name": "Wretch",
+	"move_range": 3,
+	"attack_range": 1,
+	"damage_min": 4,
+	"damage_max": 8,
+	"damage_type": "physical",
+	"stats": {
+	  "hp": 38,
+	  "agi": 11,
+	  "hit": 70,
+	  "def": 6,
+	  "res": 5,
+	  "fire_resist": 0
+	},
+	"drops": [
+	  { "item_id": "heal_potion", "chance": 50, "count": 1 }
+	]
   },
   {
-    "id": "enemy_3",
-    "name": "Shade",
-    "move_range": 2,
-    "attack_range": 2,
-    "damage_min": 6,
-    "damage_max": 10,
-    "damage_type": "physical",
-    "stats": {
-      "hp": 40,
-      "agi": 9,
-      "hit": 72,
-      "def": 7,
-      "res": 8,
-      "fire_resist": -10
-    }
+	"id": "enemy_3",
+	"name": "Shade",
+	"move_range": 2,
+	"attack_range": 2,
+	"damage_min": 6,
+	"damage_max": 10,
+	"damage_type": "physical",
+	"stats": {
+	  "hp": 40,
+	  "agi": 9,
+	  "hit": 72,
+	  "def": 7,
+	  "res": 8,
+	  "fire_resist": -10
+	},
+	"drops": [
+	  { "item_id": "heal_potion", "chance": 35, "count": 1 }
+	]
   }
 ]

@@ -18,12 +18,14 @@ var return_rotation_y: float = 0.0
 var overworld_enemy_id: String = ""
 var defeated_enemy_ids: Array[String] = []
 var visited_area_ids: Array[String] = []
+var collected_pickup_ids: Array[String] = []
 var party_members: Array = []
 var inventory: Dictionary = {}
 var equipped: Dictionary = {}
 var owned_equipment: Dictionary = {}
 var has_checkpoint: bool = false
 var last_battle_outcome: int = BattleOutcomeCode.NONE
+var last_battle_loot: Array[Dictionary] = []
 var reload_from_checkpoint_on_explore_start: bool = false
 var post_battle_contact_immune_until_msec: int = 0
 var pending_door_spawn: Dictionary = {}
@@ -121,6 +123,55 @@ func is_area_cleared(area_id: String) -> bool:
 		if not is_enemy_defeated(enemy_id):
 			return false
 	return true
+
+
+func is_pickup_collected(pickup_id: String) -> bool:
+	return pickup_id in collected_pickup_ids
+
+
+func has_item(item_id: String) -> bool:
+	return int(inventory.get(item_id, 0)) > 0
+
+
+func collect_pickup(pickup_id: String, item_id: String, count: int = 1) -> String:
+	if pickup_id.is_empty() or item_id.is_empty():
+		return "Invalid pickup."
+	if is_pickup_collected(pickup_id):
+		return "Already collected."
+	var amount := maxi(count, 1)
+	if _is_equipment_item(item_id):
+		owned_equipment[item_id] = int(owned_equipment.get(item_id, 0)) + amount
+	else:
+		inventory[item_id] = int(inventory.get(item_id, 0)) + amount
+	collected_pickup_ids.append(pickup_id)
+	return "Collected %s." % _get_loot_item_name(item_id)
+
+
+func roll_encounter_loot(encounter_id: String) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var encounter := DataLoader.load_encounter(encounter_id)
+	var enemies := DataLoader.load_enemies()
+	for enemy_entry: Dictionary in encounter.enemies:
+		var enemy_type_id := str(enemy_entry.get("enemy_id", ""))
+		if not enemies.has(enemy_type_id):
+			continue
+		var enemy: EnemyData = enemies[enemy_type_id]
+		for drop_entry: Dictionary in enemy.drops:
+			var item_id := str(drop_entry.get("item_id", ""))
+			var chance := float(drop_entry.get("chance", 0.0))
+			var drop_count := maxi(int(drop_entry.get("count", 1)), 1)
+			if item_id.is_empty() or chance <= 0.0:
+				continue
+			if randf() * 100.0 >= chance:
+				continue
+			_grant_loot_item(item_id, drop_count)
+			result.append({
+				"enemy_name": enemy.display_name,
+				"item_id": item_id,
+				"item_name": _get_loot_item_name(item_id),
+				"count": drop_count,
+			})
+	return result
 
 
 func use_item_outside_battle(item_id: String, target_character_id: String) -> String:
@@ -277,8 +328,10 @@ func get_member_snapshot(character_id: String) -> PartyMemberSnapshot:
 
 func resolve_battle(outcome: int) -> void:
 	last_battle_outcome = outcome
+	last_battle_loot.clear()
 	match outcome:
 		BattleOutcomeCode.VICTORY:
+			last_battle_loot = roll_encounter_loot(current_encounter_id)
 			if not overworld_enemy_id.is_empty() and overworld_enemy_id not in defeated_enemy_ids:
 				defeated_enemy_ids.append(overworld_enemy_id)
 			reload_from_checkpoint_on_explore_start = false
@@ -308,6 +361,7 @@ func save_checkpoint(area_id: String, position: Vector3, rotation_y: float) -> v
 	_checkpoint.owned_equipment = owned_equipment.duplicate()
 	_checkpoint.defeated_enemy_ids = defeated_enemy_ids.duplicate()
 	_checkpoint.visited_area_ids = visited_area_ids.duplicate()
+	_checkpoint.collected_pickup_ids = collected_pickup_ids.duplicate()
 	has_checkpoint = true
 
 
@@ -327,6 +381,7 @@ func load_checkpoint() -> void:
 	owned_equipment = _checkpoint.owned_equipment.duplicate()
 	defeated_enemy_ids = _checkpoint.defeated_enemy_ids.duplicate()
 	visited_area_ids = _checkpoint.visited_area_ids.duplicate()
+	collected_pickup_ids = _checkpoint.collected_pickup_ids.duplicate()
 	reload_from_checkpoint_on_explore_start = true
 
 
@@ -392,6 +447,7 @@ func reset_party_to_default() -> void:
 	owned_equipment.clear()
 	defeated_enemy_ids.clear()
 	visited_area_ids.clear()
+	collected_pickup_ids.clear()
 	has_checkpoint = false
 	_checkpoint = ExploreCheckpointData.new()
 	ensure_party_initialized(DEFAULT_ENCOUNTER_ID)
@@ -457,3 +513,27 @@ func _item_fits_slot(item_id: String, slot_name: String) -> bool:
 	if slot_name.begins_with("accessory"):
 		return piece.slot == "accessory"
 	return piece.slot == slot_name
+
+
+func _is_equipment_item(item_id: String) -> bool:
+	return DataLoader.load_weapons().has(item_id) or DataLoader.load_equipment().has(item_id)
+
+
+func _grant_loot_item(item_id: String, count: int) -> void:
+	if _is_equipment_item(item_id):
+		owned_equipment[item_id] = int(owned_equipment.get(item_id, 0)) + count
+	else:
+		inventory[item_id] = int(inventory.get(item_id, 0)) + count
+
+
+func _get_loot_item_name(item_id: String) -> String:
+	var items := DataLoader.load_items()
+	if items.has(item_id):
+		return (items[item_id] as ItemData).display_name
+	var weapons := DataLoader.load_weapons()
+	if weapons.has(item_id):
+		return (weapons[item_id] as WeaponData).display_name
+	var equipment := DataLoader.load_equipment()
+	if equipment.has(item_id):
+		return equipment[item_id].display_name
+	return item_id

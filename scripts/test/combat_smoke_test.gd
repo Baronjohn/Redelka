@@ -11,6 +11,7 @@ func _initialize() -> void:
 	errors.append_array(_test_battle_grid())
 	errors.append_array(_test_explore_handoff())
 	errors.append_array(_test_character_menu_system())
+	errors.append_array(_test_pickups_and_loot())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -238,6 +239,69 @@ func _test_character_menu_system() -> PackedStringArray:
 	var adjacent := DataLoader.load_area("adjacent_room")
 	if adjacent.map_position.x <= 0.0:
 		errors.append("Adjacent room should define custom map layout.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_pickups_and_loot() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+
+	var area := DataLoader.load_area("test_room")
+	if area.pickups.is_empty():
+		errors.append("Test room should define pickups.")
+
+	var enemies := DataLoader.load_enemies()
+	var wretch: EnemyData = enemies["enemy_2"]
+	if wretch.drops.is_empty():
+		errors.append("Wretch should define loot drops.")
+
+	if bool(gs.call("has_item", "adjacent_room_key")):
+		errors.append("Party should not start with adjacent room key.")
+
+	var potion_before := int(gs.get("inventory").get("heal_potion", 0))
+	var collect_result: String = gs.call("collect_pickup", "smoke_potion_pickup", "heal_potion", 1)
+	if collect_result.is_empty():
+		errors.append("Pickup collection should return a message.")
+	if int(gs.get("inventory").get("heal_potion", 0)) != potion_before + 1:
+		errors.append("Consumable pickup should increase inventory count.")
+
+	var duplicate_result: String = gs.call("collect_pickup", "smoke_potion_pickup", "heal_potion", 1)
+	if duplicate_result != "Already collected.":
+		errors.append("Duplicate pickup should be rejected.")
+	if int(gs.get("inventory").get("heal_potion", 0)) != potion_before + 1:
+		errors.append("Duplicate pickup should not increase inventory count.")
+
+	var helm_before := int(gs.get("owned_equipment").get("iron_helm", 0))
+	gs.call("collect_pickup", "smoke_equip_pickup", "iron_helm", 1)
+	if int(gs.get("owned_equipment").get("iron_helm", 0)) != helm_before + 1:
+		errors.append("Equipment pickup should increase owned equipment pool.")
+
+	gs.get("inventory")["adjacent_room_key"] = 1
+	if not bool(gs.call("has_item", "adjacent_room_key")):
+		errors.append("has_item should detect key items in inventory.")
+
+	gs.call("save_checkpoint", "test_room", Vector3(2, 0, -8), 0.0)
+	gs.set("inventory", {})
+	gs.set("collected_pickup_ids", [])
+	gs.call("load_checkpoint")
+	if not bool(gs.call("is_pickup_collected", "smoke_potion_pickup")):
+		errors.append("Checkpoint should restore collected pickup ids.")
+	if not bool(gs.call("has_item", "adjacent_room_key")):
+		errors.append("Checkpoint should restore key item inventory.")
+
+	seed(0)
+	var got_loot := false
+	for _attempt: int in range(32):
+		gs.call("reset_party_to_default")
+		var loot: Array = gs.call("roll_encounter_loot", "test_room_wretch")
+		if not loot.is_empty():
+			got_loot = true
+			break
+	if not got_loot:
+		errors.append("Encounter loot roll should eventually grant drops.")
 
 	gs.call("reset_party_to_default")
 	return errors

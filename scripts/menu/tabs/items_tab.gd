@@ -99,11 +99,17 @@ func _on_use_pressed() -> void:
 	if _selected_item_id.is_empty():
 		menu.call("show_message", "Select an item first.")
 		return
+	var items := DataLoader.load_items()
+	if not items.has(_selected_item_id):
+		menu.call("show_message", "Item cannot be used.")
+		return
+	var item: ItemData = items[_selected_item_id]
+	if item.item_type == "key":
+		menu.call("show_message", "Key items cannot be used.")
+		return
 	_awaiting_target = true
 	_target_list.visible = true
 	_target_list.clear()
-	var items := DataLoader.load_items()
-	var item: ItemData = items[_selected_item_id]
 	var characters := DataLoader.load_characters()
 	for member_variant: Variant in GameState.party_members:
 		var snapshot := member_variant as PartyMemberSnapshot

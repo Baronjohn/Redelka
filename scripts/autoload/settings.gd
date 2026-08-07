@@ -9,7 +9,6 @@ const REBINDABLE_ACTIONS: Array[String] = [
 	"move_left",
 	"move_right",
 	"interact",
-	"use_door",
 	"open_menu",
 	"menu_cancel",
 	"ui_accept",

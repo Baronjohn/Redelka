@@ -2,6 +2,7 @@ extends Node3D
 
 const PROTAGONIST_SCENE: PackedScene = preload("res://scenes/explore/protagonist.tscn")
 const OverworldEnemyScript = preload("res://scripts/explore/overworld_enemy.gd")
+const ExplorePickupScript = preload("res://scripts/explore/explore_pickup.gd")
 const CHARACTER_MENU_SCENE: PackedScene = preload("res://scenes/menu/character_menu.tscn")
 const ENEMY_CONTACT_CLEAR_DISTANCE: float = 2.5
 
@@ -19,20 +20,24 @@ var _busy: bool = false
 var _active_door: Node3D
 var _checkpoint: ExploreCheckpointNode
 var _menu: Control
+var _active_pickup: Node = null
+var _pickups_root: Node3D
 
 
 func _ready() -> void:
 	_area = DataLoader.load_area(area_id)
+	_pickups_root = get_node_or_null("Pickups") as Node3D
 	_checkpoint = get_node_or_null("Checkpoint") as ExploreCheckpointNode
 	GameState.ensure_party_initialized(str(_area.default_encounter_id))
 	_spawn_player()
 	_spawn_enemies()
+	_spawn_pickups()
 	_connect_doors()
 	camera_rig.set_track_target(_player)
 	if _checkpoint != null:
 		_checkpoint.checkpoint_saved.connect(_on_checkpoint_saved)
 	GameState.mark_area_visited(area_id)
-	_show_message("%s — touch enemies to fight. I for menu. Space at doors to travel." % _area.display_name)
+	_show_message("%s — touch enemies to fight. I for menu. E to interact." % _area.display_name)
 	set_process_unhandled_input(true)
 
 
@@ -101,13 +106,52 @@ func _connect_doors() -> void:
 		door.door_exited.connect(_on_door_exited)
 
 
+func _spawn_pickups() -> void:
+	if _pickups_root == null:
+		return
+	for pickup_entry: Dictionary in _area.pickups:
+		var pickup_id := str(pickup_entry.get("id", ""))
+		if pickup_id.is_empty() or GameState.is_pickup_collected(pickup_id):
+			continue
+		var pos_array: Array = pickup_entry.get("position", [0, 0, 0]) as Array
+		var pickup := ExplorePickupScript.new()
+		pickup.pickup_id = pickup_id
+		pickup.item_id = str(pickup_entry.get("item_id", ""))
+		pickup.count = maxi(int(pickup_entry.get("count", 1)), 1)
+		pickup.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
+		pickup.pickup_collected.connect(_on_pickup_collected)
+		_pickups_root.add_child(pickup)
+
+
+func _on_pickup_collected(message: String) -> void:
+	_active_pickup = null
+	_show_message(message)
+
+
 func _process(_delta: float) -> void:
+	_update_active_pickup()
 	if _active_door != null and _active_door.call("can_use"):
-		prompt_label.text = "Press Space to enter %s" % str(_active_door.get("door_label"))
+		prompt_label.text = "Press E to enter %s" % str(_active_door.get("door_label"))
+	elif _active_door != null and _active_door.has_method("is_locked") and bool(_active_door.call("is_locked")):
+		prompt_label.text = str(_active_door.call("get_lock_prompt"))
+	elif _active_pickup != null and bool(_active_pickup.call("can_interact")):
+		prompt_label.text = "Press E to pick up %s" % str(_active_pickup.call("get_pickup_label"))
 	elif _checkpoint != null and _checkpoint.can_interact():
 		prompt_label.text = "Press E to save checkpoint"
 	else:
 		prompt_label.text = "WASD to move | I menu"
+
+
+func _update_active_pickup() -> void:
+	_active_pickup = null
+	if _pickups_root == null:
+		return
+	for child: Node in _pickups_root.get_children():
+		if not child.has_method("can_interact"):
+			continue
+		if bool(child.call("can_interact")):
+			_active_pickup = child
+			return
 
 
 func _on_door_entered(door: Node3D) -> void:

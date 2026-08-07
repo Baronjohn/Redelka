@@ -16,5 +16,10 @@
 	"revive": true,
 	"range": 2,
 	"targets": "ally"
+  },
+  {
+	"id": "adjacent_room_key",
+	"name": "Adjacent Room Key",
+	"type": "key"
   }
 ]

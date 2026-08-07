@@ -10,6 +10,7 @@ var equipped: Dictionary = {}
 var owned_equipment: Dictionary = {}
 var defeated_enemy_ids: Array[String] = []
 var visited_area_ids: Array[String] = []
+var collected_pickup_ids: Array[String] = []
 
 
 func duplicate_snapshot() -> ExploreCheckpointData:
@@ -22,6 +23,7 @@ func duplicate_snapshot() -> ExploreCheckpointData:
 	copy.owned_equipment = owned_equipment.duplicate()
 	copy.defeated_enemy_ids = defeated_enemy_ids.duplicate()
 	copy.visited_area_ids = visited_area_ids.duplicate()
+	copy.collected_pickup_ids = collected_pickup_ids.duplicate()
 	for member: Variant in party_members:
 		var snapshot := member as PartyMemberSnapshot
 		copy.party_members.append(PartyMemberSnapshot.from_dict(snapshot.to_dict()))
