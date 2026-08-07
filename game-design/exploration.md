@@ -81,10 +81,12 @@
 
 ## Exploration ↔ combat transition
 
-1. Player in 3D fixed-camera space.
+1. Player in 3D fixed-camera space (**WASD** movement in Phase 2 prototype).
 2. Contact visible enemy, trigger ambush, or interact with fight trigger.
-3. Transition to **5×5 grid** combat (see [combat.md](combat.md)).
-4. On victory, defeat, or retreat — return to exploration state (**TBD** spawn rules; see [prototype.md](prototype.md#explore--combat-transition)).
+3. Transition to **grid** combat (see [combat.md](combat.md)).
+4. On victory, defeat, or retreat — return to exploration state via `GameState` (see [prototype.md](prototype.md#explore--combat-transition)).
+
+**Phase 2 prototype note:** One **manual checkpoint** (E key) replaces full save-tier systems for now; defeat reloads checkpoint or area start.
 
 ## Open questions (TBD)
 

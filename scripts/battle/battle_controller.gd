@@ -53,6 +53,8 @@ var _scheduled_enemy_removals: Dictionary = {}
 
 
 func _ready() -> void:
+	if GameState.overworld_enemy_id.is_empty():
+		GameState.set_standalone_battle(encounter_id)
 	battle_ui.action_requested.connect(_on_ui_action_requested)
 	battle_ui.sub_action_requested.connect(_on_ui_sub_action_requested)
 	battle_ui.wait_requested.connect(_on_ui_wait_requested)
@@ -62,6 +64,7 @@ func _ready() -> void:
 	log_message.connect(battle_ui.append_log)
 	turn_order_changed.connect(_on_turn_order_changed)
 	result_panel.restart_requested.connect(_on_restart_requested)
+	result_panel.continue_requested.connect(_on_continue_requested)
 	_position_camera()
 	call_deferred("_start_battle")
 
@@ -84,10 +87,16 @@ func _start_battle() -> void:
 
 
 func _load_data() -> void:
+	if GameState.battle_source == GameState.BattleSource.EXPLORE:
+		encounter_id = GameState.current_encounter_id
 	_encounter = DataLoader.load_encounter(encounter_id)
 	_spells = DataLoader.load_spells()
 	_items = DataLoader.load_items()
-	_inventory = _encounter.party_inventory.duplicate()
+	if GameState.battle_source == GameState.BattleSource.EXPLORE:
+		GameState.ensure_party_initialized(_encounter.id)
+		_inventory = GameState.inventory.duplicate()
+	else:
+		_inventory = _encounter.party_inventory.duplicate()
 	_allow_retreat = _encounter.allow_retreat
 	var weapons := DataLoader.load_weapons()
 	var skills := DataLoader.load_skills()
@@ -105,6 +114,9 @@ func _load_data() -> void:
 		var unit := CombatUnit.from_character(runtime_id, character, weapon, skill, pos)
 		_units[runtime_id] = unit
 		_grid.set_occupant(pos, runtime_id)
+
+	if GameState.battle_source == GameState.BattleSource.EXPLORE:
+		GameState.apply_party_snapshot_to_allies(_ally_units())
 
 	for enemy_entry: Dictionary in _encounter.enemies:
 		var enemy_id := str(enemy_entry.get("enemy_id", ""))
@@ -677,17 +689,24 @@ func _check_battle_end() -> bool:
 
 func _finish_battle(outcome: BattleOutcome) -> void:
 	_outcome = outcome
+	GameState.update_party_from_battle(_ally_units(), _inventory)
+	GameState.resolve_battle(outcome)
 	_set_phase(BattlePhase.BATTLE_END)
 	_current_unit_id = ""
 	_update_turn_highlight()
 	battle_ui.hide_menus()
 	_clear_highlights()
-	result_panel.show_result(outcome)
+	var from_explore := GameState.battle_source == GameState.BattleSource.EXPLORE
+	result_panel.show_result(outcome, from_explore)
 	battle_finished.emit(outcome)
 
 
 func _on_restart_requested() -> void:
 	get_tree().reload_current_scene()
+
+
+func _on_continue_requested() -> void:
+	SceneTransition.go_to_explore()
 
 
 func _set_phase(new_phase: BattlePhase) -> void:

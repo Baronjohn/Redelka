@@ -68,3 +68,12 @@ static func load_encounter(encounter_id: String) -> EncounterData:
 			return EncounterData.from_dict(data)
 	push_error("Encounter not found: %s" % encounter_id)
 	return EncounterData.new()
+
+
+static func load_area(area_id: String) -> AreaData:
+	for entry: Variant in load_json_array("res://data/areas.json"):
+		var data := entry as Dictionary
+		if str(data.get("id", "")) == area_id:
+			return AreaData.from_dict(data)
+	push_error("Area not found: %s" % area_id)
+	return AreaData.new()

@@ -246,3 +246,8 @@ horizontal_alignment = 1
 [node name="RestartButton" type="Button" parent="UI/ResultPanel/Panel/VBox"]
 layout_mode = 2
 text = "Restart Battle"
+
+[node name="ContinueButton" type="Button" parent="UI/ResultPanel/Panel/VBox"]
+visible = false
+layout_mode = 2
+text = "Continue"

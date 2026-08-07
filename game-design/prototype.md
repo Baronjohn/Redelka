@@ -162,12 +162,12 @@ Use placeholders or omit entirely in v0:
 
 ## Phase 2 — Exploration and combat handoff
 
-Documented now; implementation follows Phase 1.
+**Status (Aug 2026):** **Functional at core.** Greybox test room with WASD movement, 3 camera zones, one visible overworld enemy, manual checkpoint, and explore ↔ battle transitions via `GameState` + `SceneTransition`. Ambush encounters deferred.
 
 ### Success criteria
 
 - Player moves in **3D** space with **fixed camera positions + tracking** ([exploration.md](exploration.md)).
-- **Visible enemies** and at least one **scripted ambush** trigger combat.
+- **Visible enemies** and at least one **scripted ambush** trigger combat. *(v1: visible enemy only; ambush deferred.)*
 - After combat, player returns to exploration at authored positions/state.
 
 ### Explore → combat transition
@@ -194,7 +194,21 @@ sequenceDiagram
 3. **Spawn:** Encounter data defines ally/enemy count and **starting grid positions** (v0 used fixed 4v3; Phase 2 uses per-encounter data).
 4. **Return on victory:** Remove or flag defeated overworld enemy; apply loot.
 5. **Return on retreat:** Enemy remains (or authored exception); party returns to explore state near trigger point.
-6. **Return on defeat:** Game over or reload from save (**TBD** — tie to [difficulty-saves.md](difficulty-saves.md)).
+6. **Return on defeat:** Reload **manual checkpoint** if saved; otherwise reset party and spawn at area default. *(Full difficulty-tier saves remain TBD — [difficulty-saves.md](difficulty-saves.md).)*
+
+**Implemented (Phase 2 build):**
+
+| Topic | Choice |
+|-------|--------|
+| **Entry scene** | `scenes/main.tscn` → `scenes/explore/test_room.tscn` |
+| **Movement** | WASD `CharacterBody3D`; protagonist-only capsule in explore |
+| **Cameras** | 3 `CameraZone` areas; `CameraRig` tracks player within zone |
+| **Battle bridge** | `GameState` party/inventory snapshot + `SceneTransition` fade (~0.4s) |
+| **Overworld enemy** | Contact trigger → `test_room_wretch` encounter (4 allies vs 1 Wretch) |
+| **Checkpoint** | Press **E** in checkpoint alcove; defeat restores checkpoint state |
+| **Result UI** | Explore battles show **Continue**; standalone battle keeps **Restart** |
+| **Data** | `data/areas.json`, explore-linked row in `data/encounters.json` |
+| **Tests** | Explore handoff covered in `scripts/test/combat_smoke_test.gd` |
 
 **TBD:**
 
@@ -205,8 +219,8 @@ sequenceDiagram
 
 ### Phase 2 exploration scope (minimal)
 
-- One **test chapter room** with 2–3 camera zones
-- One visible enemy + one ambush encounter
+- One **test chapter room** (`scenes/explore/test_room.tscn`) with **3 camera zones**
+- One visible enemy + one ambush encounter *(ambush deferred)*
 - No full puzzle pipeline required for first Phase 2 milestone
 
 ---
@@ -226,8 +240,8 @@ sequenceDiagram
 
 | Topic | Choice |
 |-------|--------|
-| **Entry scene** | `scenes/battle/battle.tscn` (main scene); `scenes/main.tscn` can redirect for future menu flow |
-| **Autoload** | `GameState` — holds `current_encounter_id` |
+| **Entry scene** | `scenes/main.tscn` → `scenes/explore/test_room.tscn`; battle via `scenes/battle/battle.tscn` |
+| **Autoload** | `GameState` (session bridge), `SceneTransition` (fade transitions) |
 | **Data layout** | `data/*.json` loaded by `DataLoader` into typed RefCounted classes |
 | **Input** | Mouse-first — click menu buttons; raycast tile/unit selection on battleground |
 | **Battle end** | Result panel (Victory / Defeat / Escaped) + **Restart Battle** reloads scene |

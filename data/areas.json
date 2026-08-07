@@ -1,0 +1,32 @@
+[
+  {
+    "id": "test_room",
+    "name": "Test Room",
+    "scene_path": "res://scenes/explore/test_room.tscn",
+    "default_spawn": [0, 0, 8],
+    "checkpoint_spawn": [2, 0, -8],
+    "default_encounter_id": "test_4v3",
+    "enemies": [
+      {
+        "id": "room_wretch",
+        "encounter_id": "test_room_wretch",
+        "position": [5, 0, -2]
+      }
+    ]
+  },
+  {
+    "id": "adjacent_room",
+    "name": "Adjacent Room",
+    "scene_path": "res://scenes/explore/adjacent_room.tscn",
+    "default_spawn": [0, 0, 0],
+    "checkpoint_spawn": [0, 0, 0],
+    "default_encounter_id": "test_4v3",
+    "enemies": [
+      {
+        "id": "room_hollow",
+        "encounter_id": "adjacent_room_hollow",
+        "position": [-1, 0, 4]
+      }
+    ]
+  }
+]

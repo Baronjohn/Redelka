@@ -9,6 +9,7 @@ func _initialize() -> void:
 	errors.append_array(_test_combat_formulas())
 	errors.append_array(_test_turn_queue())
 	errors.append_array(_test_battle_grid())
+	errors.append_array(_test_explore_handoff())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -127,4 +128,68 @@ func _test_battle_grid() -> PackedStringArray:
 	for cell: Vector2i in ally_reach:
 		if cell.y >= 3:
 			errors.append("Allies should not move into enemy rows.")
+	return errors
+
+
+func _test_explore_handoff() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	var area := DataLoader.load_area("test_room")
+	if area.id != "test_room":
+		errors.append("Area test_room failed to load.")
+	if area.enemies.is_empty():
+		errors.append("Area test_room should define enemies.")
+
+	var room_encounter := DataLoader.load_encounter("test_room_wretch")
+	if room_encounter.enemies.size() != 1:
+		errors.append("Encounter test_room_wretch should have one enemy.")
+
+	gs.call("reset_party_to_default")
+	if int(gs.get("party_members").size()) != 4:
+		errors.append("Party init should create four members.")
+
+	gs.call("enter_battle", "test_room", Vector3(1, 0, 2), 0.5, "test_room_wretch", "room_wretch")
+	if int(gs.get("battle_source")) != 1:
+		errors.append("Battle source should be EXPLORE after enter_battle.")
+	if str(gs.get("current_encounter_id")) != "test_room_wretch":
+		errors.append("Encounter id not stored for explore battle.")
+
+	gs.call("save_checkpoint", "test_room", Vector3(2, 0, -8), 0.0)
+	if not bool(gs.get("has_checkpoint")):
+		errors.append("Checkpoint should exist after save.")
+
+	var bran_snapshot = gs.call("get_member_snapshot", "ally_1")
+	if bran_snapshot == null:
+		errors.append("Expected ally_1 in party snapshot.")
+		return errors
+
+	var saved_hp: int = bran_snapshot.current_hp
+	gs.call("resolve_battle", 1)
+	if not bool(gs.call("is_enemy_defeated", "room_wretch")):
+		errors.append("Victory should mark overworld enemy defeated.")
+
+	gs.call("enter_battle", "test_room", Vector3(5, 0, -2), 0.0, "test_room_wretch", "room_wretch")
+	gs.call("resolve_battle", 3)
+	if not bool(gs.call("is_post_battle_contact_immune")):
+		errors.append("Retreat should grant post-battle contact immunity.")
+	var escaped_spawn: Dictionary = gs.call("get_explore_spawn", area)
+	if (escaped_spawn["position"] as Vector3).distance_to(Vector3(5, 0, -2)) > 0.01:
+		errors.append("Retreat spawn should restore battle return position.")
+
+	var adjacent_area := DataLoader.load_area("adjacent_room")
+	if adjacent_area.id != "adjacent_room":
+		errors.append("Adjacent room area should load from areas.json.")
+
+	gs.call("travel_to_area", "adjacent_room", Vector3(-8, 0, 0), -1.5707964)
+	var door_spawn: Dictionary = gs.call("get_explore_spawn", adjacent_area)
+	if (door_spawn["position"] as Vector3).distance_to(Vector3(-8, 0, 0)) > 0.01:
+		errors.append("Door travel should spawn at target door position.")
+
+	bran_snapshot.current_hp = 1
+	gs.call("resolve_battle", 2)
+	var restored = gs.call("get_member_snapshot", "ally_1")
+	if restored == null or restored.current_hp != saved_hp:
+		errors.append("Defeat with checkpoint should restore saved party HP.")
+
+	gs.call("reset_party_to_default")
 	return errors
