@@ -16,6 +16,7 @@ This folder holds game design documents for **Redelka**.
 | [exploration.md](exploration.md) | Fixed cameras, encounters, puzzles, chapters |
 | [difficulty-saves.md](difficulty-saves.md) | Difficulty tiers, save systems, Hard-mode sanity |
 | [presentation.md](presentation.md) | Art direction, adaptive audio, narrative delivery |
+| [todos.md](todos.md) | Prioritized next implementation tasks |
 
 ## Conventions
 
