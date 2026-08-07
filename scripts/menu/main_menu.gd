@@ -4,6 +4,7 @@ const CONFIG_TAB := preload("res://scripts/menu/tabs/config_tab.gd")
 const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
 
 @onready var main_buttons: VBoxContainer = $Center/VBox/MainButtons
+@onready var load_game_button: Button = $Center/VBox/MainButtons/LoadGameButton
 @onready var difficulty_panel: VBoxContainer = $Center/VBox/DifficultyPanel
 @onready var message_label: Label = $Center/VBox/MessageLabel
 @onready var title_label: Label = $Center/VBox/TitleLabel
@@ -21,6 +22,7 @@ func _ready() -> void:
 	$Center/VBox/DifficultyPanel/NormalButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.NORMAL))
 	$Center/VBox/DifficultyPanel/HardButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.HARD))
 	$Center/VBox/DifficultyPanel/DifficultyBackButton.pressed.connect(_show_main_buttons)
+	_update_load_button_state()
 	_show_main_buttons()
 	set_process_unhandled_input(true)
 
@@ -49,6 +51,11 @@ func _show_main_buttons() -> void:
 	difficulty_panel.visible = false
 	title_label.text = "Redelka"
 	show_message("")
+	_update_load_button_state()
+
+
+func _update_load_button_state() -> void:
+	load_game_button.disabled = not SaveManager.has_loadable_save()
 
 
 func _start_new_game(chosen_difficulty: int) -> void:

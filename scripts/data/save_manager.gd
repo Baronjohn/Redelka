@@ -157,6 +157,15 @@ static func has_autosave() -> bool:
 	return FileAccess.file_exists(AUTOSAVE_PATH)
 
 
+static func has_loadable_save() -> bool:
+	if get_autosave_read_status() == SaveReadStatus.OK:
+		return true
+	for slot: int in range(1, SLOT_COUNT + 1):
+		if get_slot_read_status(slot) == SaveReadStatus.OK:
+			return true
+	return false
+
+
 static func get_slot_metadata(slot: int) -> Dictionary:
 	var read_result := read_slot_detailed(slot)
 	if int(read_result.get("status", SaveReadStatus.MISSING)) != SaveReadStatus.OK:
