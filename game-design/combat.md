@@ -25,7 +25,7 @@ Battles play out on a **shared 5×5 tile grid**. Allies and enemies occupy the s
 - When a unit’s turn arrives, they use the action economy (move + action or wait), then re-enter the order.
 - Turn order is **not fixed** and can shift as stats change or effects apply.
 
-Phase 1 behaviour: [prototype.md](prototype.md).
+Phase 1 behaviour: [prototype.md](prototype.md). **Note:** Phase 1 greybox uses a **6×6** grid for playtest spacing; launch target remains **5×5** unless revised after playtest.
 
 **TBD:** CTB bar UI, initiative queue algorithm, haste/slow effects, tie-breaking
 

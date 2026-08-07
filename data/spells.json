@@ -1,0 +1,29 @@
+[
+  {
+    "id": "firebolt",
+    "name": "Firebolt",
+    "tier_base": 12,
+    "damage_type": "fire",
+    "mp_cost": 6,
+    "targets": "enemy",
+    "healing": false
+  },
+  {
+    "id": "mend",
+    "name": "Mend",
+    "tier_base": 15,
+    "damage_type": "physical",
+    "mp_cost": 5,
+    "targets": "ally",
+    "healing": true
+  },
+  {
+    "id": "arc_bolt",
+    "name": "Arc Bolt",
+    "tier_base": 8,
+    "damage_type": "physical",
+    "mp_cost": 4,
+    "targets": "enemy",
+    "healing": false
+  }
+]

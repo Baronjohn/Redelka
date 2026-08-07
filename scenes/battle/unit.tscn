@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://redelka_unit_view"]
+
+[ext_resource type="Script" path="res://scripts/battle/unit_view.gd" id="1"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_unit"]
+radius = 0.35
+height = 1.2
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_unit"]
+radius = 0.35
+height = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_hp"]
+size = Vector3(1.0, 0.08, 0.08)
+
+[node name="Unit" type="Node3D"]
+script = ExtResource("1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_unit")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+text = "Unit"
+font_size = 28
+outline_size = 8
+
+[node name="HPBar" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+mesh = SubResource("BoxMesh_hp")
+
+[node name="ClickBody" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ClickBody"]
+shape = SubResource("CapsuleShape_unit")

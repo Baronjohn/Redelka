@@ -1,0 +1,46 @@
+[
+  {
+    "id": "ally_1",
+    "name": "Bran",
+    "move_range": 3,
+    "weapon_id": "iron_sword",
+    "skill_id": "power_strike",
+    "stats": {
+      "str": 14, "dex": 10, "vit": 12, "agi": 9,
+      "int": 6, "mnd": 8, "res": 10, "luk": 7
+    }
+  },
+  {
+    "id": "ally_2",
+    "name": "Mira",
+    "move_range": 3,
+    "weapon_id": "rusty_dagger",
+    "skill_id": "guard_break",
+    "stats": {
+      "str": 10, "dex": 14, "vit": 10, "agi": 13,
+      "int": 7, "mnd": 9, "res": 9, "luk": 11
+    }
+  },
+  {
+    "id": "ally_3",
+    "name": "Owen",
+    "move_range": 2,
+    "weapon_id": "short_bow",
+    "skill_id": "aimed_shot",
+    "stats": {
+      "str": 11, "dex": 13, "vit": 11, "agi": 10,
+      "int": 8, "mnd": 10, "res": 9, "luk": 8
+    }
+  },
+  {
+    "id": "ally_4",
+    "name": "Elara",
+    "move_range": 2,
+    "weapon_id": "wooden_staff",
+    "skill_id": "focus",
+    "stats": {
+      "str": 7, "dex": 9, "vit": 9, "agi": 8,
+      "int": 14, "mnd": 13, "res": 14, "luk": 9
+    }
+  }
+]

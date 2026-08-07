@@ -6,7 +6,7 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 
 | Phase | Goal | Dimensionality |
 |-------|------|----------------|
-| **Phase 1 (v0)** | Prove tactical combat loop | **3D battle view** on a 5×5 grid; no playable exploration module |
+| **Phase 1 (v0)** | Prove tactical combat loop | **3D battle view** on a **6×6** playtest grid; no playable exploration module |
 | **Phase 2** | Explore → fight → return | **3D exploration** (fixed/tracking cameras) linked to Phase 1 combat |
 
 **Decided:** **Combat-first.** Exploration is documented now but built after the combat greybox is fun.
@@ -15,9 +15,11 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 
 ## Phase 1 — Combat greybox (v0)
 
+**Status (Aug 2026):** **Functional at core.** Playable 4v3 test encounter with move/action/wait, CTB turns, combat resolution, spells/skills/items, retreat, win/lose/escape, and greybox UI. Automated smoke tests in `scripts/test/combat_smoke_test.gd`. Phase 2 (exploration handoff) not started.
+
 ### Success criteria
 
-- 4 allies vs 3 enemies on shared **5×5** grid
+- 4 allies vs 3 enemies on shared **6×6** grid (expanded from planned 5×5 for v0 spacing; full-game target remains 5×5 — see [combat.md](combat.md))
 - Turn flow: **Move + Action** (either order), or **Wait** (skips both)
 - CTB-style turn order: higher **Agility** acts first; sufficiently higher AGI may gain **extra turns** (exact formula **TBD** — principle only for v0)
 - Physical hit/damage and at least **one spell** using documented stat rules (placeholders OK)
@@ -27,17 +29,26 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 
 **Decided:** Fixed **4 allies vs 3 enemies** for v0 (stress-tests grid congestion vs final 1–4 / 1–4 range).
 
-**TBD:** Specific test character/enemy names and placeholder stats.
+**Implemented (Phase 1 build):** `data/characters.json` — **Bran**, **Mira**, **Owen**, **Elara**. `data/enemies.json` — **Hollow**, **Wretch**, **Shade**. Encounter `test_4v3` in `data/encounters.json`.
 
 ### Battle grid (logic + presentation)
 
 **Decided:**
 
-- **Logic:** 5×5 coordinate grid (e.g. `Vector2i` occupancy), not TileMap-driven rules.
-- **Presentation:** **3D battleground** — 5×5 tiles rendered in 3D.
+- **Logic:** Coordinate grid (e.g. `Vector2i` occupancy), not TileMap-driven rules. **v0 uses 6×6** (`CombatConstants.GRID_SIZE`).
+- **Presentation:** **3D battleground** — grid tiles rendered in 3D.
 - **Area texture:** Battleground uses a **texture matching the overworld area** where the fight would occur (in v0, a single test “area” texture is enough; Phase 2 supplies real context).
 
-**TBD:** Tile height, character model scale, camera angle for combat view.
+**TBD:** Tile height, character model scale (greybox capsules in use).
+
+**Implemented (Phase 1 build):**
+
+- Fixed **Camera3D** behind allies, looking toward enemies (~55° FOV); no player camera control.
+- Greybox **colored capsules** (blue allies, red enemies) with 3D name labels and HP bars; active unit **gold highlight + scale**.
+- Tile spacing via `CombatConstants.TILE_SIZE` (1.4 units); unit capsules sit 0.8 units above tile surface.
+- **Frontline movement:** allies cannot enter an enemy’s row or beyond; enemies cannot enter an ally’s row or beyond (`_get_movement_row_bounds()`).
+- **Attack paths:** melee = 8-direction adjacent (Chebyshev 1); ranged = straight/diagonal lines with unit blocking on intervening tiles.
+- **KO handling:** KO’d allies remain on the board; defeated **enemies** are removed after `ENEMY_REMOVE_DELAY` (2 s).
 
 ### Turn UI
 
@@ -69,6 +80,16 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 
 **TBD:** Whether Retreat also forfeits remaining movement if chosen first.
 
+**Implemented (Phase 1 build):**
+
+- Two-level menu in **CommandPanel** (bottom-left): main (Move / Action / Wait) and action submenu (Attack / Spell / Skill / Item / Retreat).
+- **Back** returns up the menu stack; spell/item lists stack **above** the command bar and hide on back.
+- **Attack** disabled when no valid target in range.
+- **Top-left HUD:** turn order + party HP/MP in stacked panel containers (`TopLeftHud` VBox).
+- **Battle log:** top-right panel with fixed max size and scroll.
+- Input: mouse — menu buttons, raycast tile clicks, unit/capsule clicks for targeting.
+- Resolution: **1920×1080** viewport.
+
 ### CTB / Agility
 
 **Decided:**
@@ -78,6 +99,8 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 - If Agility is **sufficiently higher** than opponents, a unit may take **more turns** over a period (exact threshold **TBD** — document principle in v0, tune in playtest).
 
 **TBD:** Initiative queue algorithm, haste/slow, tie-breakers ([combat.md](combat.md)).
+
+**Implemented (Phase 1 build):** `TurnQueue` sorts living units by Agility (desc). Units with AGI ≥ `CombatConstants.EXTRA_TURN_AGI_FACTOR` × round average receive a duplicate queue slot (placeholder extra-turn rule).
 
 ### Spells (v0)
 
@@ -89,15 +112,21 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 
 **TBD:** Which test spells exist in greybox (suggest 3–5 including one fire spell).
 
+**Implemented (Phase 1 build):** `data/spells.json` — **Firebolt** (fire), **Mend** (heal), **Arc Bolt** (physical). All pre-unlocked; selectable from Action → Spell. **No tile range** in v0 (any valid ally/enemy target on the grid). **Delayed cast:** selecting spell + target spends MP and ends the turn; spell resolves at the **start of the caster’s next turn** (`pending_spell` on `CombatUnit`).
+
 ### Skills (v0)
 
 **Decided:** **One stub Skill per test character** — proves menu path and per-character identity; full skill design remains **TBD** ([progression.md](progression.md)).
+
+**Implemented (Phase 1 build):** `data/skills.json` — **Power Strike** (Bran), **Guard Break** (Mira), **Aimed Shot** (Owen, ranged), **Focus** (Elara, instant MP restore). Targeting uses skill `range` where applicable.
 
 ### Items (v0)
 
 **Decided:** Action → Item includes **heal** and **revive** test items (supports KO/revive loop).
 
 **TBD:** Item IDs, potency, inventory limits.
+
+**Implemented (Phase 1 build):** Party inventory in `data/encounters.json` — **3× Heal Potion** (25 HP), **1× Revive Charm** (revive at 15 HP). Shared inventory; range 2 tiles.
 
 ### Damage types (v0)
 
@@ -127,6 +156,8 @@ Use placeholders or omit entirely in v0:
 
 **Decided:** Use **placeholder constants** for HP, MP, hit %, STR vs VIT, Mind vs Res, INT multiplier — tune in playtest. Principles in [attributes.md](attributes.md); numbers **TBD**.
 
+**Implemented (Phase 1 build):** All placeholder numbers live in `scripts/battle/combat_constants.gd`. Resolution logic in `scripts/battle/combat_resolver.gd`.
+
 ---
 
 ## Phase 2 — Exploration and combat handoff
@@ -149,7 +180,7 @@ sequenceDiagram
   participant Battle as Combat3D
   Explore->>Explore: Player touches visible enemy OR ambush trigger
   Explore->>Battle: Transition (fade or short cut)
-  Note over Battle: Load 5x5 grid with area-matched texture
+  Note over Battle: Load grid with area-matched texture
   Note over Battle: Spawn 4v3 or authored count from encounter data
   Battle->>Battle: Fight until win / lose / retreat
   Battle->>Explore: Transition back
@@ -187,9 +218,21 @@ sequenceDiagram
 | Topic | Choice |
 |-------|--------|
 | **Game data** | **JSON** loaded at runtime (characters, spells, weapons, enemies, encounters) |
-| **Battle logic** | 5×5 logical grid; 3D scene for tile + unit presentation |
+| **Battle logic** | 6×6 logical grid in v0; 3D scene for tile + unit presentation |
 | **Scene split** | Separate combat scene (Phase 1); exploration scene added Phase 2 |
 | **Autoloads** | Recommend `GameState`, `BattleManager` (names **TBD** in code) |
+
+**Implemented (Phase 1 build):**
+
+| Topic | Choice |
+|-------|--------|
+| **Entry scene** | `scenes/battle/battle.tscn` (main scene); `scenes/main.tscn` can redirect for future menu flow |
+| **Autoload** | `GameState` — holds `current_encounter_id` |
+| **Data layout** | `data/*.json` loaded by `DataLoader` into typed RefCounted classes |
+| **Input** | Mouse-first — click menu buttons; raycast tile/unit selection on battleground |
+| **Battle end** | Result panel (Victory / Defeat / Escaped) + **Restart Battle** reloads scene |
+| **Enemy AI** | Move toward nearest living ally (respects frontline); attack when in weapon range |
+| **Tests** | Headless smoke tests (`scripts/test/combat_smoke_test.gd`) |
 
 **TBD:** JSON schema files, whether to add CSV export later for designers.
 
@@ -210,8 +253,18 @@ When Phase 1 milestones pass, revise this doc and promote decisions into [combat
 
 ## Open questions (TBD)
 
-- Agility extra-turn threshold formula
-- Retreat vs remaining movement order
-- Exact test JSON content and file layout under `data/`
-- Combat camera: fixed isometric vs orbit vs cinematic
-- Game over on party wipe in v0 vs reload test scene
+- Agility extra-turn threshold formula (placeholder `EXTRA_TURN_AGI_FACTOR = 1.35` in `combat_constants.gd`)
+- Retreat vs remaining movement order (v0: retreat consumes action only; move may still be taken before/after)
+- Game over on party wipe in v0 vs reload test scene (v0: **Defeat** panel + Restart)
+
+## Resolved in Phase 1 build
+
+- **Combat camera:** Fixed behind allies, looking toward enemies; no orbit
+- **Grid size:** 6×6 playtest grid (deviation from full-game 5×5 — revisit after playtest)
+- **Test JSON content:** See `data/` — 4 allies (Bran, Mira, Owen, Elara), 3 enemies (Hollow, Wretch, Shade), encounter `test_4v3`
+- **File layout:** `data/*.json`, `scripts/data/`, `scripts/battle/`, `scenes/battle/`, `scripts/test/`
+- **Battle end flow:** Result screen + scene reload on Restart
+- **Spell delay:** MP spent on cast declaration; effect on caster’s next turn
+- **Attack paths:** Melee adjacent; ranged line-of-sight with blocking
+- **Frontline:** Row-bound movement per side
+- **UI panels:** Turn order, party stats, command menu, battle log — container-based layout at 1920×1080

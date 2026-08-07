@@ -1,0 +1,23 @@
+[
+  {
+    "id": "test_4v3",
+    "name": "Test Encounter",
+    "area_texture": "res://assets/battlegrounds/test_area.png",
+    "allow_retreat": true,
+    "party_inventory": {
+      "heal_potion": 3,
+      "revive_charm": 1
+    },
+    "allies": [
+      { "character_id": "ally_1", "position": [0, 0] },
+      { "character_id": "ally_2", "position": [1, 0] },
+      { "character_id": "ally_3", "position": [4, 0] },
+      { "character_id": "ally_4", "position": [5, 0] }
+    ],
+    "enemies": [
+      { "enemy_id": "enemy_1", "position": [1, 5] },
+      { "enemy_id": "enemy_2", "position": [2, 5] },
+      { "enemy_id": "enemy_3", "position": [4, 5] }
+    ]
+  }
+]
