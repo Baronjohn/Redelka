@@ -2,6 +2,8 @@ class_name PartyStats
 extends RefCounted
 
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
+const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
+const StatBlockScript = preload("res://scripts/data/stat_block.gd")
 
 
 static func aggregate_bonuses(
@@ -24,11 +26,31 @@ static func aggregate_bonuses(
 	return bonuses
 
 
-static func get_effective_stats(character: CharacterData, loadout: Dictionary) -> StatBlock:
+static func get_total_level_growth(character: CharacterData, level: int) -> StatBlock:
+	return StatBlockScript.from_growth_dict(character.level_growth, maxi(level - 1, 0))
+
+
+static func get_level_growth_for_levels(character: CharacterData, levels_gained: int) -> StatBlock:
+	return StatBlockScript.from_growth_dict(character.level_growth, maxi(levels_gained, 0))
+
+
+static func get_progression_stats(character: CharacterData, snapshot: PartyMemberSnapshot) -> StatBlock:
+	var stats: StatBlock = character.stats.duplicate_block()
+	stats.add_block(get_total_level_growth(character, snapshot.level))
+	stats.add_block(snapshot.allocated_stats.duplicate_block())
+	return stats
+
+
+static func get_effective_stats(
+	character: CharacterData,
+	loadout: Dictionary,
+	snapshot: PartyMemberSnapshot = null
+) -> StatBlock:
+	var progression: StatBlock = get_progression_stats(character, snapshot) if snapshot != null else character.stats.duplicate_block()
 	var weapons := DataLoader.load_weapons()
 	var equipment := DataLoader.load_equipment()
 	var bonuses := aggregate_bonuses(loadout, weapons, equipment)
-	return character.stats.get_bonus(bonuses)
+	return progression.get_bonus(bonuses)
 
 
 static func get_equipped_weapon(loadout: Dictionary) -> WeaponData:
@@ -65,3 +87,7 @@ static func get_derived_values(stats: StatBlock, weapon: WeaponData, move_range:
 		"move_range": move_range,
 		"retreat_chance": retreat_chance,
 	}
+
+
+static func get_xp_to_next_level(snapshot: PartyMemberSnapshot) -> int:
+	return ProgressionConstantsScript.xp_required_for_level(snapshot.level)

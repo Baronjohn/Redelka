@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://redelka_battle_scene"]
+[gd_scene load_steps=7 format=3 uid="uid://redelka_battle_scene"]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_controller.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/battle/ui/battle_ui.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/battle/ui/result_panel.gd" id="3"]
+[ext_resource type="PackedScene" uid="uid://redelka_level_up_panel" path="res://scenes/battle/level_up_panel.tscn" id="4"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_floor"]
 size = Vector3(10.0, 0.15, 10.0)
@@ -257,3 +258,5 @@ text = "Restart Battle"
 visible = false
 layout_mode = 2
 text = "Continue"
+
+[node name="LevelUpPanel" parent="UI" instance=ExtResource("4")]

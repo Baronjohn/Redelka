@@ -1,5 +1,7 @@
 extends Control
 
+const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
+
 var menu: Control
 var _stats_label: RichTextLabel
 
@@ -22,6 +24,7 @@ func refresh() -> void:
 	var character: CharacterData = characters[character_id]
 	var snapshot := GameState.get_member_snapshot(character_id)
 	var base_stats := character.stats
+	var progression_stats := PartyStatsHelper.get_progression_stats(character, snapshot) if snapshot != null else base_stats
 	var effective_stats := GameState.get_effective_stats(character_id)
 	var derived := GameState.get_derived_values(character_id)
 	var lines: PackedStringArray = []
@@ -34,10 +37,23 @@ func refresh() -> void:
 			snapshot.max_mp,
 			" (KO)" if snapshot.is_ko else "",
 		])
+		lines.append("Level %d  XP %d / %d" % [
+			snapshot.level,
+			snapshot.xp,
+			PartyStatsHelper.get_xp_to_next_level(snapshot),
+		])
+		if snapshot.unspent_stat_points > 0:
+			lines.append(
+				"[i]Allocate points after your next level-up in battle.[/i]"
+			)
 	lines.append("")
 	lines.append("[b]Base Stats[/b]")
 	for stat_name: String in ["str", "dex", "vit", "agi", "int", "mnd", "res", "luk"]:
 		lines.append("%s: %d" % [stat_name.to_upper(), _get_stat_value(base_stats, stat_name)])
+	lines.append("")
+	lines.append("[b]Progression Stats[/b]")
+	for stat_name: String in ["str", "dex", "vit", "agi", "int", "mnd", "res", "luk"]:
+		lines.append("%s: %d" % [stat_name.to_upper(), _get_stat_value(progression_stats, stat_name)])
 	lines.append("")
 	lines.append("[b]Effective Stats[/b]")
 	for stat_name: String in ["str", "dex", "vit", "agi", "int", "mnd", "res", "luk"]:

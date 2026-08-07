@@ -35,3 +35,77 @@ func get_bonus(other: Dictionary) -> StatBlock:
 	result.res = res + int(other.get("res", 0))
 	result.luk = luk + int(other.get("luk", 0))
 	return result
+
+
+func duplicate_block() -> StatBlock:
+	var copy := StatBlock.new()
+	copy.str = str
+	copy.dex = dex
+	copy.vit = vit
+	copy.agi = agi
+	copy.int_stat = int_stat
+	copy.mnd = mnd
+	copy.res = res
+	copy.luk = luk
+	return copy
+
+
+func add_block(other: StatBlock) -> void:
+	str += other.str
+	dex += other.dex
+	vit += other.vit
+	agi += other.agi
+	int_stat += other.int_stat
+	mnd += other.mnd
+	res += other.res
+	luk += other.luk
+
+
+static func from_growth_dict(growth: Dictionary, level_count: int = 1) -> StatBlock:
+	var block := StatBlock.new()
+	if level_count <= 0:
+		return block
+	for stat_name: String in growth.keys():
+		block.add_stat(stat_name, int(growth[stat_name]) * level_count)
+	return block
+
+
+func add_stat(stat_name: String, amount: int) -> void:
+	match stat_name:
+		"str":
+			str += amount
+		"dex":
+			dex += amount
+		"vit":
+			vit += amount
+		"agi":
+			agi += amount
+		"int":
+			int_stat += amount
+		"mnd":
+			mnd += amount
+		"res":
+			res += amount
+		"luk":
+			luk += amount
+
+
+func get_stat(stat_name: String) -> int:
+	match stat_name:
+		"str":
+			return str
+		"dex":
+			return dex
+		"vit":
+			return vit
+		"agi":
+			return agi
+		"int":
+			return int_stat
+		"mnd":
+			return mnd
+		"res":
+			return res
+		"luk":
+			return luk
+	return 0

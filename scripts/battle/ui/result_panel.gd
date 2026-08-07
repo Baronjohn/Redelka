@@ -26,7 +26,7 @@ func show_result(outcome: int, from_explore: bool = false) -> void:
 			title_label.text = "Escaped"
 		_:
 			title_label.text = ""
-	loot_label.text = _format_loot_text(outcome)
+	loot_label.text = _format_result_text(outcome)
 	if from_explore:
 		continue_button.visible = true
 		continue_button.text = "Continue" if outcome != 2 else "Reload Checkpoint"
@@ -37,18 +37,31 @@ func show_result(outcome: int, from_explore: bool = false) -> void:
 	visible = true
 
 
-func _format_loot_text(outcome: int) -> String:
+func _format_result_text(outcome: int) -> String:
 	if outcome != 1:
 		return ""
+	var lines: PackedStringArray = []
+	if GameState.last_battle_xp > 0:
+		lines.append("+%d XP" % GameState.last_battle_xp)
+	for entry_variant: Variant in GameState.last_level_ups:
+		var entry := entry_variant as Dictionary
+		lines.append("%s: Lv %d → %d" % [
+			str(entry.get("name", "Ally")),
+			int(entry.get("old_level", 1)),
+			int(entry.get("new_level", 1)),
+		])
 	var loot: Array = GameState.last_battle_loot
 	if loot.is_empty():
+		if lines.is_empty():
+			return "No loot."
+	else:
+		for entry_variant: Variant in loot:
+			var entry := entry_variant as Dictionary
+			lines.append("%s dropped: %s x%d" % [
+				str(entry.get("enemy_name", "Enemy")),
+				str(entry.get("item_name", entry.get("item_id", "Item"))),
+				int(entry.get("count", 1)),
+			])
+	if lines.is_empty():
 		return "No loot."
-	var lines: PackedStringArray = []
-	for entry_variant: Variant in loot:
-		var entry := entry_variant as Dictionary
-		lines.append("%s dropped: %s x%d" % [
-			str(entry.get("enemy_name", "Enemy")),
-			str(entry.get("item_name", entry.get("item_id", "Item"))),
-			int(entry.get("count", 1)),
-		])
 	return "\n".join(lines)

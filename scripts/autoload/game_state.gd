@@ -2,6 +2,7 @@ extends Node
 
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
+const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
 
 enum BattleSource { STANDALONE, EXPLORE }
 
@@ -26,6 +27,9 @@ var owned_equipment: Dictionary = {}
 var has_checkpoint: bool = false
 var last_battle_outcome: int = BattleOutcomeCode.NONE
 var last_battle_loot: Array[Dictionary] = []
+var last_battle_xp: int = 0
+var last_level_ups: Array[Dictionary] = []
+var pending_level_up_queue: Array[String] = []
 var reload_from_checkpoint_on_explore_start: bool = false
 var post_battle_contact_immune_until_msec: int = 0
 var pending_door_spawn: Dictionary = {}
@@ -34,6 +38,9 @@ const POST_BATTLE_CONTACT_IMMUNITY_MS: int = 2500
 
 var _checkpoint: ExploreCheckpointData = ExploreCheckpointData.new()
 var _characters_cache: Dictionary = {}
+var _draft_character_id: String = ""
+var _draft_allocated: StatBlock = StatBlock.new()
+var _draft_budget: int = 0
 
 
 func ensure_party_initialized(encounter_id: String = DEFAULT_ENCOUNTER_ID) -> void:
@@ -49,9 +56,9 @@ func ensure_party_initialized(encounter_id: String = DEFAULT_ENCOUNTER_ID) -> vo
 			continue
 		var character: CharacterData = characters[character_id]
 		var loadout: Dictionary = get_loadout(character_id)
-		var stats := PartyStatsHelper.get_effective_stats(character, loadout)
 		var snapshot: PartyMemberSnapshot = PartyMemberSnapshot.new()
 		snapshot.character_id = character_id
+		var stats := PartyStatsHelper.get_effective_stats(character, loadout, snapshot)
 		snapshot.max_hp = CombatConstants.HP_BASE + stats.vit * CombatConstants.HP_PER_VIT
 		snapshot.current_hp = snapshot.max_hp
 		snapshot.max_mp = CombatConstants.MP_BASE + stats.res * CombatConstants.MP_PER_RES
@@ -87,7 +94,8 @@ func get_effective_stats(character_id: String) -> StatBlock:
 	if not characters.has(character_id):
 		return StatBlock.new()
 	var character: CharacterData = characters[character_id]
-	return PartyStatsHelper.get_effective_stats(character, get_loadout(character_id))
+	var snapshot := get_member_snapshot(character_id)
+	return PartyStatsHelper.get_effective_stats(character, get_loadout(character_id), snapshot)
 
 
 func get_equipped_weapon(character_id: String) -> WeaponData:
@@ -145,6 +153,131 @@ func collect_pickup(pickup_id: String, item_id: String, count: int = 1) -> Strin
 		inventory[item_id] = int(inventory.get(item_id, 0)) + amount
 	collected_pickup_ids.append(pickup_id)
 	return "Collected %s." % _get_loot_item_name(item_id)
+
+
+func roll_encounter_xp(encounter_id: String) -> int:
+	var total := 0
+	var encounter := DataLoader.load_encounter(encounter_id)
+	var enemies := DataLoader.load_enemies()
+	for enemy_entry: Dictionary in encounter.enemies:
+		var enemy_type_id := str(enemy_entry.get("enemy_id", ""))
+		if not enemies.has(enemy_type_id):
+			continue
+		total += (enemies[enemy_type_id] as EnemyData).xp_reward
+	return total
+
+
+func grant_xp_to_party(amount: int) -> Array[Dictionary]:
+	last_level_ups.clear()
+	pending_level_up_queue.clear()
+	if amount <= 0:
+		return last_level_ups
+	var characters := _get_characters()
+	for member: Variant in party_members:
+		var snapshot := member as PartyMemberSnapshot
+		if not characters.has(snapshot.character_id):
+			continue
+		var character: CharacterData = characters[snapshot.character_id]
+		var old_level := snapshot.level
+		snapshot.xp += amount
+		while snapshot.level < ProgressionConstantsScript.LEVEL_CAP:
+			var required := ProgressionConstantsScript.xp_required_for_level(snapshot.level)
+			if snapshot.xp < required:
+				break
+			snapshot.xp -= required
+			snapshot.level += 1
+			snapshot.unspent_stat_points += ProgressionConstantsScript.POINTS_PER_LEVEL
+			_recalculate_member_caps(snapshot.character_id)
+			snapshot.current_hp = snapshot.max_hp
+			snapshot.current_mp = snapshot.max_mp
+			if snapshot.is_ko:
+				snapshot.is_ko = false
+		if snapshot.level > old_level:
+			var levels_gained := snapshot.level - old_level
+			last_level_ups.append({
+				"character_id": snapshot.character_id,
+				"name": character.display_name,
+				"old_level": old_level,
+				"new_level": snapshot.level,
+				"auto_growth": PartyStatsHelper.get_level_growth_for_levels(character, levels_gained),
+			})
+			if snapshot.unspent_stat_points > 0:
+				pending_level_up_queue.append(snapshot.character_id)
+	return last_level_ups
+
+
+func begin_level_up_allocation(character_id: String) -> void:
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null:
+		return
+	_draft_character_id = character_id
+	_draft_allocated = StatBlock.new()
+	_draft_budget = snapshot.unspent_stat_points
+
+
+func draft_allocate_stat(stat_name: String) -> void:
+	if _draft_budget <= 0:
+		return
+	_draft_allocated.add_stat(stat_name, 1)
+	_draft_budget -= 1
+
+
+func draft_deallocate_stat(stat_name: String) -> void:
+	if _draft_allocated.get_stat(stat_name) <= 0:
+		return
+	_draft_allocated.add_stat(stat_name, -1)
+	_draft_budget += 1
+
+
+func reset_draft_allocation() -> void:
+	_draft_allocated = StatBlock.new()
+	var snapshot := get_member_snapshot(_draft_character_id)
+	if snapshot != null:
+		_draft_budget = snapshot.unspent_stat_points
+
+
+func confirm_draft_allocation() -> String:
+	var snapshot := get_member_snapshot(_draft_character_id)
+	if snapshot == null:
+		return ""
+	if _draft_budget > 0:
+		return ""
+	snapshot.allocated_stats.add_block(_draft_allocated)
+	snapshot.unspent_stat_points = 0
+	_recalculate_member_caps(_draft_character_id)
+	var confirmed_id := _draft_character_id
+	if confirmed_id in pending_level_up_queue:
+		pending_level_up_queue.erase(confirmed_id)
+	_draft_character_id = ""
+	_draft_allocated = StatBlock.new()
+	_draft_budget = 0
+	return confirmed_id
+
+
+func has_pending_level_ups() -> bool:
+	return not pending_level_up_queue.is_empty()
+
+
+func peek_level_up_character() -> String:
+	if pending_level_up_queue.is_empty():
+		return ""
+	return pending_level_up_queue[0]
+
+
+func get_draft_allocated_stats() -> StatBlock:
+	return _draft_allocated
+
+
+func get_draft_remaining_points() -> int:
+	return _draft_budget
+
+
+func get_level_up_entry(character_id: String) -> Dictionary:
+	for entry_variant: Variant in last_level_ups:
+		var entry := entry_variant as Dictionary
+		if str(entry.get("character_id", "")) == character_id:
+			return entry
+	return {}
 
 
 func roll_encounter_loot(encounter_id: String) -> Array[Dictionary]:
@@ -305,9 +438,11 @@ func enter_battle(
 
 
 func update_party_from_battle(allies: Array[CombatUnit], battle_inventory: Dictionary) -> void:
-	party_members.clear()
+	var updated: Array = []
 	for unit: CombatUnit in allies:
-		party_members.append(PartyMemberSnapshot.from_combat_unit(unit))
+		var existing := get_member_snapshot(unit.source_id)
+		updated.append(PartyMemberSnapshot.from_combat_unit(unit, existing))
+	party_members = updated
 	inventory = battle_inventory.duplicate()
 
 
@@ -329,9 +464,15 @@ func get_member_snapshot(character_id: String) -> PartyMemberSnapshot:
 func resolve_battle(outcome: int) -> void:
 	last_battle_outcome = outcome
 	last_battle_loot.clear()
+	last_battle_xp = 0
+	last_level_ups.clear()
+	pending_level_up_queue.clear()
 	match outcome:
 		BattleOutcomeCode.VICTORY:
 			last_battle_loot = roll_encounter_loot(current_encounter_id)
+			last_battle_xp = roll_encounter_xp(current_encounter_id)
+			if last_battle_xp > 0:
+				grant_xp_to_party(last_battle_xp)
 			if not overworld_enemy_id.is_empty() and overworld_enemy_id not in defeated_enemy_ids:
 				defeated_enemy_ids.append(overworld_enemy_id)
 			reload_from_checkpoint_on_explore_start = false
@@ -449,6 +590,12 @@ func reset_party_to_default() -> void:
 	visited_area_ids.clear()
 	collected_pickup_ids.clear()
 	has_checkpoint = false
+	last_battle_xp = 0
+	last_level_ups.clear()
+	pending_level_up_queue.clear()
+	_draft_character_id = ""
+	_draft_allocated = StatBlock.new()
+	_draft_budget = 0
 	_checkpoint = ExploreCheckpointData.new()
 	ensure_party_initialized(DEFAULT_ENCOUNTER_ID)
 

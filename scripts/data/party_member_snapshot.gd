@@ -2,6 +2,10 @@ class_name PartyMemberSnapshot
 extends RefCounted
 
 var character_id: String = ""
+var level: int = 1
+var xp: int = 0
+var unspent_stat_points: int = 0
+var allocated_stats: StatBlock = StatBlock.new()
 var current_hp: int = 0
 var max_hp: int = 0
 var current_mp: int = 0
@@ -14,6 +18,10 @@ var pending_spell_target_id: String = ""
 static func from_dict(data: Dictionary) -> PartyMemberSnapshot:
 	var snapshot := new()
 	snapshot.character_id = str(data.get("character_id", ""))
+	snapshot.level = int(data.get("level", 1))
+	snapshot.xp = int(data.get("xp", 0))
+	snapshot.unspent_stat_points = int(data.get("unspent_stat_points", 0))
+	snapshot.allocated_stats = StatBlock.from_dict(data.get("allocated_stats", {}) as Dictionary)
 	snapshot.current_hp = int(data.get("current_hp", 0))
 	snapshot.max_hp = int(data.get("max_hp", 0))
 	snapshot.current_mp = int(data.get("current_mp", 0))
@@ -27,6 +35,19 @@ static func from_dict(data: Dictionary) -> PartyMemberSnapshot:
 func to_dict() -> Dictionary:
 	return {
 		"character_id": character_id,
+		"level": level,
+		"xp": xp,
+		"unspent_stat_points": unspent_stat_points,
+		"allocated_stats": {
+			"str": allocated_stats.str,
+			"dex": allocated_stats.dex,
+			"vit": allocated_stats.vit,
+			"agi": allocated_stats.agi,
+			"int": allocated_stats.int_stat,
+			"mnd": allocated_stats.mnd,
+			"res": allocated_stats.res,
+			"luk": allocated_stats.luk,
+		},
 		"current_hp": current_hp,
 		"max_hp": max_hp,
 		"current_mp": current_mp,
@@ -37,7 +58,7 @@ func to_dict() -> Dictionary:
 	}
 
 
-static func from_combat_unit(unit: CombatUnit) -> PartyMemberSnapshot:
+static func from_combat_unit(unit: CombatUnit, existing: PartyMemberSnapshot = null) -> PartyMemberSnapshot:
 	var snapshot := new()
 	snapshot.character_id = unit.source_id
 	snapshot.current_hp = unit.current_hp
@@ -47,6 +68,11 @@ static func from_combat_unit(unit: CombatUnit) -> PartyMemberSnapshot:
 	snapshot.is_ko = unit.is_ko
 	snapshot.pending_spell_id = unit.pending_spell_id
 	snapshot.pending_spell_target_id = unit.pending_spell_target_id
+	if existing != null:
+		snapshot.level = existing.level
+		snapshot.xp = existing.xp
+		snapshot.unspent_stat_points = existing.unspent_stat_points
+		snapshot.allocated_stats = existing.allocated_stats.duplicate_block()
 	return snapshot
 
 

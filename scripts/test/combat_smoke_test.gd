@@ -2,6 +2,9 @@ extends SceneTree
 
 ## Headless smoke test for Phase 1 combat data and formulas.
 
+const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
+const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
+
 
 func _initialize() -> void:
 	var errors: PackedStringArray = []
@@ -12,6 +15,7 @@ func _initialize() -> void:
 	errors.append_array(_test_explore_handoff())
 	errors.append_array(_test_character_menu_system())
 	errors.append_array(_test_pickups_and_loot())
+	errors.append_array(_test_progression())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -143,8 +147,8 @@ func _test_explore_handoff() -> PackedStringArray:
 		errors.append("Area test_room should define enemies.")
 
 	var room_encounter := DataLoader.load_encounter("test_room_wretch")
-	if room_encounter.enemies.size() != 1:
-		errors.append("Encounter test_room_wretch should have one enemy.")
+	if room_encounter.enemies.size() != 3:
+		errors.append("Encounter test_room_wretch should have three enemies.")
 
 	gs.call("reset_party_to_default")
 	if int(gs.get("party_members").size()) != 4:
@@ -302,6 +306,73 @@ func _test_pickups_and_loot() -> PackedStringArray:
 			break
 	if not got_loot:
 		errors.append("Encounter loot roll should eventually grant drops.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_progression() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+
+	var enemies := DataLoader.load_enemies()
+	if (enemies["enemy_2"] as EnemyData).xp_reward <= 0:
+		errors.append("Enemy should define xp_reward.")
+
+	var characters := DataLoader.load_characters()
+	var bran_char: CharacterData = characters["ally_1"]
+	if bran_char.level_growth.is_empty():
+		errors.append("Character should define level_growth.")
+
+	var encounter_xp: int = gs.call("roll_encounter_xp", "test_room_wretch")
+	if encounter_xp < 100:
+		errors.append("Explore encounter XP should reach level-up threshold.")
+
+	var bran := gs.call("get_member_snapshot", "ally_1") as PartyMemberSnapshot
+	var old_level := bran.level
+	gs.call("grant_xp_to_party", 200)
+	if bran.level <= old_level:
+		errors.append("200 XP should level ally_1.")
+	if bran.unspent_stat_points != ProgressionConstantsScript.POINTS_PER_LEVEL:
+		errors.append("Single level-up should grant four stat points.")
+
+	var progression_before := PartyStatsHelper.get_progression_stats(bran_char, bran)
+	gs.call("begin_level_up_allocation", "ally_1")
+	for _i: int in range(ProgressionConstantsScript.POINTS_PER_LEVEL):
+		gs.call("draft_allocate_stat", "str")
+	if str(gs.call("confirm_draft_allocation")).is_empty():
+		errors.append("Confirm should succeed when all points are allocated.")
+	if bran.unspent_stat_points != 0:
+		errors.append("Confirm should clear unspent stat points.")
+	if bran.allocated_stats.str != ProgressionConstantsScript.POINTS_PER_LEVEL:
+		errors.append("Confirmed allocation should update allocated_stats.")
+
+	var progression_after := PartyStatsHelper.get_progression_stats(bran_char, bran)
+	if progression_after.str <= progression_before.str:
+		errors.append("Confirmed allocation should increase progression stats.")
+
+	bran.unspent_stat_points = ProgressionConstantsScript.POINTS_PER_LEVEL
+	gs.call("begin_level_up_allocation", "ally_1")
+	gs.call("draft_allocate_stat", "str")
+	if not str(gs.call("confirm_draft_allocation")).is_empty():
+		errors.append("Confirm should fail while points remain unspent.")
+
+	bran.unspent_stat_points = ProgressionConstantsScript.POINTS_PER_LEVEL
+	gs.call("begin_level_up_allocation", "ally_1")
+	gs.call("draft_allocate_stat", "vit")
+	gs.call("reset_draft_allocation")
+	for _i: int in range(ProgressionConstantsScript.POINTS_PER_LEVEL):
+		gs.call("draft_allocate_stat", "dex")
+	gs.call("confirm_draft_allocation")
+	if bran.allocated_stats.dex != ProgressionConstantsScript.POINTS_PER_LEVEL:
+		errors.append("Reset draft should discard prior draft points.")
+	if bran.allocated_stats.vit != 0:
+		errors.append("Reset draft should not commit discarded draft points.")
+
+	var effective: StatBlock = gs.call("get_effective_stats", "ally_1")
+	if effective.str <= bran_char.stats.str:
+		errors.append("Effective stats should reflect progression and equipment.")
 
 	gs.call("reset_party_to_default")
 	return errors

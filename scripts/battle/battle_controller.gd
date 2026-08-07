@@ -34,6 +34,7 @@ signal battle_finished(outcome: BattleOutcome)
 @onready var tile_scene: PackedScene = preload("res://scenes/battle/grid_tile.tscn")
 @onready var battle_ui: BattleUI = $"../UI/BattleUI"
 @onready var result_panel: ResultPanel = $"../UI/ResultPanel"
+@onready var level_up_panel: Control = $"../UI/LevelUpPanel"
 
 var _grid := BattleGrid.new()
 var _turn_queue := TurnQueue.new()
@@ -67,6 +68,7 @@ func _ready() -> void:
 	turn_order_changed.connect(_on_turn_order_changed)
 	result_panel.restart_requested.connect(_on_restart_requested)
 	result_panel.continue_requested.connect(_on_continue_requested)
+	level_up_panel.allocation_confirmed.connect(_on_level_up_confirmed)
 	_position_camera()
 	call_deferred("_start_battle")
 
@@ -111,12 +113,13 @@ func _load_data() -> void:
 		var pos := Vector2i(int(pos_array[0]), int(pos_array[1]))
 		var character: CharacterData = characters[character_id]
 		var loadout: Dictionary = GameState.get_loadout(character_id)
+		var snapshot := GameState.get_member_snapshot(character_id)
 		var weapon: WeaponData = PartyStatsHelper.get_equipped_weapon(loadout)
 		if weapon == null:
 			weapon = weapons[character.weapon_id]
 		var skill: SkillData = skills[character.skill_id]
 		var runtime_id := "ally_%s" % character_id
-		var effective_stats := PartyStatsHelper.get_effective_stats(character, loadout)
+		var effective_stats := PartyStatsHelper.get_effective_stats(character, loadout, snapshot)
 		var unit := CombatUnit.from_character_with_stats(
 			runtime_id, character, weapon, skill, effective_stats, pos
 		)
@@ -696,6 +699,8 @@ func _check_battle_end() -> bool:
 
 
 func _finish_battle(outcome: BattleOutcome) -> void:
+	if _phase == BattlePhase.BATTLE_END:
+		return
 	_outcome = outcome
 	GameState.update_party_from_battle(_ally_units(), _inventory)
 	GameState.resolve_battle(outcome)
@@ -714,7 +719,23 @@ func _on_restart_requested() -> void:
 
 
 func _on_continue_requested() -> void:
+	if GameState.has_pending_level_ups():
+		_show_next_level_up()
+		return
 	SceneTransition.go_to_explore()
+
+
+func _show_next_level_up() -> void:
+	result_panel.visible = false
+	var character_id := GameState.peek_level_up_character()
+	level_up_panel.show_level_up(character_id)
+
+
+func _on_level_up_confirmed() -> void:
+	if GameState.has_pending_level_ups():
+		_show_next_level_up()
+	else:
+		SceneTransition.go_to_explore()
 
 
 func _set_phase(new_phase: BattlePhase) -> void:
