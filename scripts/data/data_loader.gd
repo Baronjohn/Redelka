@@ -1,6 +1,8 @@
 class_name DataLoader
 extends RefCounted
 
+const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
+
 static func load_json_array(path: String) -> Array:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -77,3 +79,30 @@ static func load_area(area_id: String) -> AreaData:
 			return AreaData.from_dict(data)
 	push_error("Area not found: %s" % area_id)
 	return AreaData.new()
+
+
+static func load_all_areas() -> Array[AreaData]:
+	var areas: Array[AreaData] = []
+	for entry: Variant in load_json_array("res://data/areas.json"):
+		areas.append(AreaData.from_dict(entry as Dictionary))
+	return areas
+
+
+static func load_equipment() -> Dictionary:
+	var result: Dictionary = {}
+	for entry: Variant in load_json_array("res://data/equipment.json"):
+		var equipment = EquipmentDataScript.from_dict(entry as Dictionary)
+		result[equipment.id] = equipment
+	return result
+
+
+static func load_party_equipment_defaults() -> Dictionary:
+	var file := FileAccess.open("res://data/party_equipment.json", FileAccess.READ)
+	if file == null:
+		push_error("Failed to open party equipment defaults.")
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if parsed is Dictionary:
+		return parsed as Dictionary
+	push_error("Invalid party equipment JSON.")
+	return {}

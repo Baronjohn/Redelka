@@ -1,0 +1,47 @@
+{
+  "owned_pool": {
+    "iron_sword": 1,
+    "rusty_dagger": 1,
+    "short_bow": 1,
+    "wooden_staff": 1,
+    "leather_vest": 2,
+    "chain_mail": 1,
+    "cloth_robe": 1,
+    "iron_helm": 2,
+    "scout_hood": 1,
+    "power_ring": 2,
+    "swift_charm": 1,
+    "mind_pendant": 1,
+    "guard_brooch": 1
+  },
+  "starting_loadouts": {
+    "ally_1": {
+      "weapon": "iron_sword",
+      "armor": "chain_mail",
+      "helmet": "iron_helm",
+      "accessory_1": "power_ring",
+      "accessory_2": ""
+    },
+    "ally_2": {
+      "weapon": "rusty_dagger",
+      "armor": "leather_vest",
+      "helmet": "scout_hood",
+      "accessory_1": "swift_charm",
+      "accessory_2": ""
+    },
+    "ally_3": {
+      "weapon": "short_bow",
+      "armor": "leather_vest",
+      "helmet": "scout_hood",
+      "accessory_1": "guard_brooch",
+      "accessory_2": ""
+    },
+    "ally_4": {
+      "weapon": "wooden_staff",
+      "armor": "cloth_robe",
+      "helmet": "iron_helm",
+      "accessory_1": "mind_pendant",
+      "accessory_2": ""
+    }
+  }
+}

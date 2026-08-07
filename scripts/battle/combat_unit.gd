@@ -105,6 +105,24 @@ static func from_character(
 	skill: SkillData,
 	start_pos: Vector2i
 ) -> CombatUnit:
+	return from_character_with_stats(
+		runtime_id,
+		character,
+		weapon,
+		skill,
+		character.stats.get_bonus(weapon.stat_bonuses),
+		start_pos
+	)
+
+
+static func from_character_with_stats(
+	runtime_id: String,
+	character: CharacterData,
+	weapon: WeaponData,
+	skill: SkillData,
+	effective_stats: StatBlock,
+	start_pos: Vector2i
+) -> CombatUnit:
 	var unit := CombatUnit.new()
 	unit.runtime_id = runtime_id
 	unit.source_id = character.id
@@ -114,12 +132,12 @@ static func from_character(
 	unit.move_range = character.move_range
 	unit.weapon = weapon
 	unit.skill = skill
-	unit.stats = character.stats.get_bonus(weapon.stat_bonuses)
+	unit.stats = effective_stats
 	unit.max_hp = CombatConstants.HP_BASE + unit.stats.vit * CombatConstants.HP_PER_VIT
 	unit.current_hp = unit.max_hp
 	unit.max_mp = CombatConstants.MP_BASE + unit.stats.res * CombatConstants.MP_PER_RES
 	unit.current_mp = unit.max_mp
-	unit.attack_range = weapon.attack_range
+	unit.attack_range = weapon.attack_range if weapon != null else 1
 	return unit
 
 

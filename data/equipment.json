@@ -1,0 +1,56 @@
+[
+  {
+	"id": "leather_vest",
+	"name": "Leather Vest",
+	"slot": "armor",
+	"stat_bonuses": { "vit": 2 }
+  },
+  {
+	"id": "chain_mail",
+	"name": "Chain Mail",
+	"slot": "armor",
+	"stat_bonuses": { "vit": 4, "str": 1 }
+  },
+  {
+	"id": "cloth_robe",
+	"name": "Cloth Robe",
+	"slot": "armor",
+	"stat_bonuses": { "res": 3, "mnd": 1 }
+  },
+  {
+	"id": "iron_helm",
+	"name": "Iron Helm",
+	"slot": "helmet",
+	"stat_bonuses": { "vit": 1, "res": 1 }
+  },
+  {
+	"id": "scout_hood",
+	"name": "Scout Hood",
+	"slot": "helmet",
+	"stat_bonuses": { "agi": 2, "dex": 1 }
+  },
+  {
+	"id": "power_ring",
+	"name": "Power Ring",
+	"slot": "accessory",
+	"stat_bonuses": { "str": 2 }
+  },
+  {
+	"id": "swift_charm",
+	"name": "Swift Charm",
+	"slot": "accessory",
+	"stat_bonuses": { "agi": 2, "luk": 1 }
+  },
+  {
+	"id": "mind_pendant",
+	"name": "Mind Pendant",
+	"slot": "accessory",
+	"stat_bonuses": { "int": 2, "mnd": 1 }
+  },
+  {
+	"id": "guard_brooch",
+	"name": "Guard Brooch",
+	"slot": "accessory",
+	"stat_bonuses": { "vit": 2, "res": 1 }
+  }
+]

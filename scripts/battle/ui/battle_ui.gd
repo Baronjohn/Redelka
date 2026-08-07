@@ -132,10 +132,22 @@ func update_turn_order(order: Array[String], units: Dictionary) -> void:
 	turn_order_label.text = "Turn: " + ", ".join(names)
 
 
-func update_ally_status(allies: Array[CombatUnit]) -> void:
+func update_ally_status(allies: Array[CombatUnit], active_runtime_id: String = "") -> void:
 	for child: Node in ally_status_box.get_children():
 		child.queue_free()
+	var characters := DataLoader.load_characters()
 	for ally: CombatUnit in allies:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var portrait := TextureRect.new()
+		portrait.custom_minimum_size = Vector2(48, 48)
+		portrait.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		if characters.has(ally.source_id):
+			var character: CharacterData = characters[ally.source_id]
+			if not character.portrait_path.is_empty() and ResourceLoader.exists(character.portrait_path):
+				portrait.texture = load(character.portrait_path)
+		row.add_child(portrait)
 		var label := Label.new()
 		label.text = "%s  HP %d/%d  MP %d/%d%s" % [
 			ally.display_name,
@@ -145,7 +157,18 @@ func update_ally_status(allies: Array[CombatUnit]) -> void:
 			ally.max_mp,
 			" (KO)" if ally.is_ko else "",
 		]
-		ally_status_box.add_child(label)
+		row.add_child(label)
+		if ally.runtime_id == active_runtime_id:
+			var panel := PanelContainer.new()
+			var style := StyleBoxFlat.new()
+			style.bg_color = Color(0.95, 0.82, 0.28, 0.25)
+			style.set_border_width_all(2)
+			style.border_color = Color(0.95, 0.82, 0.28, 0.9)
+			panel.add_theme_stylebox_override("panel", style)
+			panel.add_child(row)
+			ally_status_box.add_child(panel)
+		else:
+			ally_status_box.add_child(row)
 
 
 func _on_spell_selected(index: int) -> void:

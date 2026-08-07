@@ -162,7 +162,7 @@ Use placeholders or omit entirely in v0:
 
 ## Phase 2 — Exploration and combat handoff
 
-**Status (Aug 2026):** **Functional at core.** Greybox test room with WASD movement, 3 camera zones, one visible overworld enemy, manual checkpoint, and explore ↔ battle transitions via `GameState` + `SceneTransition`. Ambush encounters deferred.
+**Status (Aug 2026):** **Functional at core.** Greybox test room with WASD movement, 3 camera zones, visible overworld enemies, manual checkpoint, door-linked second room, character menu (I), and explore ↔ battle transitions via `GameState` + `SceneTransition`. Ambush encounters deferred.
 
 ### Success criteria
 
@@ -206,6 +206,9 @@ sequenceDiagram
 | **Battle bridge** | `GameState` party/inventory snapshot + `SceneTransition` fade (~0.4s) |
 | **Overworld enemy** | Contact trigger → `test_room_wretch` encounter (4 allies vs 1 Wretch) |
 | **Checkpoint** | Press **E** in checkpoint alcove; defeat restores checkpoint state |
+| **Character menu** | Press **I** in explore for Items, Equipment, Status, Map, Config |
+| **Equipment** | Weapon, armor, helmet, accessory x2 with stat bonuses; owned pool in `data/party_equipment.json` |
+| **Settings** | `Settings` autoload persists graphics/audio/input to `user://settings.cfg` |
 | **Result UI** | Explore battles show **Continue**; standalone battle keeps **Restart** |
 | **Data** | `data/areas.json`, explore-linked row in `data/encounters.json` |
 | **Tests** | Explore handoff covered in `scripts/test/combat_smoke_test.gd` |

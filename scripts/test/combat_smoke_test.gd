@@ -10,6 +10,7 @@ func _initialize() -> void:
 	errors.append_array(_test_turn_queue())
 	errors.append_array(_test_battle_grid())
 	errors.append_array(_test_explore_handoff())
+	errors.append_array(_test_character_menu_system())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -190,6 +191,53 @@ func _test_explore_handoff() -> PackedStringArray:
 	var restored = gs.call("get_member_snapshot", "ally_1")
 	if restored == null or restored.current_hp != saved_hp:
 		errors.append("Defeat with checkpoint should restore saved party HP.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_character_menu_system() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+
+	var equipment := DataLoader.load_equipment()
+	if equipment.is_empty():
+		errors.append("Equipment data should load.")
+
+	var defaults := DataLoader.load_party_equipment_defaults()
+	if not defaults.has("starting_loadouts"):
+		errors.append("Party equipment defaults should define starting loadouts.")
+
+	var loadout: Dictionary = gs.call("get_loadout", "ally_1")
+	if str(loadout.get("weapon", "")).is_empty():
+		errors.append("Ally 1 should start with a weapon equipped.")
+
+	var effective: StatBlock = gs.call("get_effective_stats", "ally_1")
+	if effective.str <= 0:
+		errors.append("Effective stats should include equipment bonuses.")
+
+	var use_result: String = gs.call("use_item_outside_battle", "heal_potion", "ally_1")
+	if use_result.is_empty():
+		errors.append("Out-of-battle item use should return a message.")
+
+	gs.call("mark_area_visited", "test_room")
+	if not bool(gs.call("is_area_visited", "test_room")):
+		errors.append("Visited area tracking should work.")
+
+	if bool(gs.call("is_area_cleared", "test_room")):
+		errors.append("Uncleared test room should not report cleared before enemies defeated.")
+
+	if not bool(gs.call("is_area_cleared", "test_room")):
+		var defeated: Array = gs.get("defeated_enemy_ids")
+		defeated.append("room_wretch")
+		gs.set("defeated_enemy_ids", defeated)
+		if not bool(gs.call("is_area_cleared", "test_room")):
+			errors.append("Test room should clear after its enemy is defeated.")
+
+	var adjacent := DataLoader.load_area("adjacent_room")
+	if adjacent.map_position.x <= 0.0:
+		errors.append("Adjacent room should define custom map layout.")
 
 	gs.call("reset_party_to_default")
 	return errors

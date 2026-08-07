@@ -2,6 +2,7 @@ extends Node3D
 
 const PROTAGONIST_SCENE: PackedScene = preload("res://scenes/explore/protagonist.tscn")
 const OverworldEnemyScript = preload("res://scripts/explore/overworld_enemy.gd")
+const CHARACTER_MENU_SCENE: PackedScene = preload("res://scenes/menu/character_menu.tscn")
 const ENEMY_CONTACT_CLEAR_DISTANCE: float = 2.5
 
 @export var area_id: String = "test_room"
@@ -17,6 +18,7 @@ var _player: ExplorePlayer
 var _busy: bool = false
 var _active_door: Node3D
 var _checkpoint: ExploreCheckpointNode
+var _menu: Control
 
 
 func _ready() -> void:
@@ -29,7 +31,38 @@ func _ready() -> void:
 	camera_rig.set_track_target(_player)
 	if _checkpoint != null:
 		_checkpoint.checkpoint_saved.connect(_on_checkpoint_saved)
-	_show_message("%s — touch enemies to fight. Space at doors to travel." % _area.display_name)
+	GameState.mark_area_visited(area_id)
+	_show_message("%s — touch enemies to fight. I for menu. Space at doors to travel." % _area.display_name)
+	set_process_unhandled_input(true)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _menu != null or _busy:
+		return
+	if event.is_action_pressed("open_menu"):
+		_open_menu()
+		get_viewport().set_input_as_handled()
+
+
+func _open_menu() -> void:
+	_menu = CHARACTER_MENU_SCENE.instantiate() as Control
+	_menu.process_mode = Node.PROCESS_MODE_ALWAYS
+	_menu.closed.connect(_close_menu)
+	var layer := CanvasLayer.new()
+	layer.layer = 60
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	layer.name = "CharacterMenuLayer"
+	add_child(layer)
+	layer.add_child(_menu)
+	get_tree().paused = true
+
+
+func _close_menu() -> void:
+	get_tree().paused = false
+	var layer := get_node_or_null("CharacterMenuLayer")
+	if layer != null:
+		layer.queue_free()
+	_menu = null
 
 
 func _spawn_player() -> void:
@@ -74,7 +107,7 @@ func _process(_delta: float) -> void:
 	elif _checkpoint != null and _checkpoint.can_interact():
 		prompt_label.text = "Press E to save checkpoint"
 	else:
-		prompt_label.text = "WASD to move"
+		prompt_label.text = "WASD to move | I menu"
 
 
 func _on_door_entered(door: Node3D) -> void:

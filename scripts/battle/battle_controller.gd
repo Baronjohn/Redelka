@@ -1,5 +1,7 @@
 extends Node
 
+const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
+
 enum BattlePhase {
 	START,
 	TURN_START,
@@ -108,10 +110,16 @@ func _load_data() -> void:
 		var pos_array: Array = ally_entry.get("position", [0, 0]) as Array
 		var pos := Vector2i(int(pos_array[0]), int(pos_array[1]))
 		var character: CharacterData = characters[character_id]
-		var weapon: WeaponData = weapons[character.weapon_id]
+		var loadout: Dictionary = GameState.get_loadout(character_id)
+		var weapon: WeaponData = PartyStatsHelper.get_equipped_weapon(loadout)
+		if weapon == null:
+			weapon = weapons[character.weapon_id]
 		var skill: SkillData = skills[character.skill_id]
 		var runtime_id := "ally_%s" % character_id
-		var unit := CombatUnit.from_character(runtime_id, character, weapon, skill, pos)
+		var effective_stats := PartyStatsHelper.get_effective_stats(character, loadout)
+		var unit := CombatUnit.from_character_with_stats(
+			runtime_id, character, weapon, skill, effective_stats, pos
+		)
 		_units[runtime_id] = unit
 		_grid.set_occupant(pos, runtime_id)
 
@@ -449,7 +457,7 @@ func _on_item_selected(item_id: String) -> void:
 
 func _on_turn_order_changed(order: Array[String]) -> void:
 	battle_ui.update_turn_order(order, _units)
-	battle_ui.update_ally_status(_ally_units())
+	battle_ui.update_ally_status(_ally_units(), _current_unit_id)
 
 
 func _move_unit(unit: CombatUnit, cell: Vector2i) -> void:
@@ -718,6 +726,7 @@ func _update_turn_highlight() -> void:
 	for runtime_id: String in _unit_views.keys():
 		var view: UnitView = _unit_views[runtime_id] as UnitView
 		view.set_turn_active(runtime_id == _current_unit_id)
+	battle_ui.update_ally_status(_ally_units(), _current_unit_id)
 
 
 func _on_unit_ko_changed(runtime_id: String, is_ko: bool) -> void:
