@@ -11,7 +11,7 @@ enum BattleOutcomeCode { NONE = 0, VICTORY = 1, DEFEAT = 2, ESCAPED = 3 }
 enum Difficulty { EASY = 0, NORMAL = 1, HARD = 2 }
 
 const DEFAULT_ENCOUNTER_ID: String = "test_4v3"
-const NEW_GAME_AREA_ID: String = "test_room"
+const NEW_GAME_AREA_ID: String = "village_square"
 const SAVE_RESOURCE_ITEM_ID: String = "memory_tape"
 
 var battle_source: BattleSource = BattleSource.STANDALONE

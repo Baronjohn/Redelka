@@ -1,0 +1,334 @@
+[gd_scene load_steps=19 format=3 uid="uid://redelka_village_square"]
+
+[ext_resource type="Script" path="res://scripts/explore/explore_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/explore/camera_rig.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/explore/camera_zone.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/explore/explore_door.gd" id="4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.3, 0.28, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.22, 0.2, 0.18, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
+albedo_color = Color(0.42, 0.3, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(24, 0.4, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(24, 0.4, 24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
+size = Vector3(24, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
+size = Vector3(24, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
+size = Vector3(0.5, 3, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
+size = Vector3(0.5, 3, 24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_segment"]
+size = Vector3(0.5, 3, 9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_segment"]
+size = Vector3(0.5, 3, 9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns_segment"]
+size = Vector3(9, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns_segment"]
+size = Vector3(9, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_door_frame"]
+size = Vector3(0.35, 2.4, 3.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_panel"]
+size = Vector3(0.35, 2.4, 3.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_trigger"]
+size = Vector3(1.6, 2.5, 3.5)
+
+[sub_resource type="Environment" id="Environment_explore"]
+background_mode = 1
+background_color = Color(0.09, 0.08, 0.07, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.55, 0.5, 0.45, 1)
+ambient_light_energy = 0.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone"]
+size = Vector3(10, 3, 10)
+
+[node name="VillageSquare" type="Node3D"]
+script = ExtResource("1")
+area_id = "village_square"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_explore")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 4, 10, 6)
+shadow_enabled = true
+
+[node name="Room" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Room"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Room/Floor"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="WallNorthWest" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.5, -12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallNorthWest"]
+shape = SubResource("BoxShape3D_wall_ns_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallNorthWest"]
+mesh = SubResource("BoxMesh_wall_ns_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallNorthEast" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.5, -12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallNorthEast"]
+shape = SubResource("BoxShape3D_wall_ns_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallNorthEast"]
+mesh = SubResource("BoxMesh_wall_ns_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthWest" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 1.5, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouthWest"]
+shape = SubResource("BoxShape3D_wall_ns_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallSouthWest"]
+mesh = SubResource("BoxMesh_wall_ns_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthEast" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 1.5, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouthEast"]
+shape = SubResource("BoxShape3D_wall_ns_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallSouthEast"]
+mesh = SubResource("BoxMesh_wall_ns_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallWestNorth" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.5, -7.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallWestNorth"]
+shape = SubResource("BoxShape3D_wall_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallWestNorth"]
+mesh = SubResource("BoxMesh_wall_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallWestSouth" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.5, 7.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallWestSouth"]
+shape = SubResource("BoxShape3D_wall_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallWestSouth"]
+mesh = SubResource("BoxMesh_wall_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEastNorth" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.5, -7.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallEastNorth"]
+shape = SubResource("BoxShape3D_wall_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallEastNorth"]
+mesh = SubResource("BoxMesh_wall_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEastSouth" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.5, 7.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallEastSouth"]
+shape = SubResource("BoxShape3D_wall_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallEastSouth"]
+mesh = SubResource("BoxMesh_wall_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2")
+camera_path = NodePath("Camera3D")
+default_zone_path = NodePath("../CameraZones/ZoneCenter")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+fov = 62.0
+
+[node name="CameraZones" type="Node3D" parent="."]
+
+[node name="ZoneCenter" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("3")
+camera_position = Vector3(0, 14, 16)
+look_target_offset = Vector3(0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_zone")
+
+[node name="ZoneNorth" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -6)
+script = ExtResource("3")
+camera_position = Vector3(0, 13, 14)
+look_target_offset = Vector3(0, 1, 5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 3)
+shape = SubResource("BoxShape3D_zone")
+
+[node name="ZoneSouth" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 6)
+script = ExtResource("3")
+camera_position = Vector3(0, 14, 16)
+look_target_offset = Vector3(0, 1, -5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -3)
+shape = SubResource("BoxShape3D_zone")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Interactables" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="DoorNorthChapel" type="Node3D" parent="Doors"]
+script = ExtResource("4")
+target_area_id = "old_chapel"
+target_spawn = Vector3(0, 0, 7)
+target_rotation_y = 0.0
+door_label = "Old Chapel"
+
+[node name="Panel" type="StaticBody3D" parent="Doors/DoorNorthChapel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorNorthChapel/Panel"]
+shape = SubResource("BoxShape3D_door_panel")
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorNorthChapel/Panel"]
+mesh = SubResource("BoxMesh_door_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="Trigger" type="Area3D" parent="Doors/DoorNorthChapel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -11.25)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorNorthChapel/Trigger"]
+shape = SubResource("BoxShape3D_door_trigger")
+
+[node name="DoorWestCottage" type="Node3D" parent="Doors"]
+script = ExtResource("4")
+target_area_id = "weavers_cottage"
+target_spawn = Vector3(7, 0, 0)
+target_rotation_y = -1.5707964
+door_label = "Weaver's Cottage"
+
+[node name="Panel" type="StaticBody3D" parent="Doors/DoorWestCottage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1.2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorWestCottage/Panel"]
+shape = SubResource("BoxShape3D_door_panel")
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorWestCottage/Panel"]
+mesh = SubResource("BoxMesh_door_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="Trigger" type="Area3D" parent="Doors/DoorWestCottage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.25, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorWestCottage/Trigger"]
+shape = SubResource("BoxShape3D_door_trigger")
+
+[node name="DoorEastGranary" type="Node3D" parent="Doors"]
+script = ExtResource("4")
+target_area_id = "granary"
+target_spawn = Vector3(-7, 0, 0)
+target_rotation_y = 1.5707964
+door_label = "Granary"
+
+[node name="Panel" type="StaticBody3D" parent="Doors/DoorEastGranary"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 1.2, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorEastGranary/Panel"]
+shape = SubResource("BoxShape3D_door_panel")
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorEastGranary/Panel"]
+mesh = SubResource("BoxMesh_door_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="Trigger" type="Area3D" parent="Doors/DoorEastGranary"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.25, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorEastGranary/Trigger"]
+shape = SubResource("BoxShape3D_door_trigger")
+
+[node name="DoorSouthCellar" type="Node3D" parent="Doors"]
+script = ExtResource("4")
+target_area_id = "root_cellar"
+target_spawn = Vector3(0, 0, 5)
+target_rotation_y = 0.0
+door_label = "Root Cellar"
+required_item_id = "cellar_key"
+
+[node name="Panel" type="StaticBody3D" parent="Doors/DoorSouthCellar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 12)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorSouthCellar/Panel"]
+shape = SubResource("BoxShape3D_door_panel")
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorSouthCellar/Panel"]
+mesh = SubResource("BoxMesh_door_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="Trigger" type="Area3D" parent="Doors/DoorSouthCellar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 11.25)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorSouthCellar/Trigger"]
+shape = SubResource("BoxShape3D_door_trigger")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ExploreUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PromptLabel" type="Label" parent="UI/ExploreUI"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 500.0
+offset_bottom = 44.0
+text = "WASD to move"
+
+[node name="MessageLabel" type="Label" parent="UI/ExploreUI"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 52.0
+offset_right = 900.0
+offset_bottom = 80.0
+text = "The hollowed village square lies silent."

@@ -23,18 +23,22 @@ var _checkpoint: ExploreCheckpointNode
 var _menu: Control
 var _save_panel: Control = null
 var _active_pickup: Node = null
+var _active_interactable: Node = null
 var _pickups_root: Node3D
+var _interactables_root: Node3D
 
 
 func _ready() -> void:
 	_area = DataLoader.load_area(area_id)
 	_pickups_root = get_node_or_null("Pickups") as Node3D
+	_interactables_root = get_node_or_null("Interactables") as Node3D
 	_checkpoint = get_node_or_null("Checkpoint") as ExploreCheckpointNode
 	GameState.ensure_party_initialized(str(_area.default_encounter_id))
 	_spawn_player()
 	_spawn_enemies()
 	_spawn_pickups()
 	_connect_doors()
+	_connect_interactables()
 	camera_rig.set_track_target(_player)
 	if _checkpoint != null:
 		_checkpoint.save_requested.connect(_open_save_panel)
@@ -98,6 +102,40 @@ func _spawn_enemies() -> void:
 		enemy.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
 
 
+func _connect_interactables() -> void:
+	if _interactables_root == null:
+		return
+	for child: Node in _interactables_root.get_children():
+		if child.has_signal("ambush_requested"):
+			child.ambush_requested.connect(_on_closet_ambush_requested)
+		if child.has_signal("closet_interacted"):
+			child.closet_interacted.connect(_show_message)
+
+
+func _on_closet_ambush_requested(player: CharacterBody3D) -> void:
+	if _busy or player == null:
+		return
+	_busy = true
+	_player.movement_enabled = false
+	_show_message("Something bursts from the closet!")
+	await get_tree().create_timer(0.35).timeout
+	if not is_inside_tree() or _player == null:
+		return
+	var closet := _active_interactable
+	if closet == null:
+		_busy = false
+		_player.movement_enabled = true
+		return
+	GameState.enter_battle(
+		area_id,
+		player.global_position,
+		player.rotation.y,
+		str(closet.get("encounter_id")),
+		str(closet.get("ambush_enemy_id")),
+	)
+	SceneTransition.go_to_battle()
+
+
 func _connect_doors() -> void:
 	if doors_root == null:
 		return
@@ -133,10 +171,13 @@ func _on_pickup_collected(message: String) -> void:
 
 func _process(_delta: float) -> void:
 	_update_active_pickup()
+	_update_active_interactable()
 	if _active_door != null and _active_door.call("can_use"):
 		prompt_label.text = "Press E to enter %s" % str(_active_door.get("door_label"))
 	elif _active_door != null and _active_door.has_method("is_locked") and bool(_active_door.call("is_locked")):
 		prompt_label.text = str(_active_door.call("get_lock_prompt"))
+	elif _active_interactable != null and bool(_active_interactable.call("can_interact")):
+		prompt_label.text = str(_active_interactable.call("get_interact_prompt"))
 	elif _active_pickup != null and bool(_active_pickup.call("can_interact")):
 		prompt_label.text = "Press E to pick up %s" % str(_active_pickup.call("get_pickup_label"))
 	elif _checkpoint != null and _checkpoint.can_interact():
@@ -160,6 +201,18 @@ func _update_active_pickup() -> void:
 			continue
 		if bool(child.call("can_interact")):
 			_active_pickup = child
+			return
+
+
+func _update_active_interactable() -> void:
+	_active_interactable = null
+	if _interactables_root == null:
+		return
+	for child: Node in _interactables_root.get_children():
+		if not child.has_method("can_interact"):
+			continue
+		if bool(child.call("can_interact")):
+			_active_interactable = child
 			return
 
 

@@ -1,0 +1,237 @@
+[gd_scene load_steps=18 format=3 uid="uid://redelka_old_chapel"]
+
+[ext_resource type="Script" path="res://scripts/explore/explore_controller.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/explore/camera_rig.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/explore/camera_zone.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/explore/explore_checkpoint_node.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/explore/explore_door.gd" id="5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.26, 0.24, 0.28, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.18, 0.16, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
+albedo_color = Color(0.38, 0.28, 0.18, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+size = Vector3(16, 0.4, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(16, 0.4, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
+size = Vector3(16, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
+size = Vector3(16, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
+size = Vector3(0.5, 3, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
+size = Vector3(0.5, 3, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns_segment"]
+size = Vector3(5, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns_segment"]
+size = Vector3(5, 3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_door_frame"]
+size = Vector3(0.35, 2.4, 3.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_panel"]
+size = Vector3(0.35, 2.4, 3.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_trigger"]
+size = Vector3(1.6, 2.5, 3.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_checkpoint"]
+size = Vector3(1.2, 0.2, 1.2)
+
+[sub_resource type="Environment" id="Environment_explore"]
+background_mode = 1
+background_color = Color(0.05, 0.05, 0.08, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.42, 0.55, 1)
+ambient_light_energy = 0.65
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone"]
+size = Vector3(8, 3, 8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_checkpoint"]
+size = Vector3(3, 2.5, 3)
+
+[node name="OldChapel" type="Node3D"]
+script = ExtResource("1")
+area_id = "old_chapel"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_explore")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 4, 10, 6)
+shadow_enabled = true
+
+[node name="Room" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Room"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Floor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Room/Floor"]
+mesh = SubResource("BoxMesh_floor")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="WallNorth" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -10)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallNorth"]
+shape = SubResource("BoxShape3D_wall_ns")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallNorth"]
+mesh = SubResource("BoxMesh_wall_ns")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthWest" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 1.5, 10)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouthWest"]
+shape = SubResource("BoxShape3D_wall_ns_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallSouthWest"]
+mesh = SubResource("BoxMesh_wall_ns_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthEast" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 1.5, 10)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouthEast"]
+shape = SubResource("BoxShape3D_wall_ns_segment")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallSouthEast"]
+mesh = SubResource("BoxMesh_wall_ns_segment")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallWest" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallWest"]
+shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallWest"]
+mesh = SubResource("BoxMesh_wall_ew")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="WallEast" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallEast"]
+shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallEast"]
+mesh = SubResource("BoxMesh_wall_ew")
+surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2")
+camera_path = NodePath("Camera3D")
+default_zone_path = NodePath("../CameraZones/ZoneSouth")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+fov = 62.0
+
+[node name="CameraZones" type="Node3D" parent="."]
+
+[node name="ZoneSouth" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 4)
+script = ExtResource("3")
+camera_position = Vector3(0, 12, 14)
+look_target_offset = Vector3(0, 1, -4)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -2)
+shape = SubResource("BoxShape3D_zone")
+
+[node name="ZoneNorth" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -4)
+script = ExtResource("3")
+camera_position = Vector3(-10, 13, 8)
+look_target_offset = Vector3(4, 1, 2)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 2)
+shape = SubResource("BoxShape3D_zone")
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Interactables" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="DoorToSquare" type="Node3D" parent="Doors"]
+script = ExtResource("5")
+target_area_id = "village_square"
+target_spawn = Vector3(0, 0, -10)
+target_rotation_y = 3.1415927
+door_label = "Village Square"
+
+[node name="Panel" type="StaticBody3D" parent="Doors/DoorToSquare"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 10)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorToSquare/Panel"]
+shape = SubResource("BoxShape3D_door_panel")
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorToSquare/Panel"]
+mesh = SubResource("BoxMesh_door_frame")
+surface_material_override/0 = SubResource("StandardMaterial3D_door")
+
+[node name="Trigger" type="Area3D" parent="Doors/DoorToSquare"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 9.25)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorToSquare/Trigger"]
+shape = SubResource("BoxShape3D_door_trigger")
+
+[node name="Checkpoint" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -5)
+script = ExtResource("4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Checkpoint"]
+shape = SubResource("BoxShape3D_checkpoint")
+
+[node name="CheckpointMarker" type="MeshInstance3D" parent="Checkpoint"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("BoxMesh_checkpoint")
+surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ExploreUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PromptLabel" type="Label" parent="UI/ExploreUI"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 500.0
+offset_bottom = 44.0
+text = "WASD to move"
+
+[node name="MessageLabel" type="Label" parent="UI/ExploreUI"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 52.0
+offset_right = 900.0
+offset_bottom = 80.0
+text = "Candles gutter in the abandoned chapel."

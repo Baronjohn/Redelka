@@ -200,7 +200,7 @@ sequenceDiagram
 
 | Topic | Choice |
 |-------|--------|
-| **Entry scene** | `scenes/main.tscn` → `scenes/explore/test_room.tscn` |
+| **Entry scene** | `scenes/main.tscn` → `scenes/explore/village_square.tscn` (Chapter 1 hub); test rooms retained for smoke tests |
 | **Movement** | WASD `CharacterBody3D`; protagonist-only capsule in explore |
 | **Cameras** | 3 `CameraZone` areas; `CameraRig` tracks player within zone |
 | **Battle bridge** | `GameState` party/inventory snapshot + `SceneTransition` fade (~0.4s) |
@@ -222,9 +222,9 @@ sequenceDiagram
 
 ### Phase 2 exploration scope (minimal)
 
-- One **test chapter room** (`scenes/explore/test_room.tscn`) with **3 camera zones**
-- One visible enemy + one ambush encounter *(ambush deferred)*
-- No full puzzle pipeline required for first Phase 2 milestone
+- **Chapter 1 — The Hollowed Village:** 5-room hub (`village_square`, `old_chapel`, `weavers_cottage`, `granary`, `root_cellar`) with map tab layout, locked cellar door, closet ambush key loop, mini-boss (`pale_warden`), and save checkpoints in chapel/cellar
+- Legacy **test rooms** (`test_room`, `adjacent_room`) kept for automated smoke tests
+- Each room uses **2–3 camera zones**; doors connect hub-and-spoke with tuned spawn positions
 
 ---
 
@@ -243,7 +243,7 @@ sequenceDiagram
 
 | Topic | Choice |
 |-------|--------|
-| **Entry scene** | `scenes/main.tscn` → `scenes/explore/test_room.tscn`; battle via `scenes/battle/battle.tscn` |
+| **Entry scene** | `scenes/main.tscn` → `scenes/explore/village_square.tscn`; battle via `scenes/battle/battle.tscn` |
 | **Autoload** | `GameState` (session bridge), `SceneTransition` (fade transitions) |
 | **Data layout** | `data/*.json` loaded by `DataLoader` into typed RefCounted classes |
 | **Input** | Mouse-first — click menu buttons; raycast tile/unit selection on battleground |

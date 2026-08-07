@@ -26,5 +26,10 @@
 	"id": "memory_tape",
 	"name": "Memory Tape",
 	"type": "save_resource"
+  },
+  {
+	"id": "cellar_key",
+	"name": "Cellar Key",
+	"type": "key"
   }
 ]

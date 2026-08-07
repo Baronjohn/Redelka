@@ -3,6 +3,7 @@
 	"id": "test_room",
 	"name": "Test Room",
 	"scene_path": "res://scenes/explore/test_room.tscn",
+	"map_visible": false,
 	"default_spawn": [0, 0, 8],
 	"checkpoint_spawn": [2, 0, -8],
 	"default_encounter_id": "test_4v3",
@@ -41,6 +42,7 @@
 	"id": "adjacent_room",
 	"name": "Adjacent Room",
 	"scene_path": "res://scenes/explore/adjacent_room.tscn",
+	"map_visible": false,
 	"default_spawn": [0, 0, 0],
 	"checkpoint_spawn": [0, 0, 0],
 	"default_encounter_id": "test_4v3",
@@ -55,5 +57,155 @@
 	  }
 	],
 	"pickups": []
+  },
+  {
+	"id": "village_square",
+	"name": "Village Square",
+	"scene_path": "res://scenes/explore/village_square.tscn",
+	"default_spawn": [0, 0, 10],
+	"checkpoint_spawn": [0, 0, 10],
+	"default_encounter_id": "village_square_scuffle",
+	"map_position": [400, 220],
+	"map_size": [160, 120],
+	"map_connections": ["old_chapel", "weavers_cottage", "granary", "root_cellar"],
+	"map_locked_connections": {
+	  "root_cellar": "cellar_key"
+	},
+	"enemies": [
+	  {
+		"id": "square_wretch",
+		"encounter_id": "village_square_scuffle",
+		"position": [-4, 0, -2]
+	  }
+	],
+	"pickups": [
+	  {
+		"id": "square_potion_pickup",
+		"item_id": "heal_potion",
+		"count": 1,
+		"position": [4, 0, 4]
+	  }
+	]
+  },
+  {
+	"id": "old_chapel",
+	"name": "Old Chapel",
+	"scene_path": "res://scenes/explore/old_chapel.tscn",
+	"default_spawn": [0, 0, 7],
+	"checkpoint_spawn": [0, 0, -5],
+	"default_encounter_id": "chapel_warden",
+	"map_position": [420, 50],
+	"map_size": [120, 80],
+	"map_connections": ["village_square"],
+	"enemies": [
+	  {
+		"id": "chapel_warden",
+		"encounter_id": "chapel_warden",
+		"position": [0, 0, -2]
+	  }
+	],
+	"pickups": [
+	  {
+		"id": "chapel_tape_pickup",
+		"item_id": "memory_tape",
+		"count": 1,
+		"position": [-3, 0, -4]
+	  },
+	  {
+		"id": "chapel_helm_pickup",
+		"item_id": "iron_helm",
+		"count": 1,
+		"position": [3, 0, -4]
+	  }
+	]
+  },
+  {
+	"id": "weavers_cottage",
+	"name": "Weaver's Cottage",
+	"scene_path": "res://scenes/explore/weavers_cottage.tscn",
+	"default_spawn": [0, 0, 6],
+	"checkpoint_spawn": [0, 0, 6],
+	"default_encounter_id": "cottage_closet_ambush",
+	"map_position": [185, 230],
+	"map_size": [130, 100],
+	"map_connections": ["village_square"],
+	"enemies": [],
+	"pickups": [
+	  {
+		"id": "cottage_potion_pickup",
+		"item_id": "heal_potion",
+		"count": 1,
+		"position": [2, 0, 2]
+	  }
+	]
+  },
+  {
+	"id": "granary",
+	"name": "Granary",
+	"scene_path": "res://scenes/explore/granary.tscn",
+	"default_spawn": [0, 0, 6],
+	"checkpoint_spawn": [0, 0, 6],
+	"default_encounter_id": "granary_patrol",
+	"map_position": [640, 230],
+	"map_size": [140, 100],
+	"map_connections": ["village_square"],
+	"enemies": [
+	  {
+		"id": "granary_wretch",
+		"encounter_id": "granary_patrol",
+		"position": [-2, 0, -1]
+	  },
+	  {
+		"id": "granary_loft_hollow",
+		"encounter_id": "granary_loft",
+		"position": [3, 0, 3]
+	  }
+	],
+	"pickups": [
+	  {
+		"id": "granary_vest_pickup",
+		"item_id": "leather_vest",
+		"count": 1,
+		"position": [-4, 0, 3]
+	  },
+	  {
+		"id": "granary_potion_pickup",
+		"item_id": "heal_potion",
+		"count": 1,
+		"position": [4, 0, -3]
+	  }
+	]
+  },
+  {
+	"id": "root_cellar",
+	"name": "Root Cellar",
+	"scene_path": "res://scenes/explore/root_cellar.tscn",
+	"default_spawn": [0, 0, 5],
+	"checkpoint_spawn": [0, 0, 0],
+	"default_encounter_id": "cellar_guard",
+	"map_position": [415, 385],
+	"map_size": [130, 90],
+	"map_connections": ["village_square"],
+	"enemies": [
+	  {
+		"id": "cellar_hollow",
+		"encounter_id": "cellar_guard",
+		"position": [0, 0, -2]
+	  }
+	],
+	"pickups": [
+	  {
+		"id": "cellar_tape_pickup",
+		"item_id": "memory_tape",
+		"count": 2,
+		"position": [-3, 0, -3]
+	  },
+	  {
+		"id": "cellar_mail_pickup",
+		"item_id": "chain_mail",
+		"count": 1,
+		"position": [3, 0, -3]
+	  }
+	]
   }
 ]

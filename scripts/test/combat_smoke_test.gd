@@ -17,6 +17,7 @@ func _initialize() -> void:
 	errors.append_array(_test_pickups_and_loot())
 	errors.append_array(_test_progression())
 	errors.append_array(_test_save_load())
+	errors.append_array(_test_chapter_data())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -31,8 +32,8 @@ func _test_data_loading() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	if DataLoader.load_characters().size() != 4:
 		errors.append("Expected 4 characters.")
-	if DataLoader.load_enemies().size() != 3:
-		errors.append("Expected 3 enemies.")
+	if DataLoader.load_enemies().size() != 4:
+		errors.append("Expected 4 enemies.")
 	if DataLoader.load_spells().size() < 3:
 		errors.append("Expected at least 3 spells.")
 	var encounter := DataLoader.load_encounter("test_4v3")
@@ -440,6 +441,58 @@ func _test_save_load() -> PackedStringArray:
 		errors.append("Hard save should succeed with Memory Tape.")
 	if int(gs.get("inventory").get("memory_tape", 0)) != 0:
 		errors.append("Hard save should consume Memory Tape.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_chapter_data() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	var chapter_ids: Array[String] = [
+		"village_square",
+		"old_chapel",
+		"weavers_cottage",
+		"granary",
+		"root_cellar",
+	]
+	for area_id: String in chapter_ids:
+		var area := DataLoader.load_area(area_id)
+		if area.id != area_id:
+			errors.append("Chapter area %s failed to load." % area_id)
+		if area.scene_path.is_empty():
+			errors.append("Chapter area %s should define scene_path." % area_id)
+		if area.map_connections.is_empty() and area_id != "village_square":
+			errors.append("Chapter area %s should connect to the hub." % area_id)
+
+	var items := DataLoader.load_items()
+	if not items.has("cellar_key"):
+		errors.append("cellar_key item should exist for chapter gate.")
+
+	var enemies := DataLoader.load_enemies()
+	if not enemies.has("pale_warden"):
+		errors.append("pale_warden mini-boss should exist.")
+
+	var ambush := DataLoader.load_encounter("cottage_closet_ambush")
+	if ambush.enemies.size() < 2:
+		errors.append("Closet ambush encounter should include multiple enemies.")
+
+	var warden := DataLoader.load_encounter("chapel_warden")
+	var has_warden := false
+	for enemy_entry: Dictionary in warden.enemies:
+		if str(enemy_entry.get("enemy_id", "")) == "pale_warden":
+			has_warden = true
+			break
+	if not has_warden:
+		errors.append("Chapel encounter should include pale_warden.")
+
+	gs.call("start_new_game", GameState.Difficulty.NORMAL)
+	if str(gs.get("current_area_id")) != "village_square":
+		errors.append("New game should start in village_square.")
+
+	var square := DataLoader.load_area("village_square")
+	if square.map_connections.size() < 4:
+		errors.append("Village square hub should connect to four rooms.")
 
 	gs.call("reset_party_to_default")
 	return errors

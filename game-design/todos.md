@@ -41,23 +41,19 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ---
 
-## 3. Small authored chapter (3–5 rooms)
+## 3. Small authored chapter (3–5 rooms) — done
 
-**Why now:** Pickups, keys, locked doors, drop tables, and map tab exist but only two test rooms exercise them.
+**Status (Aug 2026):** Chapter 1 "The Hollowed Village" — 5-room hub layout with closet ambush key loop, locked cellar, mini-boss, checkpoints, and map tab layout.
 
-**Goal:** A short connected chapter that stress-tests exploration systems and encounter pacing.
-
-**Tasks:**
-
-- [ ] Author 3–5 rooms in `data/areas.json` with scene paths, map layout, and connections
-- [ ] Place at least one locked door + key pickup loop (reuse `required_item_id` / `ExplorePickup` pattern)
-- [ ] Vary encounters per room (different enemy types, drop tables)
-- [ ] Place save checkpoint(s) at authored safe points
-- [ ] Add consumable/equipment pickups where appropriate
-- [ ] Verify map tab renders chapter layout and state (visited, cleared, current room)
-- [ ] Camera zones per room; playtest transitions and door spawn positions
-- [ ] Optional: scripted ambush trigger (deferred in [prototype.md](prototype.md) Phase 2)
-- [ ] Update [prototype.md](prototype.md) when chapter milestone is done
+- [x] Author 3–5 rooms in `data/areas.json` with scene paths, map layout, and connections
+- [x] Place at least one locked door + key pickup loop (reuse `required_item_id` / `ExplorePickup` pattern)
+- [x] Vary encounters per room (different enemy types, drop tables)
+- [x] Place save checkpoint(s) at authored safe points
+- [x] Add consumable/equipment pickups where appropriate
+- [x] Verify map tab renders chapter layout and state (visited, cleared, current room)
+- [x] Camera zones per room; playtest transitions and door spawn positions
+- [x] Optional: scripted ambush trigger — closet in Weaver's Cottage (`ExploreCloset`)
+- [x] Update [prototype.md](prototype.md) when chapter milestone is done
 
 **References:** [exploration.md](exploration.md), [world.md](world.md)
 
@@ -65,5 +61,5 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ## Suggested order
 
-1. **Authored chapter** — validates exploration, saves, progression, and content systems together
-2. **Later:** sanity/fear on Hard, ambush triggers, full difficulty-tier parity per [difficulty-saves.md](difficulty-saves.md)
+1. **Later:** sanity/fear on Hard, full difficulty-tier parity per [difficulty-saves.md](difficulty-saves.md)
+2. **Later:** additional authored chapters, ambush variety, puzzle pipeline

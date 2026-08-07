@@ -9,7 +9,9 @@ var checkpoint_spawn: Vector3 = Vector3.ZERO
 var default_encounter_id: String = ""
 var map_position: Vector2 = Vector2.ZERO
 var map_size: Vector2 = Vector2(120, 80)
+var map_visible: bool = true
 var map_connections: Array[String] = []
+var map_locked_connections: Dictionary = {}
 var enemies: Array[Dictionary] = []
 var pickups: Array[Dictionary] = []
 
@@ -30,8 +32,13 @@ static func from_dict(data: Dictionary) -> AreaData:
 	var map_size_array: Array = data.get("map_size", [120, 80]) as Array
 	if map_size_array.size() >= 2:
 		area.map_size = Vector2(float(map_size_array[0]), float(map_size_array[1]))
+	area.map_visible = bool(data.get("map_visible", true))
 	for connection: Variant in data.get("map_connections", []) as Array:
 		area.map_connections.append(str(connection))
+	var locks: Variant = data.get("map_locked_connections", {})
+	if locks is Dictionary:
+		for connection_id: Variant in (locks as Dictionary).keys():
+			area.map_locked_connections[str(connection_id)] = str(locks[connection_id])
 	for enemy_entry: Variant in data.get("enemies", []) as Array:
 		area.enemies.append(enemy_entry as Dictionary)
 	for pickup_entry: Variant in data.get("pickups", []) as Array:

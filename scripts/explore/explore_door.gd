@@ -15,12 +15,26 @@ var _player_inside: bool = false
 
 func _ready() -> void:
 	add_to_group("explore_doors")
+	_orient_panel_to_wall()
 	var trigger := get_node_or_null("Trigger") as Area3D
 	if trigger == null:
 		push_error("ExploreDoor requires a Trigger Area3D child.")
 		return
 	trigger.body_entered.connect(_on_body_entered)
 	trigger.body_exited.connect(_on_body_exited)
+
+
+func _orient_panel_to_wall() -> void:
+	var panel := get_node_or_null("Panel") as Node3D
+	if panel == null:
+		return
+	var panel_pos := panel.position
+	if absf(panel_pos.z) <= absf(panel_pos.x):
+		return
+	panel.rotate_y(PI / 2.0)
+	var trigger := get_node_or_null("Trigger") as Node3D
+	if trigger != null:
+		trigger.rotate_y(PI / 2.0)
 
 
 func _on_body_entered(body: Node3D) -> void:
