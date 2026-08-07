@@ -25,6 +25,8 @@ signal phase_changed(phase: BattlePhase)
 signal turn_order_changed(order: Array[String])
 signal battle_finished(outcome: BattleOutcome)
 
+const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
+
 @export var encounter_id: String = "test_4v3"
 
 @onready var units_root: Node3D = $"../Units"
@@ -53,6 +55,7 @@ var _selected_spell: SpellData = null
 var _selected_item_id: String = ""
 var _allow_retreat: bool = true
 var _scheduled_enemy_removals: Dictionary = {}
+var _save_panel: Control = null
 
 
 func _ready() -> void:
@@ -68,6 +71,9 @@ func _ready() -> void:
 	turn_order_changed.connect(_on_turn_order_changed)
 	result_panel.restart_requested.connect(_on_restart_requested)
 	result_panel.continue_requested.connect(_on_continue_requested)
+	result_panel.load_save_requested.connect(_on_load_save_requested)
+	result_panel.load_autosave_requested.connect(_on_load_autosave_requested)
+	result_panel.main_menu_requested.connect(_on_main_menu_requested)
 	level_up_panel.allocation_confirmed.connect(_on_level_up_confirmed)
 	_position_camera()
 	call_deferred("_start_battle")
@@ -736,6 +742,32 @@ func _on_level_up_confirmed() -> void:
 		_show_next_level_up()
 	else:
 		SceneTransition.go_to_explore()
+
+
+func _on_load_save_requested() -> void:
+	_open_load_panel()
+
+
+func _on_load_autosave_requested() -> void:
+	if GameState.load_autosave():
+		await SceneTransition.go_to_explore()
+
+
+func _on_main_menu_requested() -> void:
+	await SceneTransition.go_to_main_menu()
+
+
+func _open_load_panel() -> void:
+	if _save_panel == null:
+		_save_panel = SAVE_SLOT_PANEL_SCENE.instantiate() as Control
+		$"../UI".add_child(_save_panel)
+		_save_panel.load_completed.connect(_on_battle_save_loaded)
+		_save_panel.closed.connect(func() -> void: _save_panel.visible = false)
+	_save_panel.open_load_mode(true)
+
+
+func _on_battle_save_loaded() -> void:
+	await SceneTransition.go_to_explore()
 
 
 func _set_phase(new_phase: BattlePhase) -> void:

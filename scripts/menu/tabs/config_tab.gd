@@ -96,8 +96,12 @@ func _build_misc_tab() -> void:
 	_sub_tabs.add_child(box)
 	_sub_tabs.set_tab_title(3, "Misc")
 	_misc_label = Label.new()
-	_misc_label.text = "Misc settings will be added later."
+	_misc_label.text = "Unsaved progress will be lost."
 	box.add_child(_misc_label)
+	var return_button := Button.new()
+	return_button.text = "Return to Main Menu"
+	return_button.pressed.connect(_on_return_to_main_menu_pressed)
+	box.add_child(return_button)
 
 
 func _build_debug_tab() -> void:
@@ -161,3 +165,8 @@ func _on_clear_pressed() -> void:
 	Settings.clear_binding(action_name)
 	_refresh_input_list()
 	menu.call("show_message", "Binding cleared for %s." % Settings.get_action_display_name(action_name))
+
+
+func _on_return_to_main_menu_pressed() -> void:
+	get_tree().paused = false
+	SceneTransition.go_to_main_menu()

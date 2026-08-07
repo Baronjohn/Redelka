@@ -3,12 +3,16 @@ extends Node
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
+const SaveManagerScript = preload("res://scripts/data/save_manager.gd")
 
 enum BattleSource { STANDALONE, EXPLORE }
 
 enum BattleOutcomeCode { NONE = 0, VICTORY = 1, DEFEAT = 2, ESCAPED = 3 }
 
+enum Difficulty { EASY = 0, NORMAL = 1, HARD = 2 }
+
 const DEFAULT_ENCOUNTER_ID: String = "test_4v3"
+const NEW_GAME_AREA_ID: String = "test_room"
 
 var battle_source: BattleSource = BattleSource.STANDALONE
 var current_encounter_id: String = DEFAULT_ENCOUNTER_ID
@@ -24,19 +28,19 @@ var party_members: Array = []
 var inventory: Dictionary = {}
 var equipped: Dictionary = {}
 var owned_equipment: Dictionary = {}
-var has_checkpoint: bool = false
+var difficulty: int = Difficulty.NORMAL
 var last_battle_outcome: int = BattleOutcomeCode.NONE
 var last_battle_loot: Array[Dictionary] = []
 var last_battle_xp: int = 0
 var last_level_ups: Array[Dictionary] = []
 var pending_level_up_queue: Array[String] = []
-var reload_from_checkpoint_on_explore_start: bool = false
 var post_battle_contact_immune_until_msec: int = 0
 var pending_door_spawn: Dictionary = {}
+var pending_load_spawn: Dictionary = {}
+var _autosave_after_door_spawn: bool = false
 
 const POST_BATTLE_CONTACT_IMMUNITY_MS: int = 2500
 
-var _checkpoint: ExploreCheckpointData = ExploreCheckpointData.new()
 var _characters_cache: Dictionary = {}
 var _draft_character_id: String = ""
 var _draft_allocated: StatBlock = StatBlock.new()
@@ -434,7 +438,6 @@ func enter_battle(
 	current_encounter_id = encounter_id
 	overworld_enemy_id = enemy_id
 	last_battle_outcome = BattleOutcomeCode.NONE
-	reload_from_checkpoint_on_explore_start = false
 
 
 func update_party_from_battle(allies: Array[CombatUnit], battle_inventory: Dictionary) -> void:
@@ -475,58 +478,140 @@ func resolve_battle(outcome: int) -> void:
 				grant_xp_to_party(last_battle_xp)
 			if not overworld_enemy_id.is_empty() and overworld_enemy_id not in defeated_enemy_ids:
 				defeated_enemy_ids.append(overworld_enemy_id)
-			reload_from_checkpoint_on_explore_start = false
 			_begin_post_battle_explore()
 		BattleOutcomeCode.ESCAPED:
-			reload_from_checkpoint_on_explore_start = false
 			_begin_post_battle_explore()
 		BattleOutcomeCode.DEFEAT:
-			if has_checkpoint:
-				load_checkpoint()
-			else:
-				reload_from_checkpoint_on_explore_start = false
-				reset_party_to_default()
+			pass
 	overworld_enemy_id = ""
 
 
-func save_checkpoint(area_id: String, position: Vector3, rotation_y: float) -> void:
-	_checkpoint.area_id = area_id
-	_checkpoint.position = position
-	_checkpoint.rotation_y = rotation_y
-	_checkpoint.party_members.clear()
+func start_new_game(new_difficulty: int) -> void:
+	reset_party_to_default()
+	difficulty = new_difficulty
+	current_area_id = NEW_GAME_AREA_ID
+	return_area_id = NEW_GAME_AREA_ID
+	var area := DataLoader.load_area(NEW_GAME_AREA_ID)
+	return_position = area.default_spawn
+	return_rotation_y = 0.0
+	pending_load_spawn = {}
+	pending_door_spawn = {}
+	_autosave_after_door_spawn = false
+	last_battle_outcome = BattleOutcomeCode.NONE
+	battle_source = BattleSource.EXPLORE
+
+
+func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> Dictionary:
+	var members: Array = []
 	for member: Variant in party_members:
 		var snapshot := member as PartyMemberSnapshot
-		_checkpoint.party_members.append(PartyMemberSnapshot.from_dict(snapshot.to_dict()))
-	_checkpoint.inventory = inventory.duplicate()
-	_checkpoint.equipped = equipped.duplicate(true)
-	_checkpoint.owned_equipment = owned_equipment.duplicate()
-	_checkpoint.defeated_enemy_ids = defeated_enemy_ids.duplicate()
-	_checkpoint.visited_area_ids = visited_area_ids.duplicate()
-	_checkpoint.collected_pickup_ids = collected_pickup_ids.duplicate()
-	has_checkpoint = true
+		members.append(snapshot.to_dict())
+	return {
+		"difficulty": difficulty,
+		"current_area_id": current_area_id,
+		"return_area_id": return_area_id,
+		"return_position": [player_position.x, player_position.y, player_position.z],
+		"return_rotation_y": player_rotation_y,
+		"defeated_enemy_ids": defeated_enemy_ids.duplicate(),
+		"visited_area_ids": visited_area_ids.duplicate(),
+		"collected_pickup_ids": collected_pickup_ids.duplicate(),
+		"party_members": members,
+		"inventory": inventory.duplicate(),
+		"equipped": equipped.duplicate(true),
+		"owned_equipment": owned_equipment.duplicate(),
+	}
 
 
-func load_checkpoint() -> void:
-	if not has_checkpoint:
-		return
-	return_area_id = _checkpoint.area_id
-	current_area_id = _checkpoint.area_id
-	return_position = _checkpoint.position
-	return_rotation_y = _checkpoint.rotation_y
+func build_save_data(player_position: Vector3, player_rotation_y: float) -> Dictionary:
+	var state := to_save_state_dict(player_position, player_rotation_y)
+	return {
+		"meta": SaveManagerScript.build_meta(state),
+		"state": state,
+	}
+
+
+func apply_save_dict(save_data: Dictionary) -> bool:
+	var state := save_data.get("state", {}) as Dictionary
+	if state.is_empty():
+		return false
+	difficulty = int(state.get("difficulty", Difficulty.NORMAL))
+	current_area_id = str(state.get("current_area_id", NEW_GAME_AREA_ID))
+	return_area_id = str(state.get("return_area_id", current_area_id))
+	var pos_array: Array = state.get("return_position", [0, 0, 0]) as Array
+	return_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
+	return_rotation_y = float(state.get("return_rotation_y", 0.0))
+	defeated_enemy_ids.clear()
+	for enemy_id: Variant in state.get("defeated_enemy_ids", []) as Array:
+		defeated_enemy_ids.append(str(enemy_id))
+	visited_area_ids.clear()
+	for area_id: Variant in state.get("visited_area_ids", []) as Array:
+		visited_area_ids.append(str(area_id))
+	collected_pickup_ids.clear()
+	for pickup_id: Variant in state.get("collected_pickup_ids", []) as Array:
+		collected_pickup_ids.append(str(pickup_id))
 	party_members.clear()
-	for member: Variant in _checkpoint.party_members:
-		var snapshot := member as PartyMemberSnapshot
-		party_members.append(PartyMemberSnapshot.from_dict(snapshot.to_dict()))
-	inventory = _checkpoint.inventory.duplicate()
-	equipped = _checkpoint.equipped.duplicate(true)
-	owned_equipment = _checkpoint.owned_equipment.duplicate()
-	defeated_enemy_ids = _checkpoint.defeated_enemy_ids.duplicate()
-	visited_area_ids = _checkpoint.visited_area_ids.duplicate()
-	collected_pickup_ids = _checkpoint.collected_pickup_ids.duplicate()
-	reload_from_checkpoint_on_explore_start = true
+	for member_data: Variant in state.get("party_members", []) as Array:
+		party_members.append(PartyMemberSnapshot.from_dict(member_data as Dictionary))
+	inventory = (state.get("inventory", {}) as Dictionary).duplicate()
+	equipped = (state.get("equipped", {}) as Dictionary).duplicate(true)
+	owned_equipment = (state.get("owned_equipment", {}) as Dictionary).duplicate()
+	pending_load_spawn = {
+		"area_id": current_area_id,
+		"position": return_position,
+		"rotation_y": return_rotation_y,
+	}
+	pending_door_spawn = {}
+	_autosave_after_door_spawn = false
+	last_battle_outcome = BattleOutcomeCode.NONE
+	battle_source = BattleSource.EXPLORE
+	last_battle_loot.clear()
+	last_battle_xp = 0
+	last_level_ups.clear()
+	pending_level_up_queue.clear()
+	_draft_character_id = ""
+	_draft_allocated = StatBlock.new()
+	_draft_budget = 0
+	return true
+
+
+func save_to_slot(slot: int, player_position: Vector3, player_rotation_y: float) -> bool:
+	var save_data := build_save_data(player_position, player_rotation_y)
+	return SaveManagerScript.write_slot(slot, save_data)
+
+
+func save_autosave(player_position: Vector3, player_rotation_y: float) -> bool:
+	if difficulty != Difficulty.EASY:
+		return false
+	var save_data := build_save_data(player_position, player_rotation_y)
+	return SaveManagerScript.write_autosave(save_data)
+
+
+func load_from_slot(slot: int) -> bool:
+	var save_data: Dictionary = SaveManagerScript.read_slot(slot)
+	return apply_save_dict(save_data)
+
+
+func load_autosave() -> bool:
+	var save_data: Dictionary = SaveManagerScript.read_autosave()
+	return apply_save_dict(save_data)
+
+
+func consume_autosave_after_door_spawn() -> bool:
+	if not _autosave_after_door_spawn:
+		return false
+	_autosave_after_door_spawn = false
+	return difficulty == Difficulty.EASY
 
 
 func get_explore_spawn(area: AreaData) -> Dictionary:
+	if pending_load_spawn.has("area_id") and str(pending_load_spawn["area_id"]) == area.id:
+		var load_spawn := {
+			"position": pending_load_spawn["position"] as Vector3,
+			"rotation_y": float(pending_load_spawn["rotation_y"]),
+		}
+		pending_load_spawn = {}
+		current_area_id = area.id
+		return load_spawn
 	if pending_door_spawn.has("area_id") and str(pending_door_spawn["area_id"]) == area.id:
 		var door_spawn := {
 			"position": pending_door_spawn["position"] as Vector3,
@@ -535,19 +620,6 @@ func get_explore_spawn(area: AreaData) -> Dictionary:
 		pending_door_spawn = {}
 		current_area_id = area.id
 		return door_spawn
-	if reload_from_checkpoint_on_explore_start and has_checkpoint:
-		reload_from_checkpoint_on_explore_start = false
-		current_area_id = _checkpoint.area_id
-		return {
-			"position": _checkpoint.position,
-			"rotation_y": _checkpoint.rotation_y,
-		}
-	if last_battle_outcome == BattleOutcomeCode.DEFEAT and has_checkpoint:
-		current_area_id = _checkpoint.area_id
-		return {
-			"position": _checkpoint.position,
-			"rotation_y": _checkpoint.rotation_y,
-		}
 	if last_battle_outcome in [BattleOutcomeCode.VICTORY, BattleOutcomeCode.ESCAPED]:
 		var spawn := {
 			"position": return_position,
@@ -579,6 +651,8 @@ func travel_to_area(area_id: String, spawn_pos: Vector3, spawn_rot_y: float) -> 
 		"position": spawn_pos,
 		"rotation_y": spawn_rot_y,
 	}
+	if difficulty == Difficulty.EASY:
+		_autosave_after_door_spawn = true
 
 
 func reset_party_to_default() -> void:
@@ -589,14 +663,16 @@ func reset_party_to_default() -> void:
 	defeated_enemy_ids.clear()
 	visited_area_ids.clear()
 	collected_pickup_ids.clear()
-	has_checkpoint = false
+	difficulty = Difficulty.NORMAL
 	last_battle_xp = 0
 	last_level_ups.clear()
 	pending_level_up_queue.clear()
+	pending_load_spawn = {}
+	pending_door_spawn = {}
+	_autosave_after_door_spawn = false
 	_draft_character_id = ""
 	_draft_allocated = StatBlock.new()
 	_draft_budget = 0
-	_checkpoint = ExploreCheckpointData.new()
 	ensure_party_initialized(DEFAULT_ENCOUNTER_ID)
 
 
@@ -609,7 +685,6 @@ func set_standalone_battle(encounter_id: String = DEFAULT_ENCOUNTER_ID) -> void:
 	current_encounter_id = encounter_id
 	overworld_enemy_id = ""
 	last_battle_outcome = BattleOutcomeCode.NONE
-	reload_from_checkpoint_on_explore_start = false
 
 
 func _recalculate_member_caps(character_id: String) -> void:

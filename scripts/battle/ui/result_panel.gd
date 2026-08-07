@@ -3,37 +3,57 @@ extends Control
 
 signal restart_requested
 signal continue_requested
+signal load_save_requested
+signal load_autosave_requested
+signal main_menu_requested
+
+const SaveManagerScript = preload("res://scripts/data/save_manager.gd")
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var loot_label: Label = $Panel/VBox/LootLabel
 @onready var restart_button: Button = $Panel/VBox/RestartButton
 @onready var continue_button: Button = $Panel/VBox/ContinueButton
+@onready var game_over_buttons: VBoxContainer = $Panel/VBox/GameOverButtons
+@onready var load_save_button: Button = $Panel/VBox/GameOverButtons/LoadSaveButton
+@onready var load_autosave_button: Button = $Panel/VBox/GameOverButtons/LoadAutosaveButton
+@onready var main_menu_button: Button = $Panel/VBox/GameOverButtons/MainMenuButton
 
 
 func _ready() -> void:
 	restart_button.pressed.connect(func() -> void: restart_requested.emit())
 	continue_button.pressed.connect(func() -> void: continue_requested.emit())
+	load_save_button.pressed.connect(func() -> void: load_save_requested.emit())
+	load_autosave_button.pressed.connect(func() -> void: load_autosave_requested.emit())
+	main_menu_button.pressed.connect(func() -> void: main_menu_requested.emit())
 	visible = false
 
 
 func show_result(outcome: int, from_explore: bool = false) -> void:
+	game_over_buttons.visible = false
+	restart_button.visible = false
+	continue_button.visible = false
 	match outcome:
 		1:
 			title_label.text = "Victory"
 		2:
-			title_label.text = "Defeat"
+			title_label.text = "Game Over"
 		3:
 			title_label.text = "Escaped"
 		_:
 			title_label.text = ""
-	loot_label.text = _format_result_text(outcome)
-	if from_explore:
-		continue_button.visible = true
-		continue_button.text = "Continue" if outcome != 2 else "Reload Checkpoint"
-		restart_button.visible = false
+	if outcome == 2 and from_explore:
+		loot_label.text = "Your party was defeated."
+		game_over_buttons.visible = true
+		load_autosave_button.visible = (
+			GameState.difficulty == GameState.Difficulty.EASY and SaveManagerScript.has_autosave()
+		)
 	else:
-		continue_button.visible = false
-		restart_button.visible = true
+		loot_label.text = _format_result_text(outcome)
+		if from_explore:
+			continue_button.visible = true
+			continue_button.text = "Continue"
+		else:
+			restart_button.visible = true
 	visible = true
 
 

@@ -3,6 +3,7 @@ extends CanvasLayer
 const FADE_DURATION: float = 0.4
 
 const BATTLE_SCENE: PackedScene = preload("res://scenes/battle/battle.tscn")
+const MAIN_MENU_SCENE: PackedScene = preload("res://scenes/menu/main_menu.tscn")
 
 var _overlay: ColorRect
 var _busy: bool = false
@@ -37,6 +38,10 @@ func change_scene(scene: PackedScene) -> void:
 
 func go_to_battle() -> void:
 	await change_scene(BATTLE_SCENE)
+
+
+func go_to_main_menu() -> void:
+	await change_scene(MAIN_MENU_SCENE)
 
 
 func go_to_explore() -> void:

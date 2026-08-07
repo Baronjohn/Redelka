@@ -1,0 +1,94 @@
+[gd_scene load_steps=2 format=3 uid="uid://redelka_main_menu"]
+
+[ext_resource type="Script" path="res://scripts/menu/main_menu.gd" id="1"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Redelka"
+horizontal_alignment = 1
+
+[node name="MainButtons" type="VBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NewGameButton" type="Button" parent="Center/VBox/MainButtons"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "New Game"
+
+[node name="LoadGameButton" type="Button" parent="Center/VBox/MainButtons"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Load Game"
+
+[node name="ConfigButton" type="Button" parent="Center/VBox/MainButtons"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Config"
+
+[node name="QuitButton" type="Button" parent="Center/VBox/MainButtons"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Quit"
+
+[node name="DifficultyPanel" type="VBoxContainer" parent="Center/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EasyButton" type="Button" parent="Center/VBox/DifficultyPanel"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Easy"
+
+[node name="NormalButton" type="Button" parent="Center/VBox/DifficultyPanel"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Normal"
+
+[node name="HardButton" type="Button" parent="Center/VBox/DifficultyPanel"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Hard"
+
+[node name="DifficultyBackButton" type="Button" parent="Center/VBox/DifficultyPanel"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Back"
+
+[node name="MessageLabel" type="Label" parent="Center/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 2

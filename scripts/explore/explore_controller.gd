@@ -4,6 +4,7 @@ const PROTAGONIST_SCENE: PackedScene = preload("res://scenes/explore/protagonist
 const OverworldEnemyScript = preload("res://scripts/explore/overworld_enemy.gd")
 const ExplorePickupScript = preload("res://scripts/explore/explore_pickup.gd")
 const CHARACTER_MENU_SCENE: PackedScene = preload("res://scenes/menu/character_menu.tscn")
+const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
 const ENEMY_CONTACT_CLEAR_DISTANCE: float = 2.5
 
 @export var area_id: String = "test_room"
@@ -20,6 +21,7 @@ var _busy: bool = false
 var _active_door: Node3D
 var _checkpoint: ExploreCheckpointNode
 var _menu: Control
+var _save_panel: Control = null
 var _active_pickup: Node = null
 var _pickups_root: Node3D
 
@@ -35,8 +37,9 @@ func _ready() -> void:
 	_connect_doors()
 	camera_rig.set_track_target(_player)
 	if _checkpoint != null:
-		_checkpoint.checkpoint_saved.connect(_on_checkpoint_saved)
+		_checkpoint.save_requested.connect(_open_save_panel)
 	GameState.mark_area_visited(area_id)
+	_try_autosave_after_spawn()
 	_show_message("%s — touch enemies to fight. I for menu. E to interact." % _area.display_name)
 	set_process_unhandled_input(true)
 
@@ -137,7 +140,7 @@ func _process(_delta: float) -> void:
 	elif _active_pickup != null and bool(_active_pickup.call("can_interact")):
 		prompt_label.text = "Press E to pick up %s" % str(_active_pickup.call("get_pickup_label"))
 	elif _checkpoint != null and _checkpoint.can_interact():
-		prompt_label.text = "Press E to save checkpoint"
+		prompt_label.text = "Press E to save game"
 	else:
 		prompt_label.text = "WASD to move | I menu"
 
@@ -200,8 +203,40 @@ func _nudge_player_from_enemies() -> void:
 		_player.velocity = Vector3.ZERO
 
 
-func _on_checkpoint_saved() -> void:
-	_show_message("Checkpoint saved.")
+func _try_autosave_after_spawn() -> void:
+	if _player == null or not GameState.consume_autosave_after_door_spawn():
+		return
+	if GameState.save_autosave(_player.global_position, _player.rotation.y):
+		_show_message("Autosaved.")
+
+
+func _open_save_panel() -> void:
+	if _menu != null or _busy:
+		return
+	if _save_panel == null:
+		var layer := CanvasLayer.new()
+		layer.layer = 70
+		layer.name = "SavePanelLayer"
+		layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(layer)
+		_save_panel = SAVE_SLOT_PANEL_SCENE.instantiate() as Control
+		_save_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+		layer.add_child(_save_panel)
+		_save_panel.save_completed.connect(_on_manual_save_completed)
+		_save_panel.closed.connect(_close_save_panel)
+	_save_panel.open_save_mode(_player.global_position, _player.rotation.y)
+	get_tree().paused = true
+
+
+func _on_manual_save_completed(_slot: int) -> void:
+	_close_save_panel()
+	_show_message("Game saved.")
+
+
+func _close_save_panel() -> void:
+	get_tree().paused = false
+	if _save_panel != null:
+		_save_panel.visible = false
 
 
 func _show_message(text: String) -> void:

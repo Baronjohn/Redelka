@@ -4,6 +4,7 @@ extends SceneTree
 
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
+const SaveManagerScript = preload("res://scripts/data/save_manager.gd")
 
 
 func _initialize() -> void:
@@ -16,6 +17,7 @@ func _initialize() -> void:
 	errors.append_array(_test_character_menu_system())
 	errors.append_array(_test_pickups_and_loot())
 	errors.append_array(_test_progression())
+	errors.append_array(_test_save_load())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -160,16 +162,16 @@ func _test_explore_handoff() -> PackedStringArray:
 	if str(gs.get("current_encounter_id")) != "test_room_wretch":
 		errors.append("Encounter id not stored for explore battle.")
 
-	gs.call("save_checkpoint", "test_room", Vector3(2, 0, -8), 0.0)
-	if not bool(gs.get("has_checkpoint")):
-		errors.append("Checkpoint should exist after save.")
+	gs.call("save_to_slot", 1, Vector3(2, 0, -8), 0.0)
+	var slot_meta: Dictionary = SaveManagerScript.get_slot_metadata(1)
+	if slot_meta.is_empty():
+		errors.append("Manual save should write slot metadata.")
 
 	var bran_snapshot = gs.call("get_member_snapshot", "ally_1")
 	if bran_snapshot == null:
 		errors.append("Expected ally_1 in party snapshot.")
 		return errors
 
-	var saved_hp: int = bran_snapshot.current_hp
 	gs.call("resolve_battle", 1)
 	if not bool(gs.call("is_enemy_defeated", "room_wretch")):
 		errors.append("Victory should mark overworld enemy defeated.")
@@ -193,9 +195,9 @@ func _test_explore_handoff() -> PackedStringArray:
 
 	bran_snapshot.current_hp = 1
 	gs.call("resolve_battle", 2)
-	var restored = gs.call("get_member_snapshot", "ally_1")
-	if restored == null or restored.current_hp != saved_hp:
-		errors.append("Defeat with checkpoint should restore saved party HP.")
+	var after_defeat = gs.call("get_member_snapshot", "ally_1")
+	if after_defeat == null or after_defeat.current_hp != 1:
+		errors.append("Defeat should not restore party from removed session checkpoint.")
 
 	gs.call("reset_party_to_default")
 	return errors
@@ -287,14 +289,15 @@ func _test_pickups_and_loot() -> PackedStringArray:
 	if not bool(gs.call("has_item", "adjacent_room_key")):
 		errors.append("has_item should detect key items in inventory.")
 
-	gs.call("save_checkpoint", "test_room", Vector3(2, 0, -8), 0.0)
+	gs.call("save_to_slot", 1, Vector3(2, 0, -8), 0.0)
 	gs.set("inventory", {})
 	gs.set("collected_pickup_ids", [])
-	gs.call("load_checkpoint")
+	if not bool(gs.call("load_from_slot", 1)):
+		errors.append("Load from slot should restore saved game state.")
 	if not bool(gs.call("is_pickup_collected", "smoke_potion_pickup")):
-		errors.append("Checkpoint should restore collected pickup ids.")
+		errors.append("Loaded save should restore collected pickup ids.")
 	if not bool(gs.call("has_item", "adjacent_room_key")):
-		errors.append("Checkpoint should restore key item inventory.")
+		errors.append("Loaded save should restore key item inventory.")
 
 	seed(0)
 	var got_loot := false
@@ -373,6 +376,47 @@ func _test_progression() -> PackedStringArray:
 	var effective: StatBlock = gs.call("get_effective_stats", "ally_1")
 	if effective.str <= bran_char.stats.str:
 		errors.append("Effective stats should reflect progression and equipment.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_save_load() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+	gs.call("start_new_game", GameState.Difficulty.NORMAL)
+	gs.set("current_area_id", "test_room")
+	gs.set("return_position", Vector3(3, 0, 4))
+	gs.set("return_rotation_y", 1.25)
+	gs.get("inventory")["heal_potion"] = 5
+
+	var save_data: Dictionary = gs.call("build_save_data", Vector3(3, 0, 4), 1.25)
+	gs.get("inventory")["heal_potion"] = 0
+	if not bool(gs.call("apply_save_dict", save_data)):
+		errors.append("apply_save_dict should restore saved state.")
+	if int(gs.get("inventory").get("heal_potion", 0)) != 5:
+		errors.append("Save roundtrip should restore inventory.")
+
+	if not bool(gs.call("save_to_slot", 7, Vector3(1, 0, 2), 0.0)):
+		errors.append("save_to_slot should write a manual save.")
+	var slot_meta: Dictionary = SaveManagerScript.get_slot_metadata(7)
+	if slot_meta.is_empty() or int(slot_meta.get("party_level", 0)) < 1:
+		errors.append("Manual save metadata should include party level.")
+	if int(slot_meta.get("difficulty", -1)) != GameState.Difficulty.NORMAL:
+		errors.append("Manual save metadata should include difficulty.")
+
+	gs.set("difficulty", GameState.Difficulty.NORMAL)
+	if bool(gs.call("save_autosave", Vector3(1, 0, 1), 0.0)):
+		errors.append("Autosave should be disabled outside Easy difficulty.")
+
+	gs.set("difficulty", GameState.Difficulty.EASY)
+	if not bool(gs.call("save_autosave", Vector3(2, 0, 2), 0.0)):
+		errors.append("Autosave should succeed on Easy difficulty.")
+	if not SaveManagerScript.has_autosave():
+		errors.append("Autosave file should exist after writing.")
+	if not bool(gs.call("save_autosave", Vector3(4, 0, 4), 0.0)):
+		errors.append("Autosave overwrite should succeed.")
 
 	gs.call("reset_party_to_default")
 	return errors
