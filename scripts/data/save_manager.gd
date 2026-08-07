@@ -79,7 +79,7 @@ static func read_save_detailed(path: String) -> Dictionary:
 			"data": {},
 			"message": "Save file is empty.",
 		}
-	var parsed: Variant = JSON.parse_string(text)
+	var parsed: Variant = _parse_json_text(text)
 	if parsed == null or not parsed is Dictionary:
 		return {
 			"status": SaveReadStatus.CORRUPT,
@@ -110,6 +110,13 @@ static func validate_save_data(data: Dictionary) -> Dictionary:
 	if members == null or not members is Array:
 		return {"ok": false, "message": "Save file has invalid party data."}
 	return {"ok": true, "message": ""}
+
+
+static func _parse_json_text(text: String) -> Variant:
+	var json := JSON.new()
+	if json.parse(text) != OK:
+		return null
+	return json.data
 
 
 static func read_slot_detailed(slot: int) -> Dictionary:

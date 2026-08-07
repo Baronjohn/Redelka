@@ -93,9 +93,9 @@ func _spawn_enemies() -> void:
 		var enemy: Node3D = OverworldEnemyScript.new()
 		enemy.enemy_id = enemy_id
 		enemy.encounter_id = str(enemy_entry.get("encounter_id", ""))
-		enemy.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
 		enemy.contact_triggered.connect(_on_enemy_contact.bind(enemy))
 		enemies_root.add_child(enemy)
+		enemy.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
 
 
 func _connect_doors() -> void:
@@ -121,9 +121,9 @@ func _spawn_pickups() -> void:
 		pickup.pickup_id = pickup_id
 		pickup.item_id = str(pickup_entry.get("item_id", ""))
 		pickup.count = maxi(int(pickup_entry.get("count", 1)), 1)
-		pickup.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
 		pickup.pickup_collected.connect(_on_pickup_collected)
 		_pickups_root.add_child(pickup)
+		pickup.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
 
 
 func _on_pickup_collected(message: String) -> void:
