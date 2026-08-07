@@ -1,6 +1,6 @@
 # Combat
 
-Replaces the former `mechanics.md` placeholder. All rules below are **decided** unless marked **TBD**.
+Replaces the former `mechanics.md` placeholder. All rules below are **decided** unless marked **TBD**. Attribute formulas live in **[attributes.md](attributes.md)**.
 
 ## Overview
 
@@ -18,8 +18,8 @@ Battles play out on a **shared 5×5 tile grid**. Allies and enemies occupy the s
 
 ## Turn order (CTB)
 
-- Each unit has an **Agility** stat that feeds the timeline.
-- When a unit’s turn arrives, they take **one turn**, then re-enter the timeline based on Agility (exact formula **TBD**).
+- Each unit’s **Agility** feeds the CTB timeline ([attributes.md](attributes.md)).
+- When a unit’s turn arrives, they take **one turn**, then re-enter the timeline based on Agility (exact formula **TBD** in attributes doc).
 - Turn order is **not fixed** and can shift as stats change or effects apply.
 - **TBD:** CTB bar UI, haste/slow effects, tie-breaking
 
@@ -37,7 +37,7 @@ On a character’s turn they may use **movement and one action**, in **either or
 | **Wait** | Skip movement and action; re-enter timeline (benefit **TBD**, e.g. CTB bonus) |
 | **Retreat** | Attempt to flee the battle (see Retreat) |
 
-**Decided:** Movement range is **fixed per character** (identity stat), not uniform and not Agility-derived for distance.
+**Decided:** Movement range is **fixed per character** (identity), not Agility-derived. **Equipment** may modify tile count ([attributes.md](attributes.md)).
 
 **TBD:**
 
@@ -49,20 +49,34 @@ On a character’s turn they may use **movement and one action**, in **either or
 
 **Decided:** **Classic RPG** — hit/evade chance plus damage variance; stats reduce but do not eliminate randomness.
 
+### Physical attacks
+
+See [attributes.md — Physical combat](attributes.md#physical-combat):
+
+- **Hit:** attacker DEX vs defender DEX + LUK + base hit chance (one roll per action).
+- **Combo:** weapon mastery 1–3 may yield 1 / 1–2 / 1–3 hits; proc chance from DEX + LUK.
+- **Damage:** rolled range, STR vs target VIT (melee and ranged); crits, weaknesses, and damage types modify final value.
+
+### Magic attacks
+
+See [attributes.md — Magic combat](attributes.md#magic-combat):
+
+- **Hit:** caster Mind vs target Resilience.
+- **Damage:** skill tier base × Intelligence; damage-type affinities (including holy, darkness) from gear/spell vs resistances.
+
 **TBD:**
 
-- Hit/evade formulas
-- Critical hit rules
-- Damage types and resistances
+- Critical hit formula (Luck involved — see attributes doc)
 - Friendly fire (if any AoE)
+- Full status effect list and durations
 
 ## Melee and ranged in combat
 
 | Type | Combat note |
 |------|-------------|
-| Melee | Uses weapon; consumes **durability** per use (see [equipment-economy.md](equipment-economy.md)) |
-| Ranged | Uses weapon; consumes **ammo** per shot |
-| Magic | Skills unlocked via progression; level through use (see [progression.md](progression.md)) |
+| Melee | Uses weapon; consumes **durability** per use; STR vs VIT damage, DEX for hit/combo; weapon boosts stats and weapon-class mastery ([equipment-economy.md](equipment-economy.md), [attributes.md](attributes.md)) |
+| Ranged | Uses weapon; consumes **ammo** per shot; STR vs VIT damage, DEX for hit/combo; weapon boosts stats and weapon-class mastery ([equipment-economy.md](equipment-economy.md), [attributes.md](attributes.md)) |
+| Magic | **Spells:** global pool, tier + INT damage, MP from Resilience. **Skills:** character-specific — mechanics **TBD** ([progression.md](progression.md), [attributes.md](attributes.md)) |
 
 ## KO and treatment
 
@@ -82,7 +96,7 @@ On a character’s turn they may use **movement and one action**, in **either or
 **Decided:**
 
 - Player can attempt **retreat** as a turn option.
-- Success is **chance-based**, influenced by **Agility** and **Luck** (and possibly other factors).
+- Success is **chance-based**, influenced by **Agility** and **Luck** ([attributes.md](attributes.md)).
 - **Some fights cannot be retreated from** (bosses, story-mandatory battles).
 
 **TBD:**
@@ -95,6 +109,7 @@ On a character’s turn they may use **movement and one action**, in **either or
 
 - **Small and elite:** each enemy should threaten the grid, not fill it with fodder.
 - **Positional pressure:** AI should exploit the 5×5 (block lanes, focus KO’d targets, zone control).
+- **Hidden stats:** enemies use a simplified internal stat block; **no stat sheet shown to the player** ([attributes.md](attributes.md#enemy-attributes)).
 - **Ambush encounters:** scripted starts may place enemies or allies at authored positions (**TBD**).
 
 ## Combat ↔ exploration link
@@ -106,5 +121,4 @@ On a character’s turn they may use **movement and one action**, in **either or
 
 - Grid camera: fixed angle per fight vs. rotatable view
 - Transition animation from exploration to combat
-- Status effect list and duration rules
 - Whether CTB pauses for player menu or runs in real time

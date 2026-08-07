@@ -9,7 +9,8 @@ This folder holds game design documents for **Redelka**.
 | [overview.md](overview.md) | Vision, design pillars, genre balance, scope |
 | [world.md](world.md) | Fictional setting, folk-horror themes, protagonist, cast |
 | [combat.md](combat.md) | Grid combat, CTB turn order, action economy, hit model |
-| [progression.md](progression.md) | Stats, hybrid allocation, magic system, roster |
+| [attributes.md](attributes.md) | Eight primary stats, formulas, weapon mastery, UI exposure |
+| [progression.md](progression.md) | Level growth, magic system, roster, weapon mastery XP |
 | [equipment-economy.md](equipment-economy.md) | Durability, ammo, scavenging, farming |
 | [exploration.md](exploration.md) | Fixed cameras, encounters, puzzles, chapters |
 | [difficulty-saves.md](difficulty-saves.md) | Difficulty tiers, save systems, Hard-mode sanity |

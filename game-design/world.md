@@ -44,7 +44,7 @@ Surface tone: gothic, mournful, uncanny. The player should feel like an intruder
 
 - Full cast list, roles (melee, ranged, support, etc.)
 - Which chapters lock party composition vs. allow free selection
-- Per-character unique spells or abilities (see [progression.md](progression.md))
+- Per-character **skills** (see [progression.md](progression.md)); global **spell** pool for magic
 - Optional party banter triggers and rest-point conversations
 
 ## Antagonists and factions
