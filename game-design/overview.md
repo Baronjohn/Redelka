@@ -40,7 +40,7 @@ This is **loose inspiration**, not a remake. Story, characters, and setting are 
 
 ## Document map
 
-See [README.md](README.md) for the full doc index. Combat rules live in [combat.md](combat.md); attributes in [attributes.md](attributes.md); exploration in [exploration.md](exploration.md); saves and difficulty in [difficulty-saves.md](difficulty-saves.md).
+See [README.md](README.md) for the full doc index. Prototype scope in [prototype.md](prototype.md); combat rules in [combat.md](combat.md); attributes in [attributes.md](attributes.md).
 
 ## Open questions (TBD)
 

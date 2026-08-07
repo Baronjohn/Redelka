@@ -33,7 +33,7 @@ Progression treats **spells** and **skills** as separate systems.
 
 - Max tier per spell and XP thresholds
 - MP cost per spell, cooldowns, or CTB-based cast delay
-- Per-character spell slot limits vs. full pool access in battle
+- Full-game per-character spell slot limits (v0: all unlocked spells usable — [prototype.md](prototype.md))
 - Full unlock trigger list per spell
 
 ### Skills (character-specific)

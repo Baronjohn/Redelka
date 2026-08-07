@@ -15,35 +15,49 @@ Battles play out on a **shared 5×5 tile grid**. Allies and enemies occupy the s
 | Bosses | May occupy multiple tiles (e.g. 2×2); **TBD** sizing per boss |
 | Party size | 1–4 player-controlled characters per battle (story-dependent) |
 | Enemy count | **1–4 elite enemies** per encounter |
+| Presentation | **3D battleground** with area-matched texture ([prototype.md](prototype.md)) |
 
 ## Turn order (CTB)
 
-- Each unit’s **Agility** feeds the CTB timeline ([attributes.md](attributes.md)).
-- When a unit’s turn arrives, they take **one turn**, then re-enter the timeline based on Agility (exact formula **TBD** in attributes doc).
+- Each unit’s **Agility** feeds turn order ([attributes.md](attributes.md)).
+- Turn order is **not real-time** — no gauges filling during player input.
+- Higher **Agility** → acts **earlier**; sufficiently higher Agility may yield **extra turns** over time (exact formula **TBD**).
+- When a unit’s turn arrives, they use the action economy (move + action or wait), then re-enter the order.
 - Turn order is **not fixed** and can shift as stats change or effects apply.
-- **TBD:** CTB bar UI, haste/slow effects, tie-breaking
+
+Phase 1 behaviour: [prototype.md](prototype.md).
+
+**TBD:** CTB bar UI, initiative queue algorithm, haste/slow effects, tie-breaking
 
 ## Action economy (per character turn)
 
-On a character’s turn they may use **movement and one action**, in **either order**:
+**Decided:** Each turn allows **both movement and one action**, in **either order**, unless the unit **Waits**.
 
-1. Move, then act — or —
-2. Act, then move
+| Main menu | Effect |
+|-----------|--------|
+| **Move** | Move on grid (range fixed per character; gear may modify) |
+| **Action** | Opens submenu: Attack, Spell, Skill, Item, Retreat |
+| **Wait** | Skip move **and** action; turn ends |
 
-**Additional options:**
+**Action submenu**
 
-| Option | Behavior |
-|--------|----------|
-| **Wait** | Skip movement and action; re-enter timeline (benefit **TBD**, e.g. CTB bonus) |
-| **Retreat** | Attempt to flee the battle (see Retreat) |
+| Option | Effect |
+|--------|--------|
+| **Attack** | Weapon attack (physical) |
+| **Spell** | Cast from global spell pool |
+| **Skill** | Character-specific ability ([progression.md](progression.md)) |
+| **Item** | Use consumable |
+| **Retreat** | Attempt flee (see Retreat) |
 
-**Decided:** Movement range is **fixed per character** (identity), not Agility-derived. **Equipment** may modify tile count ([attributes.md](attributes.md)).
+**Decided:** **Wait** forfeits both move and action. Move and Action may be taken in either order the same turn. Movement range is **fixed per character** (identity), not Agility-derived. **Equipment** may modify tile count ([attributes.md](attributes.md)).
+
+Phase 1 UI and greybox scope: [prototype.md](prototype.md).
 
 **TBD:**
 
+- Whether Retreat forfeits remaining movement if chosen before moving
 - Exact tile counts per character archetype
-- Whether “move” is optional (can act without moving)
-- Action types: Attack, Skill, Item, Defend, etc.
+- Defend and other actions for full game
 
 ## Hit model
 
@@ -95,7 +109,7 @@ See [attributes.md — Magic combat](attributes.md#magic-combat):
 
 **Decided:**
 
-- Player can attempt **retreat** as a turn option.
+- Player attempts **retreat** from the **Action submenu**.
 - Success is **chance-based**, influenced by **Agility** and **Luck** ([attributes.md](attributes.md)).
 - **Some fights cannot be retreated from** (bosses, story-mandatory battles).
 
@@ -115,6 +129,7 @@ See [attributes.md — Magic combat](attributes.md#magic-combat):
 ## Combat ↔ exploration link
 
 - Battles begin from **visible overworld enemies** or **scripted ambushes** (see [exploration.md](exploration.md)).
+- **Phase 2** implements the full handoff; rules in [prototype.md](prototype.md#phase-2--exploration-and-combat-handoff).
 - **Room respawn** can restore farmable enemies after leaving and re-entering an area (see [equipment-economy.md](equipment-economy.md)).
 
 ## Open questions (TBD)
