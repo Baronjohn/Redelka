@@ -21,5 +21,10 @@
 	"id": "adjacent_room_key",
 	"name": "Adjacent Room Key",
 	"type": "key"
+  },
+  {
+	"id": "memory_tape",
+	"name": "Memory Tape",
+	"type": "save_resource"
   }
 ]

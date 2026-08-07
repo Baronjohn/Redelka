@@ -28,6 +28,12 @@
 		"item_id": "heal_potion",
 		"count": 1,
 		"position": [3, 0, 3]
+	  },
+	  {
+		"id": "test_room_tape_pickup",
+		"item_id": "memory_tape",
+		"count": 2,
+		"position": [2, 0, -6]
 	  }
 	]
   },

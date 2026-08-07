@@ -3,7 +3,6 @@ extends Node
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
-const SaveManagerScript = preload("res://scripts/data/save_manager.gd")
 
 enum BattleSource { STANDALONE, EXPLORE }
 
@@ -13,6 +12,7 @@ enum Difficulty { EASY = 0, NORMAL = 1, HARD = 2 }
 
 const DEFAULT_ENCOUNTER_ID: String = "test_4v3"
 const NEW_GAME_AREA_ID: String = "test_room"
+const SAVE_RESOURCE_ITEM_ID: String = "memory_tape"
 
 var battle_source: BattleSource = BattleSource.STANDALONE
 var current_encounter_id: String = DEFAULT_ENCOUNTER_ID
@@ -38,6 +38,7 @@ var post_battle_contact_immune_until_msec: int = 0
 var pending_door_spawn: Dictionary = {}
 var pending_load_spawn: Dictionary = {}
 var _autosave_after_door_spawn: bool = false
+var last_save_error: String = ""
 
 const POST_BATTLE_CONTACT_IMMUNITY_MS: int = 2500
 
@@ -143,6 +144,30 @@ func is_pickup_collected(pickup_id: String) -> bool:
 
 func has_item(item_id: String) -> bool:
 	return int(inventory.get(item_id, 0)) > 0
+
+
+func get_save_resource_display_name() -> String:
+	return _get_loot_item_name(SAVE_RESOURCE_ITEM_ID)
+
+
+func can_manual_save() -> bool:
+	return get_manual_save_block_reason().is_empty()
+
+
+func get_manual_save_block_reason() -> String:
+	if difficulty != Difficulty.HARD:
+		return ""
+	if has_item(SAVE_RESOURCE_ITEM_ID):
+		return ""
+	return "You need %s to save." % get_save_resource_display_name()
+
+
+func _consume_inventory_item(item_id: String) -> void:
+	var count := int(inventory.get(item_id, 0)) - 1
+	if count <= 0:
+		inventory.erase(item_id)
+	else:
+		inventory[item_id] = count
 
 
 func collect_pickup(pickup_id: String, item_id: String, count: int = 1) -> String:
@@ -525,7 +550,7 @@ func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> D
 func build_save_data(player_position: Vector3, player_rotation_y: float) -> Dictionary:
 	var state := to_save_state_dict(player_position, player_rotation_y)
 	return {
-		"meta": SaveManagerScript.build_meta(state),
+		"meta": SaveManager.build_meta(state),
 		"state": state,
 	}
 
@@ -575,25 +600,49 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 
 
 func save_to_slot(slot: int, player_position: Vector3, player_rotation_y: float) -> bool:
+	last_save_error = ""
+	var block_reason := get_manual_save_block_reason()
+	if not block_reason.is_empty():
+		last_save_error = block_reason
+		return false
 	var save_data := build_save_data(player_position, player_rotation_y)
-	return SaveManagerScript.write_slot(slot, save_data)
+	if not SaveManager.write_slot(slot, save_data):
+		last_save_error = "Failed to write save file."
+		return false
+	if difficulty == Difficulty.HARD:
+		_consume_inventory_item(SAVE_RESOURCE_ITEM_ID)
+	return true
 
 
 func save_autosave(player_position: Vector3, player_rotation_y: float) -> bool:
+	last_save_error = ""
 	if difficulty != Difficulty.EASY:
 		return false
 	var save_data := build_save_data(player_position, player_rotation_y)
-	return SaveManagerScript.write_autosave(save_data)
+	if not SaveManager.write_autosave(save_data):
+		last_save_error = "Failed to write autosave."
+		return false
+	return true
 
 
 func load_from_slot(slot: int) -> bool:
-	var save_data: Dictionary = SaveManagerScript.read_slot(slot)
-	return apply_save_dict(save_data)
+	last_save_error = ""
+	var read_result := SaveManager.read_slot_detailed(slot)
+	var status: int = int(read_result.get("status", SaveManager.SaveReadStatus.MISSING))
+	if status != SaveManager.SaveReadStatus.OK:
+		last_save_error = str(read_result.get("message", "Failed to load save."))
+		return false
+	return apply_save_dict(read_result.get("data", {}) as Dictionary)
 
 
 func load_autosave() -> bool:
-	var save_data: Dictionary = SaveManagerScript.read_autosave()
-	return apply_save_dict(save_data)
+	last_save_error = ""
+	var read_result := SaveManager.read_autosave_detailed()
+	var status: int = int(read_result.get("status", SaveManager.SaveReadStatus.MISSING))
+	if status != SaveManager.SaveReadStatus.OK:
+		last_save_error = str(read_result.get("message", "Failed to load autosave."))
+		return false
+	return apply_save_dict(read_result.get("data", {}) as Dictionary)
 
 
 func consume_autosave_after_door_spawn() -> bool:

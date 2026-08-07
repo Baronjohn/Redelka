@@ -7,8 +7,6 @@ signal load_save_requested
 signal load_autosave_requested
 signal main_menu_requested
 
-const SaveManagerScript = preload("res://scripts/data/save_manager.gd")
-
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var loot_label: Label = $Panel/VBox/LootLabel
 @onready var restart_button: Button = $Panel/VBox/RestartButton
@@ -45,7 +43,7 @@ func show_result(outcome: int, from_explore: bool = false) -> void:
 		loot_label.text = "Your party was defeated."
 		game_over_buttons.visible = true
 		load_autosave_button.visible = (
-			GameState.difficulty == GameState.Difficulty.EASY and SaveManagerScript.has_autosave()
+			GameState.difficulty == GameState.Difficulty.EASY and SaveManager.has_autosave()
 		)
 	else:
 		loot_label.text = _format_result_text(outcome)

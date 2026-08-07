@@ -4,45 +4,40 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ---
 
-## 1. XP and leveling (progression loop)
+## 1. XP and leveling (progression loop) — done
 
-**Why now:** Combat drops loot but grants no XP. Victories do not change party power over time, so fights lack long-term payoff.
+**Status (Aug 2026):** Implemented in `GameState` progression API, post-combat Level Up panel, read-only Status tab, and save/load persistence.
 
-**Goal:** Wire a minimal progression loop so defeating enemies makes the party stronger.
-
-**Tasks:**
-
-- [ ] Add XP fields to enemy data (`data/enemies.json`) and parse in `EnemyData`
-- [ ] Store per-character level and XP on `PartyMemberSnapshot` / `GameState`
-- [ ] Award XP on battle victory (alongside existing loot roll in `resolve_battle`)
-- [ ] Define level-up curve and placeholder automatic stat growth per character (see [progression.md](progression.md) — hybrid: 4 player points + small auto growth)
-- [ ] Apply level-up: recalculate max HP/MP from effective stats via existing `PartyStatsHelper` / derived values
-- [ ] Show XP gain and level-up on victory result panel (next to loot lines)
-- [ ] Stat allocation UI — extend Status tab or add level-up flow when unspent points remain
-- [ ] Persist level/XP in checkpoint save/load
-- [ ] Extend `combat_smoke_test.gd` for XP grant and level-up
+- [x] Add XP fields to enemy data (`data/enemies.json`) and parse in `EnemyData`
+- [x] Store per-character level and XP on `PartyMemberSnapshot` / `GameState`
+- [x] Award XP on battle victory (alongside existing loot roll in `resolve_battle`)
+- [x] Define level-up curve and placeholder automatic stat growth per character
+- [x] Apply level-up: recalculate max HP/MP from effective stats via `PartyStatsHelper`
+- [x] Show XP gain and level-up on victory result panel
+- [x] Stat allocation UI — Level Up panel with confirm-when-fully-allocated flow
+- [x] Persist level/XP in disk save/load
+- [x] Extend `combat_smoke_test.gd` for XP grant and level-up
 
 **References:** [progression.md](progression.md), [attributes.md](attributes.md)
 
 ---
 
-## 2. Persistent save/load to disk
+## 2. Persistent save/load to disk — done
 
-**Why now:** All run state is in memory; quitting loses progress. Checkpoint already snapshots the right data.
+**Status (Aug 2026):** JSON saves in `user://saves/` via `SaveManager`; main menu; shared save slot panel; difficulty chosen at New Game.
 
-**Goal:** Save and load the full run from disk so playtests span multiple sessions.
+- [x] Serialize full run state to `user://` (party, inventory, equipment, defeated enemies, collected pickups, visited areas, level/XP, difficulty)
+- [x] Save slot paths (`slot_01`–`slot_99`) and autosave (`autosave.json`); load from main menu
+- [x] Manual save at checkpoint nodes (press **E** → save slot panel with overwrite confirm)
+- [x] Autosave on door transition (**Easy** only; overwrites single autosave slot)
+- [x] Main menu: **New Game** (difficulty picker), **Load Game**, Config, Quit
+- [x] Defeat flow: Load Save, Load Autosave (Easy), Main Menu — session checkpoint respawn removed
+- [x] Save slot list shows area, level, difficulty, and timestamp
+- [x] Smoke tests for round-trip save/load, autosave rules, and slot metadata
+- [x] Handle corrupt save files gracefully (corrupt/invalid slots labeled; load/save errors shown in UI)
+- [x] Hard-tier save resource consumption at save points (`memory_tape` item; see [difficulty-saves.md](difficulty-saves.md))
 
-**Tasks:**
-
-- [ ] Serialize checkpoint + session state to `user://` (reuse `ExploreCheckpointData` shape: party, inventory, equipment, defeated enemies, collected pickups, visited areas, level/XP when added)
-- [ ] Add save slot path(s) and load on game start / continue from main menu
-- [ ] Manual save at existing checkpoint nodes (already press **E** — persist to disk on save)
-- [ ] Optional: autosave on room enter (Easy tier preview — see [difficulty-saves.md](difficulty-saves.md))
-- [ ] Main menu or explore flow: **Continue** vs **New Game** (reset via existing `reset_party_to_default`)
-- [ ] Handle corrupt/missing save gracefully
-- [ ] Smoke tests for round-trip save/load
-
-**References:** [difficulty-saves.md](difficulty-saves.md), `scripts/data/explore_checkpoint_data.gd`, `Settings` autoload (`user://settings.cfg` pattern)
+**References:** [difficulty-saves.md](difficulty-saves.md), `scripts/data/save_manager.gd`, `Settings` autoload (`user://settings.cfg` pattern)
 
 ---
 
@@ -70,6 +65,5 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ## Suggested order
 
-1. **XP and leveling** — closes the reward loop; makes combat meaningful beyond loot
-2. **Persistent save/load** — needed to playtest progression across sessions
-3. **Authored chapter** — validates all exploration/content systems together
+1. **Authored chapter** — validates exploration, saves, progression, and content systems together
+2. **Later:** sanity/fear on Hard, ambush triggers, full difficulty-tier parity per [difficulty-saves.md](difficulty-saves.md)

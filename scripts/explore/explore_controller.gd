@@ -140,7 +140,13 @@ func _process(_delta: float) -> void:
 	elif _active_pickup != null and bool(_active_pickup.call("can_interact")):
 		prompt_label.text = "Press E to pick up %s" % str(_active_pickup.call("get_pickup_label"))
 	elif _checkpoint != null and _checkpoint.can_interact():
-		prompt_label.text = "Press E to save game"
+		if GameState.difficulty == GameState.Difficulty.HARD:
+			if GameState.has_item(GameState.SAVE_RESOURCE_ITEM_ID):
+				prompt_label.text = "Press E to save game (uses %s)" % GameState.get_save_resource_display_name()
+			else:
+				prompt_label.text = "Press E to save — need %s" % GameState.get_save_resource_display_name()
+		else:
+			prompt_label.text = "Press E to save game"
 	else:
 		prompt_label.text = "WASD to move | I menu"
 
@@ -212,6 +218,10 @@ func _try_autosave_after_spawn() -> void:
 
 func _open_save_panel() -> void:
 	if _menu != null or _busy:
+		return
+	var block_reason := GameState.get_manual_save_block_reason()
+	if not block_reason.is_empty():
+		_show_message(block_reason)
 		return
 	if _save_panel == null:
 		var layer := CanvasLayer.new()

@@ -751,19 +751,23 @@ func _on_load_save_requested() -> void:
 func _on_load_autosave_requested() -> void:
 	if GameState.load_autosave():
 		await SceneTransition.go_to_explore()
+	else:
+		_open_load_panel(GameState.last_save_error)
 
 
 func _on_main_menu_requested() -> void:
 	await SceneTransition.go_to_main_menu()
 
 
-func _open_load_panel() -> void:
+func _open_load_panel(error_message: String = "") -> void:
 	if _save_panel == null:
 		_save_panel = SAVE_SLOT_PANEL_SCENE.instantiate() as Control
 		$"../UI".add_child(_save_panel)
 		_save_panel.load_completed.connect(_on_battle_save_loaded)
 		_save_panel.closed.connect(func() -> void: _save_panel.visible = false)
 	_save_panel.open_load_mode(true)
+	if not error_message.is_empty():
+		_save_panel.show_error(error_message)
 
 
 func _on_battle_save_loaded() -> void:

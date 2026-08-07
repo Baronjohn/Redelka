@@ -4,7 +4,6 @@ extends SceneTree
 
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
-const SaveManagerScript = preload("res://scripts/data/save_manager.gd")
 
 
 func _initialize() -> void:
@@ -163,7 +162,7 @@ func _test_explore_handoff() -> PackedStringArray:
 		errors.append("Encounter id not stored for explore battle.")
 
 	gs.call("save_to_slot", 1, Vector3(2, 0, -8), 0.0)
-	var slot_meta: Dictionary = SaveManagerScript.get_slot_metadata(1)
+	var slot_meta: Dictionary = SaveManager.get_slot_metadata(1)
 	if slot_meta.is_empty():
 		errors.append("Manual save should write slot metadata.")
 
@@ -400,7 +399,7 @@ func _test_save_load() -> PackedStringArray:
 
 	if not bool(gs.call("save_to_slot", 7, Vector3(1, 0, 2), 0.0)):
 		errors.append("save_to_slot should write a manual save.")
-	var slot_meta: Dictionary = SaveManagerScript.get_slot_metadata(7)
+	var slot_meta: Dictionary = SaveManager.get_slot_metadata(7)
 	if slot_meta.is_empty() or int(slot_meta.get("party_level", 0)) < 1:
 		errors.append("Manual save metadata should include party level.")
 	if int(slot_meta.get("difficulty", -1)) != GameState.Difficulty.NORMAL:
@@ -413,10 +412,34 @@ func _test_save_load() -> PackedStringArray:
 	gs.set("difficulty", GameState.Difficulty.EASY)
 	if not bool(gs.call("save_autosave", Vector3(2, 0, 2), 0.0)):
 		errors.append("Autosave should succeed on Easy difficulty.")
-	if not SaveManagerScript.has_autosave():
+	if not SaveManager.has_autosave():
 		errors.append("Autosave file should exist after writing.")
 	if not bool(gs.call("save_autosave", Vector3(4, 0, 4), 0.0)):
 		errors.append("Autosave overwrite should succeed.")
+
+	var corrupt_path: String = SaveManager.slot_path(8)
+	SaveManager.write_save(corrupt_path, {"broken": true})
+	if SaveManager.get_slot_read_status(8) != SaveManager.SaveReadStatus.INVALID:
+		errors.append("Invalid save structure should be detected.")
+	if bool(gs.call("load_from_slot", 8)):
+		errors.append("Invalid save should not load.")
+	if str(gs.get("last_save_error")).is_empty():
+		errors.append("Failed load should set last_save_error.")
+
+	var corrupt_file := FileAccess.open(SaveManager.slot_path(10), FileAccess.WRITE)
+	if corrupt_file != null:
+		corrupt_file.store_string("{not json")
+	if SaveManager.get_slot_read_status(10) != SaveManager.SaveReadStatus.CORRUPT:
+		errors.append("Corrupt JSON save should be detected.")
+
+	gs.call("start_new_game", GameState.Difficulty.HARD)
+	if bool(gs.call("save_to_slot", 9, Vector3(1, 0, 1), 0.0)):
+		errors.append("Hard save should require Memory Tape.")
+	gs.get("inventory")["memory_tape"] = 1
+	if not bool(gs.call("save_to_slot", 9, Vector3(1, 0, 1), 0.0)):
+		errors.append("Hard save should succeed with Memory Tape.")
+	if int(gs.get("inventory").get("memory_tape", 0)) != 0:
+		errors.append("Hard save should consume Memory Tape.")
 
 	gs.call("reset_party_to_default")
 	return errors
