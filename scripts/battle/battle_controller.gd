@@ -786,7 +786,7 @@ func _update_turn_highlight() -> void:
 	battle_ui.update_ally_status(_ally_units(), _current_unit_id)
 
 
-func _on_unit_ko_changed(runtime_id: String, is_ko: bool) -> void:
+func _on_unit_ko_changed(is_ko: bool, runtime_id: String) -> void:
 	if is_ko:
 		_schedule_enemy_removal(runtime_id)
 

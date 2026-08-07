@@ -78,7 +78,7 @@ func _initialize_equipment_defaults() -> void:
 	owned_equipment = (defaults.get("owned_pool", {}) as Dictionary).duplicate()
 	var loadouts: Dictionary = defaults.get("starting_loadouts", {}) as Dictionary
 	for character_id: String in loadouts.keys():
-		equipped[character_id] = (loadouts[character_id] as Dictionary).duplicate()
+		equipped[character_id] = _normalize_loadout(loadouts[character_id] as Dictionary)
 		for slot_name: String in (equipped[character_id] as Dictionary).keys():
 			var item_id := str((equipped[character_id] as Dictionary).get(slot_name, ""))
 			if item_id.is_empty():
@@ -90,8 +90,8 @@ func _initialize_equipment_defaults() -> void:
 
 func get_loadout(character_id: String) -> Dictionary:
 	if equipped.has(character_id):
-		return equipped[character_id] as Dictionary
-	return {}
+		return _normalize_loadout(equipped[character_id] as Dictionary)
+	return _empty_loadout()
 
 
 func get_effective_stats(character_id: String) -> StatBlock:
@@ -371,9 +371,15 @@ func equip_item(character_id: String, slot_name: String, item_id: String) -> Str
 	if not _item_fits_slot(item_id, slot_name):
 		return "Item does not fit this slot."
 	if int(owned_equipment.get(item_id, 0)) <= 0:
+		var equipped_location := _find_equipped_location(item_id, character_id, slot_name)
+		if equipped_location.is_empty():
+			return "Item not owned."
+		unequip_slot(
+			str(equipped_location.get("character_id", "")),
+			str(equipped_location.get("slot_name", "")),
+		)
+	if int(owned_equipment.get(item_id, 0)) <= 0:
 		return "Item not owned."
-	if _is_item_equipped_by_other(character_id, item_id):
-		return "Item is equipped by another party member."
 	if not equipped.has(character_id):
 		equipped[character_id] = _empty_loadout()
 	var loadout: Dictionary = equipped[character_id] as Dictionary
@@ -405,32 +411,73 @@ func unequip_slot(character_id: String, slot_name: String) -> String:
 	return "Unequipped."
 
 
+func get_equipment_candidates_for_slot(character_id: String, slot_name: String) -> Array[Dictionary]:
+	var candidates: Array[Dictionary] = []
+	var loadout := get_loadout(character_id)
+	var equipped_id := str(loadout.get(slot_name, ""))
+	if not equipped_id.is_empty():
+		candidates.append({
+			"item_id": equipped_id,
+			"source": "current",
+		})
+	var pool_counts: Dictionary = owned_equipment.duplicate()
+	for item_id: String in pool_counts.keys():
+		if not _item_fits_slot(item_id, slot_name):
+			continue
+		var count := int(pool_counts[item_id])
+		for _i: int in range(count):
+			candidates.append({
+				"item_id": item_id,
+				"source": "pool",
+			})
+	for owner_id: String in equipped.keys():
+		var owner_loadout: Dictionary = _normalize_loadout(equipped[owner_id] as Dictionary)
+		for equipped_slot: String in owner_loadout.keys():
+			if owner_id == character_id and equipped_slot == slot_name:
+				continue
+			var item_id := str(owner_loadout.get(equipped_slot, ""))
+			if item_id.is_empty() or not _item_fits_slot(item_id, slot_name):
+				continue
+			candidates.append({
+				"item_id": item_id,
+				"source": "equipped",
+				"owner_id": owner_id,
+				"owner_slot": equipped_slot,
+			})
+	return candidates
+
+
 func get_owned_items_for_slot(slot_name: String, character_id: String = "") -> Array[String]:
 	var result: Array[String] = []
-	if slot_name == EquipmentDataScript.SLOT_WEAPON:
-		var weapons := DataLoader.load_weapons()
-		for weapon_id: String in owned_equipment.keys():
-			if int(owned_equipment[weapon_id]) <= 0:
+	var seen: Dictionary = {}
+	for item_id: String in owned_equipment.keys():
+		if int(owned_equipment[item_id]) <= 0:
+			continue
+		if not _item_fits_slot(item_id, slot_name):
+			continue
+		if seen.has(item_id):
+			continue
+		result.append(item_id)
+		seen[item_id] = true
+	for owner_id: String in equipped.keys():
+		var loadout: Dictionary = _normalize_loadout(equipped[owner_id] as Dictionary)
+		for equipped_slot: String in loadout.keys():
+			if owner_id == character_id and equipped_slot == slot_name:
 				continue
-			if not character_id.is_empty() and _is_item_equipped_by_other(character_id, weapon_id):
+			var item_id := str(loadout.get(equipped_slot, ""))
+			if item_id.is_empty() or seen.has(item_id):
 				continue
-			if weapons.has(weapon_id):
-				result.append(weapon_id)
-		return result
-	var equipment := DataLoader.load_equipment()
-	for equipment_id: String in owned_equipment.keys():
-		if int(owned_equipment[equipment_id]) <= 0:
-			continue
-		if not character_id.is_empty() and _is_item_equipped_by_other(character_id, equipment_id):
-			continue
-		if not equipment.has(equipment_id):
-			continue
-		var piece = equipment[equipment_id]
-		if slot_name.begins_with("accessory") and piece.slot == "accessory":
-			result.append(equipment_id)
-		elif piece.slot == slot_name:
-			result.append(equipment_id)
+			if not _item_fits_slot(item_id, slot_name):
+				continue
+			result.append(item_id)
+			seen[item_id] = true
+	result.sort()
 	return result
+
+
+func get_item_equipped_by(item_id: String) -> String:
+	var location := _find_equipped_location(item_id, "", "")
+	return str(location.get("character_id", ""))
 
 
 func get_equipped_item_name(character_id: String, slot_name: String) -> String:
@@ -579,6 +626,8 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 		party_members.append(PartyMemberSnapshot.from_dict(member_data as Dictionary))
 	inventory = (state.get("inventory", {}) as Dictionary).duplicate()
 	equipped = (state.get("equipped", {}) as Dictionary).duplicate(true)
+	for character_id: String in equipped.keys():
+		equipped[character_id] = _normalize_loadout(equipped[character_id] as Dictionary)
 	owned_equipment = (state.get("owned_equipment", {}) as Dictionary).duplicate()
 	pending_load_spawn = {
 		"area_id": current_area_id,
@@ -747,15 +796,22 @@ func _recalculate_member_caps(character_id: String) -> void:
 	snapshot.current_mp = mini(snapshot.current_mp, snapshot.max_mp)
 
 
-func _is_item_equipped_by_other(character_id: String, item_id: String) -> bool:
-	for other_id: String in equipped.keys():
-		if other_id == character_id:
-			continue
-		var loadout: Dictionary = equipped[other_id] as Dictionary
+func _find_equipped_location(item_id: String, skip_character_id: String, skip_slot: String) -> Dictionary:
+	for owner_id: String in equipped.keys():
+		var loadout: Dictionary = _normalize_loadout(equipped[owner_id] as Dictionary)
 		for slot_name: String in loadout.keys():
+			if owner_id == skip_character_id and slot_name == skip_slot:
+				continue
 			if str(loadout.get(slot_name, "")) == item_id:
-				return true
-	return false
+				return {"character_id": owner_id, "slot_name": slot_name}
+	return {}
+
+
+func _normalize_loadout(loadout: Dictionary) -> Dictionary:
+	var normalized := _empty_loadout()
+	for slot_name: String in EquipmentDataScript.ALL_SLOTS:
+		normalized[slot_name] = str(loadout.get(slot_name, ""))
+	return normalized
 
 
 func _empty_loadout() -> Dictionary:

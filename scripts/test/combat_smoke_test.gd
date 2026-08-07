@@ -246,6 +246,72 @@ func _test_character_menu_system() -> PackedStringArray:
 	if adjacent.map_position.x <= 0.0:
 		errors.append("Adjacent room should define custom map layout.")
 
+	var weapon_candidates: Array = gs.call("get_owned_items_for_slot", "weapon", "ally_2")
+	if "iron_sword" not in weapon_candidates:
+		errors.append("Equipped weapons should be equippable by other party members.")
+
+	var transfer_result: String = gs.call("equip_item", "ally_2", "weapon", "iron_sword")
+	if transfer_result != "Equipped.":
+		errors.append("Weapon transfer between allies should succeed.")
+	if str(gs.call("get_loadout", "ally_2").get("weapon", "")) != "iron_sword":
+		errors.append("Transferred weapon should appear on the target ally.")
+	if not str(gs.call("get_loadout", "ally_1").get("weapon", "")).is_empty():
+		errors.append("Weapon transfer should unequip the previous wearer.")
+
+	var unequip_result: String = gs.call("unequip_slot", "ally_2", "weapon")
+	if unequip_result != "Unequipped.":
+		errors.append("Unequip should succeed after transfer.")
+	if int(gs.get("owned_equipment").get("iron_sword", 0)) != 1:
+		errors.append("Unequipped weapon should return to the owned pool.")
+
+	var duplicate_candidates: Array = gs.call(
+		"get_equipment_candidates_for_slot",
+		"ally_1",
+		"accessory_1",
+	)
+	var equipped_labels := 0
+	var pool_labels := 0
+	for candidate_variant: Variant in duplicate_candidates:
+		var candidate: Dictionary = candidate_variant as Dictionary
+		if str(candidate.get("item_id", "")) != "power_ring":
+			continue
+		match str(candidate.get("source", "")):
+			"current":
+				equipped_labels += 1
+			"pool":
+				pool_labels += 1
+	if equipped_labels != 1:
+		errors.append("Accessory slot should show exactly one equipped Power Ring.")
+	if pool_labels != 1:
+		errors.append("Accessory slot should show exactly one spare Power Ring in the pool.")
+
+	var second_slot_candidates: Array = gs.call(
+		"get_equipment_candidates_for_slot",
+		"ally_1",
+		"accessory_2",
+	)
+	equipped_labels = 0
+	pool_labels = 0
+	for candidate_variant: Variant in second_slot_candidates:
+		var candidate: Dictionary = candidate_variant as Dictionary
+		if str(candidate.get("item_id", "")) != "power_ring":
+			continue
+		match str(candidate.get("source", "")):
+			"current":
+				equipped_labels += 1
+			"pool":
+				pool_labels += 1
+			"equipped":
+				if (
+					str(candidate.get("owner_id", "")) == "ally_1"
+					and str(candidate.get("owner_slot", "")) == "accessory_1"
+				):
+					equipped_labels += 1
+	if equipped_labels != 1:
+		errors.append("Second accessory slot should show the Power Ring from the first slot.")
+	if pool_labels != 1:
+		errors.append("Second accessory slot should show the spare Power Ring in the pool.")
+
 	gs.call("reset_party_to_default")
 	return errors
 

@@ -5,7 +5,7 @@ const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 
 var menu: Control
 var _selected_slot: String = "weapon"
-var _pending_item_id: String = ""
+var _pending_candidate: Dictionary = {}
 
 var _slot_list: ItemList
 var _candidate_list: ItemList
@@ -63,7 +63,7 @@ func _on_slot_selected(index: int) -> void:
 
 
 func refresh() -> void:
-	_pending_item_id = ""
+	_pending_candidate = {}
 	_refresh_slots()
 	_populate_candidates()
 	_candidate_list.deselect_all()
@@ -72,7 +72,7 @@ func refresh() -> void:
 
 func _select_slot(slot_name: String, from_user: bool) -> void:
 	_selected_slot = slot_name
-	_pending_item_id = ""
+	_pending_candidate = {}
 	_refresh_slots()
 	_populate_candidates()
 	_candidate_list.deselect_all()
@@ -94,15 +94,10 @@ func _refresh_slots() -> void:
 func _populate_candidates() -> void:
 	_candidate_list.clear()
 	var character_id := str(menu.call("get_selected_character_id"))
-	var equipped_id := _get_equipped_id()
-	for item_id: String in GameState.get_owned_items_for_slot(_selected_slot, character_id):
+	for candidate: Dictionary in GameState.get_equipment_candidates_for_slot(character_id, _selected_slot):
 		var index := _candidate_list.item_count
-		_candidate_list.add_item(_get_item_display_name(item_id))
-		_candidate_list.set_item_metadata(index, item_id)
-	if not equipped_id.is_empty():
-		var index := _candidate_list.item_count
-		_candidate_list.add_item("%s (Equipped)" % _get_item_display_name(equipped_id))
-		_candidate_list.set_item_metadata(index, equipped_id)
+		_candidate_list.add_item(_format_candidate_label(candidate))
+		_candidate_list.set_item_metadata(index, candidate)
 
 
 func _on_candidate_clicked(index: int, _at_position: Vector2, _mouse_button_index: int) -> void:
@@ -114,28 +109,28 @@ func _on_candidate_activated(index: int) -> void:
 
 
 func _handle_candidate_pick(index: int) -> void:
-	var item_id := str(_candidate_list.get_item_metadata(index))
-	var equipped_id := _get_equipped_id()
-	if item_id == _pending_item_id:
-		_confirm_change(item_id, equipped_id)
+	var candidate := _candidate_list.get_item_metadata(index) as Dictionary
+	if _candidates_match(candidate, _pending_candidate):
+		_confirm_change(candidate)
 		return
-	_pending_item_id = item_id
+	_pending_candidate = candidate.duplicate()
 	_candidate_list.select(index)
 	_update_preview()
-	if item_id == equipped_id:
+	if str(candidate.get("source", "")) == "current":
 		menu.call("show_message", "Previewing unequip. Click again to confirm.")
 	else:
 		menu.call("show_message", "Previewing equip. Click again to confirm.")
 
 
-func _confirm_change(item_id: String, equipped_id: String) -> void:
+func _confirm_change(candidate: Dictionary) -> void:
 	var character_id := str(menu.call("get_selected_character_id"))
+	var item_id := str(candidate.get("item_id", ""))
 	var result: String
-	if item_id == equipped_id:
+	if str(candidate.get("source", "")) == "current":
 		result = GameState.unequip_slot(character_id, _selected_slot)
 	else:
 		result = GameState.equip_item(character_id, _selected_slot, item_id)
-	_pending_item_id = ""
+	_pending_candidate = {}
 	menu.call("show_message", result)
 	menu.call("refresh_all")
 
@@ -152,18 +147,19 @@ func _update_preview() -> void:
 	var current_stats := GameState.get_effective_stats(character_id)
 	var preview_loadout := GameState.get_loadout(character_id).duplicate()
 	var equipped_id := _get_equipped_id()
-	if _pending_item_id.is_empty():
+	var pending_item_id := str(_pending_candidate.get("item_id", ""))
+	if _pending_candidate.is_empty():
 		preview_loadout[_selected_slot] = equipped_id
-	elif _pending_item_id == equipped_id:
+	elif str(_pending_candidate.get("source", "")) == "current":
 		preview_loadout[_selected_slot] = ""
 	else:
-		preview_loadout[_selected_slot] = _pending_item_id
+		preview_loadout[_selected_slot] = pending_item_id
 	var preview_stats := PartyStatsHelper.get_effective_stats(character, preview_loadout)
 	var lines: PackedStringArray = []
-	if _pending_item_id.is_empty():
+	if _pending_candidate.is_empty():
 		lines.append("[i]Select an item to preview changes.[/i]")
 	else:
-		var action := "Unequip" if _pending_item_id == equipped_id else "Equip"
+		var action := "Unequip" if str(_pending_candidate.get("source", "")) == "current" else "Equip"
 		lines.append("[b]%s preview[/b] — click item again to confirm" % action)
 		lines.append("")
 	for stat_name: String in ["str", "dex", "vit", "agi", "int", "mnd", "res", "luk"]:
@@ -171,7 +167,7 @@ func _update_preview() -> void:
 		var preview_value := _get_stat_value(preview_stats, stat_name)
 		var delta := preview_value - current_value
 		var delta_text := ""
-		if _pending_item_id.is_empty():
+		if _pending_candidate.is_empty():
 			delta_text = ""
 		elif delta > 0:
 			delta_text = " [color=green](+%d)[/color]" % delta
@@ -179,6 +175,41 @@ func _update_preview() -> void:
 			delta_text = " [color=red](%d)[/color]" % delta
 		lines.append("%s: %d%s" % [stat_name.to_upper(), preview_value, delta_text])
 	_preview_label.text = "\n".join(lines)
+
+
+func _format_candidate_label(candidate: Dictionary) -> String:
+	var item_id := str(candidate.get("item_id", ""))
+	var label := _get_item_display_name(item_id)
+	match str(candidate.get("source", "")):
+		"current":
+			return "%s (Equipped)" % label
+		"pool":
+			return label
+		"equipped":
+			var owner_id := str(candidate.get("owner_id", ""))
+			var character_id := str(menu.call("get_selected_character_id"))
+			if owner_id == character_id:
+				return "%s (Equipped)" % label
+			var characters := DataLoader.load_characters()
+			if characters.has(owner_id):
+				return "%s (%s)" % [label, (characters[owner_id] as CharacterData).display_name]
+			return "%s (%s)" % [label, owner_id]
+	return label
+
+
+func _candidates_match(a: Dictionary, b: Dictionary) -> bool:
+	if a.is_empty() or b.is_empty():
+		return false
+	if str(a.get("item_id", "")) != str(b.get("item_id", "")):
+		return false
+	if str(a.get("source", "")) != str(b.get("source", "")):
+		return false
+	if str(a.get("source", "")) == "equipped":
+		return (
+			str(a.get("owner_id", "")) == str(b.get("owner_id", ""))
+			and str(a.get("owner_slot", "")) == str(b.get("owner_slot", ""))
+		)
+	return true
 
 
 func _get_item_display_name(item_id: String) -> String:
