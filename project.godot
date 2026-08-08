@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 GameState="*res://scripts/autoload/game_state.gd"
 SceneTransition="*res://scripts/autoload/scene_transition.gd"
 Settings="*res://scripts/autoload/settings.gd"
+DebugSettings="*res://scripts/autoload/debug_settings.gd"
 
 [display]
 

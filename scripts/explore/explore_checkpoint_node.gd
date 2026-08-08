@@ -27,8 +27,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _player_inside:
 		return
 	if event.is_action_pressed("interact"):
-		save_requested.emit()
-		get_viewport().set_input_as_handled()
+		if interact():
+			get_viewport().set_input_as_handled()
+
+
+func interact() -> bool:
+	if not can_interact():
+		return false
+	save_requested.emit()
+	return true
 
 
 func can_interact() -> bool:

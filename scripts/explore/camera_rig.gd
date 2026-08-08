@@ -73,3 +73,7 @@ func get_planar_move_direction(input_dir: Vector2) -> Vector3:
 	right.y = 0.0
 	right = right.normalized()
 	return forward * -input_dir.y + right * input_dir.x
+
+
+func get_camera() -> Camera3D:
+	return _camera

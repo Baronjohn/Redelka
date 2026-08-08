@@ -1,6 +1,8 @@
 class_name ExplorePickup
 extends Area3D
 
+const EnvironmentMaterialsScript = preload("res://scripts/assets/environment_materials.gd")
+
 signal pickup_collected(message: String)
 
 @export var pickup_id: String = ""
@@ -32,14 +34,18 @@ func _build_visual() -> void:
 	var box := BoxMesh.new()
 	box.size = Vector3(0.35, 0.35, 0.35)
 	mesh.mesh = box
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.95, 0.82, 0.28, 1.0)
-	material.emission_enabled = true
-	material.emission = Color(0.95, 0.82, 0.28, 1.0)
-	material.emission_energy_multiplier = 0.35
-	mesh.material_override = material
+	mesh.material_override = EnvironmentMaterialsScript.create_pickup_material()
 	mesh.position = Vector3(0.0, 0.45, 0.0)
 	add_child(mesh)
+	var click_body := StaticBody3D.new()
+	click_body.name = "ClickBody"
+	var click_shape := CollisionShape3D.new()
+	var click_box := BoxShape3D.new()
+	click_box.size = Vector3(0.5, 0.5, 0.5)
+	click_shape.shape = click_box
+	click_body.position = Vector3(0.0, 0.45, 0.0)
+	click_body.add_child(click_shape)
+	add_child(click_body)
 
 
 func _on_body_entered(body: Node3D) -> void:
@@ -55,12 +61,18 @@ func _on_body_exited(body: Node3D) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_interact():
 		return
-	if not event.is_action_pressed("interact"):
-		return
+	if event.is_action_pressed("interact"):
+		if interact():
+			get_viewport().set_input_as_handled()
+
+
+func interact() -> bool:
+	if not can_interact():
+		return false
 	var message := GameState.collect_pickup(pickup_id, item_id, count)
 	pickup_collected.emit(message)
 	queue_free()
-	get_viewport().set_input_as_handled()
+	return true
 
 
 func can_interact() -> bool:

@@ -53,7 +53,7 @@ size = Vector3(1.2, 0.2, 1.2)
 
 [sub_resource type="Environment" id="Environment_explore"]
 background_mode = 1
-background_color = Color(0.04, 0.04, 0.05, 1)
+background_color = Color(0, 0, 0, 1)
 ambient_light_source = 2
 ambient_light_color = Color(0.35, 0.32, 0.3, 1)
 ambient_light_energy = 0.5

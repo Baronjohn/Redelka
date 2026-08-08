@@ -54,11 +54,17 @@ func _on_body_exited(body: Node3D) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_use():
 		return
-	if not event.is_action_pressed("interact"):
-		return
+	if event.is_action_pressed("interact"):
+		if interact():
+			get_viewport().set_input_as_handled()
+
+
+func interact() -> bool:
+	if not can_use():
+		return false
 	GameState.travel_to_area(target_area_id, target_spawn, target_rotation_y)
 	SceneTransition.go_to_explore()
-	get_viewport().set_input_as_handled()
+	return true
 
 
 func can_use() -> bool:

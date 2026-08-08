@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://redelka_survivor_bran"]
+
+[ext_resource type="Script" path="res://scripts/assets/survivor_model_scene.gd" id="1"]
+
+[node name="Bran" type="Node3D"]
+script = ExtResource("1")
+character_id = "ally_1"

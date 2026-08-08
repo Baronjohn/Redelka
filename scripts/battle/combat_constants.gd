@@ -24,8 +24,9 @@ const ENEMY_COLOR: Color = Color(0.9, 0.25, 0.25)
 const TURN_HIGHLIGHT_COLOR: Color = Color(1.0, 0.92, 0.35)
 const ENEMY_REMOVE_DELAY: float = 2.0
 const TURN_ACTIVE_SCALE: float = 1.1
+const UNIT_MOVE_DURATION: float = 0.25
 
 const FLOATING_NUMBER_DURATION: float = 1.25
-const FLOATING_NUMBER_RISE: float = 0.75
+const FLOATING_NUMBER_RISE: float = 0.5
 const DAMAGE_NUMBER_COLOR: Color = Color(0.95, 0.22, 0.22)
 const HEAL_NUMBER_COLOR: Color = Color(0.28, 0.92, 0.38)

@@ -1,6 +1,7 @@
 extends Node
 
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
+const BattleCameraScript = preload("res://scripts/battle/battle_camera.gd")
 
 enum BattlePhase {
 	START,
@@ -29,12 +30,14 @@ signal turn_order_changed(order: Array[String])
 signal battle_finished(outcome: BattleOutcome)
 
 const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
+const INVALID_CELL := Vector2i(-1, -1)
 
 @export var encounter_id: String = "test_4v3"
 
 @onready var units_root: Node3D = $"../Units"
 @onready var tiles_root: Node3D = $"../Battleground/Tiles"
-@onready var camera: Camera3D = $"../Camera3D"
+@onready var battleground_root: Node3D = $"../Battleground"
+@onready var camera: BattleCameraScript = $"../Camera3D"
 @onready var unit_scene: PackedScene = preload("res://scenes/battle/unit.tscn")
 @onready var tile_scene: PackedScene = preload("res://scenes/battle/grid_tile.tscn")
 @onready var battle_ui: BattleUI = $"../UI/BattleUI"
@@ -60,6 +63,7 @@ var _selected_item_id: String = ""
 var _allow_retreat: bool = true
 var _scheduled_enemy_removals: Dictionary = {}
 var _save_panel: Control = null
+var _hovered_cell: Vector2i = INVALID_CELL
 
 
 func _ready() -> void:
@@ -80,14 +84,44 @@ func _ready() -> void:
 	result_panel.load_autosave_requested.connect(_on_load_autosave_requested)
 	result_panel.main_menu_requested.connect(_on_main_menu_requested)
 	level_up_panel.allocation_confirmed.connect(_on_level_up_confirmed)
-	_position_camera()
+	DebugSettings.apply_battle_lighting(get_parent() as Node3D)
 	call_deferred("_start_battle")
 
 
-func _position_camera() -> void:
-	# Allies start on row 0 (negative Z); camera sits behind them looking toward enemies.
-	camera.position = Vector3(0.0, 11.0, -9.0)
-	camera.look_at(Vector3(0.0, 0.0, 1.5), Vector3.UP)
+func _focus_camera_on_unit(unit: CombatUnit, instant: bool = false) -> void:
+	if camera == null or unit == null:
+		return
+	var unit_pos := _grid.grid_to_world(unit.grid_pos) + Vector3(0.0, 0.8, 0.0)
+	var look_target := _get_camera_look_target(unit)
+	camera.focus_unit(unit_pos, look_target, instant)
+
+
+func _focus_camera_for_board_selection(unit: CombatUnit) -> void:
+	if camera == null or unit == null:
+		return
+	var unit_pos := _grid.grid_to_world(unit.grid_pos) + Vector3(0.0, 0.8, 0.0)
+	camera.focus_move_selection(unit_pos, _get_grid_center_world())
+
+
+func _get_grid_center_world() -> Vector3:
+	var center_cell := Vector2i(BattleGrid.SIZE / 2, BattleGrid.SIZE / 2)
+	return _grid.grid_to_world(center_cell)
+
+
+func _get_camera_look_target(actor: CombatUnit) -> Vector3:
+	var opponents: Array[CombatUnit] = _enemy_units() if actor.is_ally else _ally_units()
+	var best_target: CombatUnit = null
+	var best_distance := 999
+	for opponent: CombatUnit in opponents:
+		if opponent.is_ko:
+			continue
+		var distance := _grid.manhattan(actor.grid_pos, opponent.grid_pos)
+		if distance < best_distance:
+			best_distance = distance
+			best_target = opponent
+	if best_target == null:
+		return _grid.grid_to_world(actor.grid_pos) + Vector3(0.0, 0.8, 0.0)
+	return _grid.grid_to_world(best_target.grid_pos) + Vector3(0.0, 0.8, 0.0)
 
 
 func _start_battle() -> void:
@@ -97,7 +131,7 @@ func _start_battle() -> void:
 	_turn_queue.build_queue(_all_units())
 	_on_turn_order_changed(_turn_queue.get_display_order())
 	_set_phase(BattlePhase.TURN_START)
-	await get_tree().create_timer(0.2).timeout
+	await _battle_wait(0.2)
 	_begin_next_turn()
 
 
@@ -165,6 +199,10 @@ func _build_tiles() -> void:
 			_tile_views[cell] = tile
 
 
+func _battle_wait(seconds: float) -> void:
+	await get_tree().create_timer(DebugSettings.scale_battle_duration(seconds)).timeout
+
+
 func _spawn_units() -> void:
 	for runtime_id: String in _units.keys():
 		var unit: CombatUnit = _units[runtime_id]
@@ -194,12 +232,13 @@ func _begin_next_turn() -> void:
 	var unit: CombatUnit = _units[_current_unit_id]
 	unit.reset_turn_flags()
 	_update_turn_highlight()
+	_focus_camera_on_unit(unit)
 	turn_order_changed.emit(_turn_queue.get_display_order())
 	log_message.emit("%s's turn." % unit.display_name)
 	_set_phase(BattlePhase.TURN_START)
 
 	if not unit.can_act():
-		await get_tree().create_timer(0.3).timeout
+		await _battle_wait(0.3)
 		_begin_next_turn()
 		return
 
@@ -213,7 +252,7 @@ func _begin_next_turn() -> void:
 		battle_ui.show_main_menu(unit, _allow_retreat)
 	else:
 		_set_phase(BattlePhase.ENEMY_TURN)
-		await get_tree().create_timer(0.35).timeout
+		await _battle_wait(0.35)
 		_run_enemy_turn(unit)
 
 
@@ -236,7 +275,7 @@ func _run_enemy_turn(actor: CombatUnit) -> void:
 			await _execute_enemy_action(actor, after_move, selected_action)
 		elif str(follow_up.get("type", "")) in ["attack", "debuff"] and not actor.has_acted:
 			await _execute_enemy_action(actor, follow_up, selected_action)
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_begin_next_turn()
 
 
@@ -352,9 +391,11 @@ func _on_ui_back_requested() -> void:
 	match _phase:
 		BattlePhase.SELECT_MOVE, BattlePhase.PLAYER_ACTION_SUB:
 			_set_phase(BattlePhase.PLAYER_MAIN)
+			_focus_camera_on_unit(unit)
 			battle_ui.show_main_menu(unit, _allow_retreat)
 		BattlePhase.SELECT_ATTACK_TARGET, BattlePhase.SELECT_SKILL_TARGET:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
+			_focus_camera_on_unit(unit)
 			battle_ui.show_action_submenu(
 				unit,
 				_allow_retreat,
@@ -372,6 +413,7 @@ func _on_ui_back_requested() -> void:
 		BattlePhase.SELECT_SPELL_TARGET:
 			_selected_spell = null
 			_set_phase(BattlePhase.SELECT_SPELL)
+			_focus_camera_on_unit(unit)
 			battle_ui.show_spell_menu(_build_spell_menu_entries(unit))
 		BattlePhase.SELECT_ITEM:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
@@ -384,6 +426,7 @@ func _on_ui_back_requested() -> void:
 		BattlePhase.SELECT_ITEM_TARGET:
 			_selected_item_id = ""
 			_set_phase(BattlePhase.SELECT_ITEM)
+			_focus_camera_on_unit(unit)
 			battle_ui.show_item_menu(_inventory, _items)
 		BattlePhase.SELECT_SWITCH_WEAPON:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
@@ -407,6 +450,9 @@ func _on_ui_wait_requested() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _phase == BattlePhase.BATTLE_END or _phase == BattlePhase.ENEMY_TURN:
+		return
+	if event is InputEventMouseMotion:
+		_update_tile_hover_preview((event as InputEventMouseMotion).position)
 		return
 	if not event is InputEventMouseButton:
 		return
@@ -437,10 +483,133 @@ func _raycast_at(screen_pos: Vector2) -> Dictionary:
 		return {}
 	var from := camera.project_ray_origin(screen_pos)
 	var to := from + camera.project_ray_normal(screen_pos) * 100.0
-	var query := PhysicsRayQueryParameters3D.create(from, to)
-	query.collide_with_areas = false
-	query.collide_with_bodies = true
-	return get_parent().get_world_3d().direct_space_state.intersect_ray(query)
+	var space_state: PhysicsDirectSpaceState3D = get_parent().get_world_3d().direct_space_state
+	var exclude: Array[RID] = []
+	while true:
+		var query := PhysicsRayQueryParameters3D.create(from, to)
+		query.collide_with_areas = false
+		query.collide_with_bodies = true
+		query.exclude = exclude
+		var hit: Dictionary = space_state.intersect_ray(query)
+		if hit.is_empty():
+			return {}
+		var unit_view := _collider_to_unit_view(hit.collider as Node)
+		if unit_view != null and _should_passthrough_unit_click(unit_view):
+			exclude.append(hit.rid)
+			continue
+		return hit
+	return {}
+
+
+func _should_passthrough_unit_click(unit_view: UnitView) -> bool:
+	if not _units.has(unit_view.runtime_id):
+		return false
+	return _should_passthrough_unit(_units[unit_view.runtime_id])
+
+
+func _should_passthrough_unit(unit: CombatUnit) -> bool:
+	match _phase:
+		BattlePhase.SELECT_MOVE:
+			return true
+		BattlePhase.SELECT_ATTACK_TARGET, BattlePhase.SELECT_SKILL_TARGET:
+			return unit.is_ally
+		BattlePhase.SELECT_SPELL_TARGET:
+			if _selected_spell == null:
+				return false
+			if _selected_spell.healing:
+				return not unit.is_ally
+			return unit.is_ally
+		BattlePhase.SELECT_ITEM_TARGET:
+			return not unit.is_ally
+	return false
+
+
+func _is_tile_hover_phase() -> bool:
+	match _phase:
+		BattlePhase.SELECT_MOVE, BattlePhase.SELECT_ATTACK_TARGET, BattlePhase.SELECT_SPELL_TARGET, BattlePhase.SELECT_SKILL_TARGET, BattlePhase.SELECT_ITEM_TARGET:
+			return true
+	return false
+
+
+func _resolve_pointer_cell(screen_pos: Vector2) -> Vector2i:
+	var hit := _raycast_at(screen_pos)
+	if hit.is_empty():
+		return INVALID_CELL
+	var collider: Node = hit.collider as Node
+	if collider is GridTile:
+		return (collider as GridTile).cell
+	var unit_view := _collider_to_unit_view(collider)
+	if unit_view != null and _units.has(unit_view.runtime_id):
+		return (_units[unit_view.runtime_id] as CombatUnit).grid_pos
+	return INVALID_CELL
+
+
+func _is_valid_hover_cell(cell: Vector2i) -> bool:
+	if cell == INVALID_CELL or not _tile_views.has(cell):
+		return false
+	var actor: CombatUnit = _units[_current_unit_id]
+	match _phase:
+		BattlePhase.SELECT_MOVE:
+			return cell in grid_reachable(actor)
+		BattlePhase.SELECT_ATTACK_TARGET:
+			var occupant_id := _grid.get_occupant(cell)
+			if occupant_id.is_empty() or not _units.has(occupant_id):
+				return false
+			var attack_target: CombatUnit = _units[occupant_id]
+			return not attack_target.is_ally and not attack_target.is_ko and _can_attack(actor, attack_target)
+		BattlePhase.SELECT_SKILL_TARGET:
+			if actor.skill == null:
+				return false
+			var skill_occupant_id := _grid.get_occupant(cell)
+			if skill_occupant_id.is_empty() or not _units.has(skill_occupant_id):
+				return false
+			var skill_target: CombatUnit = _units[skill_occupant_id]
+			return (
+				not skill_target.is_ally
+				and not skill_target.is_ko
+				and _grid.manhattan(actor.grid_pos, skill_target.grid_pos) <= actor.skill.range_tiles
+			)
+		BattlePhase.SELECT_SPELL_TARGET:
+			if _selected_spell == null:
+				return false
+			var spell_occupant_id := _grid.get_occupant(cell)
+			if spell_occupant_id.is_empty() or not _units.has(spell_occupant_id):
+				return false
+			return _is_valid_spell_target(actor, _units[spell_occupant_id], _selected_spell)
+		BattlePhase.SELECT_ITEM_TARGET:
+			if _selected_item_id.is_empty():
+				return false
+			var item_occupant_id := _grid.get_occupant(cell)
+			if item_occupant_id.is_empty() or not _units.has(item_occupant_id):
+				return false
+			return _is_valid_item_target(actor, _units[item_occupant_id], _selected_item_id)
+	return false
+
+
+func _update_tile_hover_preview(screen_pos: Vector2) -> void:
+	if not _is_tile_hover_phase() or battle_ui.is_pointer_over_interactive_ui(screen_pos):
+		_clear_hover_preview()
+		return
+	var cell := _resolve_pointer_cell(screen_pos)
+	if cell == _hovered_cell:
+		return
+	_clear_hover_preview()
+	if not _is_valid_hover_cell(cell):
+		return
+	_hovered_cell = cell
+	(_tile_views[cell] as GridTile).set_hover_highlight(true)
+
+
+func _clear_hover_preview() -> void:
+	if _hovered_cell == INVALID_CELL:
+		return
+	if _tile_views.has(_hovered_cell):
+		(_tile_views[_hovered_cell] as GridTile).set_hover_highlight(false)
+	_hovered_cell = INVALID_CELL
+
+
+func _refresh_tile_hover_preview() -> void:
+	_update_tile_hover_preview(get_viewport().get_mouse_position())
 
 
 func _collider_to_unit_view(collider: Node) -> UnitView:
@@ -458,7 +627,7 @@ func _on_tile_clicked(cell: Vector2i) -> void:
 			var reachable := grid_reachable(unit)
 			if cell not in reachable:
 				return
-			_apply_player_move(unit, cell)
+			await _apply_player_move(unit, cell)
 		BattlePhase.SELECT_ATTACK_TARGET, BattlePhase.SELECT_SPELL_TARGET, BattlePhase.SELECT_SKILL_TARGET, BattlePhase.SELECT_ITEM_TARGET:
 			var occupant_id := _grid.get_occupant(cell)
 			if occupant_id.is_empty() or not _units.has(occupant_id):
@@ -467,20 +636,32 @@ func _on_tile_clicked(cell: Vector2i) -> void:
 
 
 func _apply_player_move(unit: CombatUnit, cell: Vector2i) -> void:
-	_move_unit_to_cell(unit, cell)
+	await _move_unit_to_cell(unit, cell)
 	log_message.emit("%s moved." % unit.display_name)
 	_clear_highlights()
+	_focus_camera_on_unit(unit)
 	_set_phase(BattlePhase.PLAYER_MAIN)
 	battle_ui.show_main_menu(unit, _allow_retreat)
 
 
 func _move_unit_to_cell(unit: CombatUnit, cell: Vector2i) -> void:
 	var from := unit.grid_pos
+	var from_pos := _grid.grid_to_world(from) + Vector3(0.0, 0.8, 0.0)
 	_grid.move_unit(from, cell, unit.runtime_id)
 	unit.grid_pos = cell
 	unit.has_moved = true
+	var to_pos := _grid.grid_to_world(cell) + Vector3(0.0, 0.8, 0.0)
+	var move_duration := DebugSettings.scale_battle_duration(CombatConstants.UNIT_MOVE_DURATION)
+	if camera != null:
+		camera.track_movement(
+			from_pos,
+			to_pos,
+			_get_camera_look_target(unit),
+			move_duration,
+		)
 	var view: UnitView = _unit_views[unit.runtime_id] as UnitView
-	view.move_to_world(_grid.grid_to_world(cell) + Vector3(0.0, 0.8, 0.0))
+	view.move_to_world(to_pos, false, move_duration)
+	await _battle_wait(CombatConstants.UNIT_MOVE_DURATION)
 
 
 func _on_unit_clicked(runtime_id: String) -> void:
@@ -549,9 +730,10 @@ func _on_turn_order_changed(order: Array[String]) -> void:
 
 
 func _move_unit(unit: CombatUnit, cell: Vector2i) -> void:
-	_move_unit_to_cell(unit, cell)
+	await _move_unit_to_cell(unit, cell)
 	log_message.emit("%s moved." % unit.display_name)
-	await get_tree().create_timer(0.2).timeout
+	_focus_camera_on_unit(unit)
+	await _battle_wait(0.2)
 
 
 func _begin_spell_cast(caster: CombatUnit, target: CombatUnit, spell: SpellData) -> void:
@@ -580,16 +762,16 @@ func _unleash_pending_spell(caster: CombatUnit) -> void:
 	var spell: SpellData = _spells[spell_id] as SpellData
 	if not _units.has(target_id):
 		log_message.emit("%s's %s fizzled." % [caster.display_name, spell.display_name])
-		await get_tree().create_timer(0.25).timeout
+		await _battle_wait(0.25)
 		return
 	var target: CombatUnit = _units[target_id]
 	if not _is_valid_spell_target(caster, target, spell):
 		log_message.emit("%s's %s fizzled." % [caster.display_name, spell.display_name])
-		await get_tree().create_timer(0.25).timeout
+		await _battle_wait(0.25)
 		return
 	log_message.emit("%s unleashes %s!" % [caster.display_name, spell.display_name])
 	_apply_spell_effect(caster, target, spell)
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_check_battle_end()
 
 
@@ -627,7 +809,7 @@ func _on_weapon_selected(weapon_id: String) -> void:
 		return
 	_consume_action(unit)
 	_sync_ally_weapon_stats(unit)
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_end_player_turn_if_done(unit)
 
 
@@ -647,7 +829,7 @@ func _perform_ammo_reload(actor: CombatUnit, item_id: String) -> void:
 	if bool(reload_result.get("ok", false)):
 		_inventory = GameState.inventory.duplicate()
 		_sync_ally_weapon_stats(actor)
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_end_player_turn_if_done(actor)
 
 
@@ -692,7 +874,7 @@ func _perform_attack(
 	if broke:
 		log_message.emit(break_message)
 		_sync_ally_weapon_stats(attacker)
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_check_battle_end()
 
 
@@ -710,7 +892,7 @@ func _perform_enemy_debuff(
 		log_message.emit("%s used %s, but it had no effect." % [actor.display_name, action.display_name])
 	else:
 		log_message.emit("%s used %s. %s" % [actor.display_name, action.display_name, str(result["message"])])
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_check_battle_end()
 
 
@@ -729,7 +911,7 @@ func _perform_skill(attacker: CombatUnit, defender: CombatUnit) -> void:
 		and attacker.skill.mp_restore <= 0
 	):
 		_show_floating_miss(defender)
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 	_check_battle_end()
 
 
@@ -750,7 +932,7 @@ func _perform_item(actor: CombatUnit, target: CombatUnit, item_id: String) -> vo
 		log_message.emit("%s used %s on %s." % [actor.display_name, item.display_name, target.display_name])
 	else:
 		log_message.emit("Revive failed.")
-	await get_tree().create_timer(0.25).timeout
+	await _battle_wait(0.25)
 
 
 func _consume_action(unit: CombatUnit) -> void:
@@ -777,7 +959,9 @@ func _end_player_turn_if_done(unit: CombatUnit) -> void:
 func _show_reachable_tiles(unit: CombatUnit) -> void:
 	_clear_highlights()
 	for cell: Vector2i in grid_reachable(unit):
-		_tile_views[cell].set_move_highlight(true)
+		(_tile_views[cell] as GridTile).set_move_highlight(true)
+	_focus_camera_for_board_selection(unit)
+	_refresh_tile_hover_preview()
 
 
 func _show_attack_targets(unit: CombatUnit) -> void:
@@ -786,7 +970,9 @@ func _show_attack_targets(unit: CombatUnit) -> void:
 		if enemy.is_ko:
 			continue
 		if _can_attack(unit, enemy):
-			_tile_views[enemy.grid_pos].set_target_highlight(true)
+			(_tile_views[enemy.grid_pos] as GridTile).set_target_highlight(true)
+	_focus_camera_for_board_selection(unit)
+	_refresh_tile_hover_preview()
 
 
 func _can_attack(attacker: CombatUnit, target: CombatUnit) -> bool:
@@ -850,7 +1036,9 @@ func _show_skill_targets(unit: CombatUnit) -> void:
 		if enemy.is_ko:
 			continue
 		if _grid.manhattan(unit.grid_pos, enemy.grid_pos) <= unit.skill.range_tiles:
-			_tile_views[enemy.grid_pos].set_target_highlight(true)
+			(_tile_views[enemy.grid_pos] as GridTile).set_target_highlight(true)
+	_focus_camera_for_board_selection(unit)
+	_refresh_tile_hover_preview()
 
 
 func _show_spell_targets(caster: CombatUnit, spell: SpellData) -> void:
@@ -858,7 +1046,9 @@ func _show_spell_targets(caster: CombatUnit, spell: SpellData) -> void:
 	for unit: CombatUnit in _all_units():
 		if not _is_valid_spell_target(caster, unit, spell):
 			continue
-		_tile_views[unit.grid_pos].set_target_highlight(true)
+		(_tile_views[unit.grid_pos] as GridTile).set_target_highlight(true)
+	_focus_camera_for_board_selection(caster)
+	_refresh_tile_hover_preview()
 
 
 func _show_item_targets(actor: CombatUnit, item: ItemData) -> void:
@@ -866,12 +1056,15 @@ func _show_item_targets(actor: CombatUnit, item: ItemData) -> void:
 	for ally: CombatUnit in _ally_units():
 		if not _is_valid_item_target(actor, ally, item.id):
 			continue
-		_tile_views[ally.grid_pos].set_target_highlight(true)
+		(_tile_views[ally.grid_pos] as GridTile).set_target_highlight(true)
+	_focus_camera_for_board_selection(actor)
+	_refresh_tile_hover_preview()
 
 
 func _clear_highlights() -> void:
+	_clear_hover_preview()
 	for tile: StaticBody3D in _tile_views.values():
-		tile.reset_highlight()
+		(tile as GridTile).reset_highlight()
 
 
 func grid_reachable(unit: CombatUnit) -> Array[Vector2i]:
@@ -1070,7 +1263,9 @@ func _schedule_enemy_removal(runtime_id: String) -> void:
 	if unit.is_ally or not unit.is_ko:
 		return
 	_scheduled_enemy_removals[runtime_id] = true
-	var timer := get_tree().create_timer(CombatConstants.ENEMY_REMOVE_DELAY)
+	var timer := get_tree().create_timer(
+		DebugSettings.scale_battle_duration(CombatConstants.ENEMY_REMOVE_DELAY)
+	)
 	timer.timeout.connect(_remove_enemy_from_board.bind(runtime_id), CONNECT_ONE_SHOT)
 
 

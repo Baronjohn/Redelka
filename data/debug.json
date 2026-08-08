@@ -1,0 +1,6 @@
+{
+  "global_illumination": 1.5,
+  "explore_sky_color": [0.0, 0.0, 0.0],
+  "battle_shadows_enabled": false,
+  "battle_speed": 0.5
+}

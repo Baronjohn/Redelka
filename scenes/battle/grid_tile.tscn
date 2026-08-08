@@ -11,7 +11,7 @@ size = Vector3(1.25, 0.2, 1.25)
 [node name="GridTile" type="StaticBody3D"]
 script = ExtResource("1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="FloorMesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_tile")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

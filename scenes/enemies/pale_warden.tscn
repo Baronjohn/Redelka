@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://redelka_enemy_pale_warden"]
+
+[ext_resource type="Script" path="res://scripts/assets/enemy_model_scene.gd" id="1"]
+
+[node name="PaleWarden" type="Node3D"]
+script = ExtResource("1")
+enemy_id = "pale_warden"

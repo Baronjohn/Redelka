@@ -3,13 +3,14 @@ extends CharacterBody3D
 
 signal contact_triggered
 
+const Ps1EnemyModelScript = preload("res://scripts/assets/ps1_enemy_model.gd")
+
 @export var enemy_id: String = ""
 @export var encounter_id: String = ""
 @export var contact_radius: float = 1.2
 
 var _player: CharacterBody3D
 var _area: Area3D
-var _mesh: MeshInstance3D
 var _triggered: bool = false
 
 
@@ -23,20 +24,27 @@ func _ready() -> void:
 	_area.add_child(collision)
 	add_child(_area)
 	_area.body_entered.connect(_on_body_entered)
-
-	_mesh = MeshInstance3D.new()
-	var capsule := CapsuleMesh.new()
-	capsule.radius = 0.35
-	capsule.height = 1.2
-	_mesh.mesh = capsule
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.9, 0.25, 0.25)
-	_mesh.material_override = material
-	_mesh.position = Vector3(0.0, 0.9, 0.0)
-	add_child(_mesh)
+	_attach_enemy_model()
 
 	if GameState.is_enemy_defeated(enemy_id):
 		queue_free()
+
+
+func _attach_enemy_model() -> void:
+	var model_path := ""
+	var enemies := DataLoader.load_enemies()
+	if enemies.has(enemy_id):
+		model_path = (enemies[enemy_id] as EnemyData).model_path
+
+	var model: Node3D = null
+	if not model_path.is_empty() and ResourceLoader.exists(model_path):
+		var scene := load(model_path) as PackedScene
+		if scene != null:
+			model = scene.instantiate() as Node3D
+	if model == null:
+		model = Ps1EnemyModelScript.create(enemy_id)
+	model.position = Vector3(0.0, 0.9, 0.0)
+	add_child(model)
 
 
 func _on_body_entered(body: Node3D) -> void:

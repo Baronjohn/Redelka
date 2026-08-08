@@ -1,6 +1,8 @@
 class_name ExploreCloset
 extends Area3D
 
+const EnvironmentMaterialsScript = preload("res://scripts/assets/environment_materials.gd")
+
 signal ambush_requested(player: CharacterBody3D)
 signal closet_interacted(message: String)
 
@@ -33,9 +35,7 @@ func _build_visual() -> void:
 	var box := BoxMesh.new()
 	box.size = Vector3(1.4, 2.0, 0.8)
 	mesh.mesh = box
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.35, 0.28, 0.22, 1.0)
-	mesh.material_override = material
+	mesh.material_override = EnvironmentMaterialsScript.create_closet_material()
 	mesh.position = Vector3(0.0, 1.0, 0.0)
 	add_child(mesh)
 
@@ -53,21 +53,25 @@ func _on_body_exited(body: Node3D) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not can_interact():
 		return
-	if not event.is_action_pressed("interact"):
-		return
+	if event.is_action_pressed("interact"):
+		if interact():
+			get_viewport().set_input_as_handled()
+
+
+func interact() -> bool:
+	if not can_interact():
+		return false
 	if not GameState.is_enemy_defeated(ambush_enemy_id):
 		var player := _get_player()
 		if player != null:
 			ambush_requested.emit(player)
-		get_viewport().set_input_as_handled()
-		return
+		return true
 	if not pickup_id.is_empty() and not GameState.is_pickup_collected(pickup_id):
 		var message := GameState.collect_pickup(pickup_id, key_item_id, 1)
 		closet_interacted.emit(message)
-		get_viewport().set_input_as_handled()
-		return
+		return true
 	closet_interacted.emit("The closet is empty.")
-	get_viewport().set_input_as_handled()
+	return true
 
 
 func can_interact() -> bool:
@@ -76,10 +80,10 @@ func can_interact() -> bool:
 
 func get_interact_prompt() -> String:
 	if not GameState.is_enemy_defeated(ambush_enemy_id):
-		return "Press E to open the closet"
+		return "Press E or click to open the closet"
 	if not pickup_id.is_empty() and not GameState.is_pickup_collected(pickup_id):
-		return "Press E to search the closet"
-	return "Press E to inspect the closet"
+		return "Press E or click to search the closet"
+	return "Press E or click to inspect the closet"
 
 
 func _get_player() -> CharacterBody3D:

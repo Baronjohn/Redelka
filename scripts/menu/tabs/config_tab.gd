@@ -109,8 +109,36 @@ func _build_debug_tab() -> void:
 	_sub_tabs.add_child(box)
 	_sub_tabs.set_tab_title(4, "Debug")
 	_debug_label = Label.new()
-	_debug_label.text = "Developer debug tools will be added later."
+	_debug_label.text = "Lighting defaults load from data/debug.json."
 	box.add_child(_debug_label)
+	var illum_label := Label.new()
+	illum_label.text = "Global Illumination: %.2f" % DebugSettings.global_illumination
+	box.add_child(illum_label)
+	var illum_slider := HSlider.new()
+	illum_slider.min_value = 0.0
+	illum_slider.max_value = 2.0
+	illum_slider.step = 0.05
+	illum_slider.value = DebugSettings.global_illumination
+	illum_slider.value_changed.connect(func(value: float) -> void:
+		DebugSettings.set_global_illumination(value)
+		illum_label.text = "Global Illumination: %.2f" % value
+		menu.call("show_message", "Global illumination set to %.2f." % value)
+	)
+	box.add_child(illum_slider)
+	var speed_label := Label.new()
+	speed_label.text = "Battle Speed: %.2f" % DebugSettings.battle_speed
+	box.add_child(speed_label)
+	var speed_slider := HSlider.new()
+	speed_slider.min_value = 0.25
+	speed_slider.max_value = 4.0
+	speed_slider.step = 0.05
+	speed_slider.value = DebugSettings.battle_speed
+	speed_slider.value_changed.connect(func(value: float) -> void:
+		DebugSettings.set_battle_speed(value)
+		speed_label.text = "Battle Speed: %.2f" % value
+		menu.call("show_message", "Battle speed set to %.2f." % value)
+	)
+	box.add_child(speed_slider)
 
 
 func _make_volume_row(label_text: String, initial_value: float, setter: Callable) -> HBoxContainer:

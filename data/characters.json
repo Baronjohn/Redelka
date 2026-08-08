@@ -3,6 +3,7 @@
 	"id": "ally_1",
 	"name": "Bran",
 	"portrait_path": "res://assets/portraits/bran.png",
+	"model_path": "res://scenes/characters/bran.tscn",
 	"move_range": 2,
 	"skill_id": "endure",
 	"level_growth": { "str": 1, "vit": 1 },
@@ -15,6 +16,7 @@
 	"id": "ally_2",
 	"name": "Mira",
 	"portrait_path": "res://assets/portraits/mira.png",
+	"model_path": "res://scenes/characters/mira.tscn",
 	"move_range": 2,
 	"level_growth": { "dex": 1, "agi": 1 },
 	"stats": {
@@ -26,6 +28,7 @@
 	"id": "ally_3",
 	"name": "Owen",
 	"portrait_path": "res://assets/portraits/owen.png",
+	"model_path": "res://scenes/characters/owen.tscn",
 	"move_range": 2,
 	"level_growth": { "dex": 1, "str": 1 },
 	"stats": {
@@ -37,6 +40,7 @@
 	"id": "ally_4",
 	"name": "Elara",
 	"portrait_path": "res://assets/portraits/elara.png",
+	"model_path": "res://scenes/characters/elara.tscn",
 	"move_range": 2,
 	"skill_id": "focus",
 	"level_growth": { "int": 1, "mnd": 1 },

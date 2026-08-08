@@ -3,6 +3,7 @@ extends Node3D
 const PROTAGONIST_SCENE: PackedScene = preload("res://scenes/explore/protagonist.tscn")
 const OverworldEnemyScript = preload("res://scripts/explore/overworld_enemy.gd")
 const ExplorePickupScript = preload("res://scripts/explore/explore_pickup.gd")
+const EnvironmentMaterialsScript = preload("res://scripts/assets/environment_materials.gd")
 const CHARACTER_MENU_SCENE: PackedScene = preload("res://scenes/menu/character_menu.tscn")
 const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
 const ENEMY_CONTACT_CLEAR_DISTANCE: float = 2.5
@@ -37,6 +38,8 @@ func _ready() -> void:
 	_spawn_player()
 	_spawn_enemies()
 	_spawn_pickups()
+	_apply_environment_textures()
+	DebugSettings.apply_explore_lighting(self)
 	_connect_doors()
 	_connect_interactables()
 	camera_rig.set_track_target(_player)
@@ -44,7 +47,7 @@ func _ready() -> void:
 		_checkpoint.save_requested.connect(_open_save_panel)
 	GameState.mark_area_visited(area_id)
 	_try_autosave_after_spawn()
-	_show_message("%s — touch enemies to fight. I for menu. E to interact." % _area.display_name)
+	_show_message("%s — touch enemies to fight. I for menu. E or click to interact." % _area.display_name)
 	set_process_unhandled_input(true)
 
 
@@ -53,6 +56,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("open_menu"):
 		_open_menu()
+		get_viewport().set_input_as_handled()
+		return
+	var mouse_button := event as InputEventMouseButton
+	if mouse_button == null or not mouse_button.pressed or mouse_button.button_index != MOUSE_BUTTON_LEFT:
+		return
+	if _try_mouse_interact(mouse_button.position):
 		get_viewport().set_input_as_handled()
 
 
@@ -164,6 +173,16 @@ func _spawn_pickups() -> void:
 		pickup.global_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
 
 
+func _apply_environment_textures() -> void:
+	var room := get_node_or_null("Room") as Node3D
+	if room != null:
+		EnvironmentMaterialsScript.apply_explore_room(room, area_id)
+	if doors_root != null:
+		EnvironmentMaterialsScript.apply_explore_doors(doors_root, area_id)
+	if _checkpoint != null:
+		EnvironmentMaterialsScript.apply_explore_checkpoint(_checkpoint, area_id)
+
+
 func _on_pickup_collected(message: String) -> void:
 	_active_pickup = null
 	_show_message(message)
@@ -173,21 +192,21 @@ func _process(_delta: float) -> void:
 	_update_active_pickup()
 	_update_active_interactable()
 	if _active_door != null and _active_door.call("can_use"):
-		prompt_label.text = "Press E to enter %s" % str(_active_door.get("door_label"))
+		prompt_label.text = "Press E or click to enter %s" % str(_active_door.get("door_label"))
 	elif _active_door != null and _active_door.has_method("is_locked") and bool(_active_door.call("is_locked")):
 		prompt_label.text = str(_active_door.call("get_lock_prompt"))
 	elif _active_interactable != null and bool(_active_interactable.call("can_interact")):
 		prompt_label.text = str(_active_interactable.call("get_interact_prompt"))
 	elif _active_pickup != null and bool(_active_pickup.call("can_interact")):
-		prompt_label.text = "Press E to pick up %s" % str(_active_pickup.call("get_pickup_label"))
+		prompt_label.text = "Press E or click to pick up %s" % str(_active_pickup.call("get_pickup_label"))
 	elif _checkpoint != null and _checkpoint.can_interact():
 		if GameState.difficulty == GameState.Difficulty.HARD:
 			if GameState.has_item(GameState.SAVE_RESOURCE_ITEM_ID):
-				prompt_label.text = "Press E to save game (uses %s)" % GameState.get_save_resource_display_name()
+				prompt_label.text = "Press E or click to save game (uses %s)" % GameState.get_save_resource_display_name()
 			else:
-				prompt_label.text = "Press E to save — need %s" % GameState.get_save_resource_display_name()
+				prompt_label.text = "Press E or click to save — need %s" % GameState.get_save_resource_display_name()
 		else:
-			prompt_label.text = "Press E to save game"
+			prompt_label.text = "Press E or click to save game"
 	else:
 		prompt_label.text = "WASD to move | I menu"
 
@@ -214,6 +233,55 @@ func _update_active_interactable() -> void:
 		if bool(child.call("can_interact")):
 			_active_interactable = child
 			return
+
+
+func _try_mouse_interact(screen_pos: Vector2) -> bool:
+	if camera_rig == null or camera_rig.get_camera() == null:
+		return false
+	var camera := camera_rig.get_camera()
+	var ray_origin := camera.project_ray_origin(screen_pos)
+	var ray_end := ray_origin + camera.project_ray_normal(screen_pos) * 100.0
+	var space_state := get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
+	var hit := space_state.intersect_ray(query)
+	if not hit.is_empty():
+		var collider := hit.get("collider") as Node
+		var target := _find_interactable_from_collider(collider)
+		if target != null and target.has_method("interact") and bool(target.call("interact")):
+			return true
+	return _try_active_interact()
+
+
+func _try_active_interact() -> bool:
+	var target := _get_priority_interact_target()
+	if target == null or not target.has_method("interact"):
+		return false
+	return bool(target.call("interact"))
+
+
+func _get_priority_interact_target() -> Node:
+	if _active_door != null and bool(_active_door.call("can_use")):
+		return _active_door
+	if _active_interactable != null and bool(_active_interactable.call("can_interact")):
+		return _active_interactable
+	if _active_pickup != null and bool(_active_pickup.call("can_interact")):
+		return _active_pickup
+	if _checkpoint != null and _checkpoint.can_interact():
+		return _checkpoint
+	return null
+
+
+func _find_interactable_from_collider(collider: Node) -> Node:
+	var current: Node = collider
+	while current != null:
+		if current.has_method("interact") and current.has_method("can_interact"):
+			return current
+		if current.has_method("interact") and current.has_method("can_use"):
+			return current
+		current = current.get_parent()
+	return null
 
 
 func _on_door_entered(door: Node3D) -> void:

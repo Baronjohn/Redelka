@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://redelka_enemy_hollow"]
+
+[ext_resource type="Script" path="res://scripts/assets/enemy_model_scene.gd" id="1"]
+
+[node name="Hollow" type="Node3D"]
+script = ExtResource("1")
+enemy_id = "enemy_1"

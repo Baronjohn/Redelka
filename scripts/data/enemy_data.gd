@@ -3,6 +3,7 @@ extends RefCounted
 
 var id: String = ""
 var display_name: String = ""
+var model_path: String = ""
 var move_range: int = 2
 var attack_range: int = 1
 var hp: int = 0
@@ -21,6 +22,7 @@ static func from_dict(data: Dictionary) -> EnemyData:
 	var stats: Dictionary = data.get("stats", {}) as Dictionary
 	enemy.id = str(data.get("id", ""))
 	enemy.display_name = str(data.get("name", ""))
+	enemy.model_path = str(data.get("model_path", ""))
 	enemy.move_range = int(data.get("move_range", 2))
 	enemy.attack_range = int(data.get("attack_range", 1))
 	enemy.hp = int(stats.get("hp", 30))
