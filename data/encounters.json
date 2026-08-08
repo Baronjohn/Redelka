@@ -18,6 +18,9 @@
       { "enemy_id": "enemy_1", "position": [1, 5] },
       { "enemy_id": "enemy_2", "position": [2, 5] },
       { "enemy_id": "enemy_3", "position": [4, 5] }
+    ],
+    "spell_unlocks": [
+      { "character_id": "ally_4", "spell_id": "firebolt" }
     ]
   },
   {
@@ -79,6 +82,9 @@
     ],
     "enemies": [
       { "enemy_id": "enemy_2", "position": [2, 5] }
+    ],
+    "spell_unlocks": [
+      { "character_id": "ally_4", "spell_id": "firebolt" }
     ]
   },
   {

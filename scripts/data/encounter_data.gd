@@ -8,6 +8,7 @@ var allow_retreat: bool = true
 var party_inventory: Dictionary = {}
 var allies: Array[Dictionary] = []
 var enemies: Array[Dictionary] = []
+var spell_unlocks: Array[Dictionary] = []
 
 
 static func from_dict(data: Dictionary) -> EncounterData:
@@ -21,4 +22,6 @@ static func from_dict(data: Dictionary) -> EncounterData:
 		encounter.allies.append(ally_entry as Dictionary)
 	for enemy_entry: Variant in data.get("enemies", []) as Array:
 		encounter.enemies.append(enemy_entry as Dictionary)
+	for unlock_entry: Variant in data.get("spell_unlocks", []) as Array:
+		encounter.spell_unlocks.append(unlock_entry as Dictionary)
 	return encounter

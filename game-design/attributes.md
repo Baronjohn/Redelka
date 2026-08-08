@@ -124,8 +124,9 @@ Spells use the rules below. **Character-specific skills** are separate; mechanic
 
 **Decided:**
 
-- Weapons are tied to one **weapon class** (e.g. sword, bow — full list **TBD**).
-- Mastery levels **1–3** unlocked through **use in combat** (XP thresholds **TBD**).
+- Weapons are tied to one **weapon class** (`sword`, `bow`, `staff`, `dagger`).
+- **Per-character** mastery levels **1–3**; all classes start at **level 1** with **0 XP**.
+- **+40 XP** per weapon attack resolve (hit or miss); **1000 XP** per level gained.
 - Mastery gates **combo potential** only; it does not directly boost raw damage (weapon stats and STR/DEX do).
 
 | Level | Combo behavior |
@@ -134,7 +135,8 @@ Spells use the rules below. **Character-specific skills** are separate; mechanic
 | 2 | 1–2 hits (DEX + LUK for proc) |
 | 3 | 1–3 hits (DEX + LUK for proc) |
 
-**TBD:** Mastery XP per weapon class, whether mastery is per-character or shared, ranged weapon mastery rules.
+- **Combo proc:** roll `rand(100) <= DEX + LUK` (clamped) for each extra hit; level 2 rolls once for a 2nd hit, level 3 rolls again for a 3rd.
+- Ranged and melee share the same mastery/combo rules; differentiate via ammo vs durability only.
 
 ## Equipment interaction
 

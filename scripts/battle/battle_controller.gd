@@ -276,7 +276,7 @@ func _on_ui_sub_action_requested(action: String) -> void:
 				log_message.emit("Already casting a spell.")
 				return
 			_set_phase(BattlePhase.SELECT_SPELL)
-			battle_ui.show_spell_menu(_spells.values())
+			battle_ui.show_spell_menu(_build_spell_menu_entries(unit))
 		"skill":
 			if unit.skill == null:
 				log_message.emit("No skill available.")
@@ -337,7 +337,7 @@ func _on_ui_back_requested() -> void:
 		BattlePhase.SELECT_SPELL_TARGET:
 			_selected_spell = null
 			_set_phase(BattlePhase.SELECT_SPELL)
-			battle_ui.show_spell_menu(_spells.values())
+			battle_ui.show_spell_menu(_build_spell_menu_entries(unit))
 		BattlePhase.SELECT_ITEM:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
 			battle_ui.show_action_submenu(
@@ -518,7 +518,9 @@ func _move_unit(unit: CombatUnit, cell: Vector2i) -> void:
 
 
 func _begin_spell_cast(caster: CombatUnit, target: CombatUnit, spell: SpellData) -> void:
-	if not caster.spend_mp(spell.mp_cost):
+	var effective_stats: Dictionary = GameState.get_effective_spell_stats(caster.source_id, spell.id)
+	var mp_cost := int(effective_stats.get("mp_cost", spell.mp_cost))
+	if not caster.spend_mp(mp_cost):
 		log_message.emit("Not enough MP.")
 		return
 	caster.set_pending_spell(spell.id, target.runtime_id)
@@ -555,7 +557,9 @@ func _unleash_pending_spell(caster: CombatUnit) -> void:
 
 
 func _apply_spell_effect(caster: CombatUnit, target: CombatUnit, spell: SpellData) -> void:
-	var result := CombatResolver.resolve_spell(caster, target, spell)
+	var effective_stats: Dictionary = GameState.get_effective_spell_stats(caster.source_id, spell.id)
+	var tier_base := int(effective_stats.get("tier_base", spell.tier_base))
+	var result := CombatResolver.resolve_spell(caster, target, spell, tier_base)
 	log_message.emit(str(result["message"]))
 	if result["hit"]:
 		if spell.healing:
@@ -563,6 +567,10 @@ func _apply_spell_effect(caster: CombatUnit, target: CombatUnit, spell: SpellDat
 		else:
 			target.apply_damage(int(result["amount"]))
 			_handle_combat_damage(target)
+	if caster.is_ally:
+		var xp_result: Dictionary = GameState.award_spell_mastery_xp(caster.source_id, spell.id)
+		if not str(xp_result.get("message", "")).is_empty():
+			log_message.emit(str(xp_result.get("message", "")))
 
 
 func _on_weapon_selected(weapon_id: String) -> void:
@@ -614,11 +622,22 @@ func _perform_attack(attacker: CombatUnit, defender: CombatUnit) -> void:
 		broke = bool(resource_result.get("broke", false))
 		break_message = str(resource_result.get("message", ""))
 	_consume_action(attacker)
-	var result := CombatResolver.resolve_physical_attack(attacker, defender)
+	var mastery_level := 1
+	var weapon_class := ""
+	if attacker.is_ally and attacker.weapon != null:
+		weapon_class = attacker.weapon.weapon_class
+		mastery_level = GameState.get_weapon_mastery_level(attacker.source_id, weapon_class)
+	var result := CombatResolver.resolve_physical_attack(attacker, defender, mastery_level)
 	log_message.emit(str(result["message"]))
 	if result["hit"]:
-		defender.apply_damage(int(result["damage"]))
+		var hit_count := int(result.get("hit_count", 1))
+		for _hit_index: int in range(maxi(hit_count, 1)):
+			defender.apply_damage(int(result["damage"]))
 		_handle_combat_damage(defender)
+	if attacker.is_ally and not weapon_class.is_empty():
+		var xp_result: Dictionary = GameState.award_weapon_mastery_xp(attacker.source_id, weapon_class)
+		if not str(xp_result.get("message", "")).is_empty():
+			log_message.emit(str(xp_result.get("message", "")))
 	if broke:
 		log_message.emit(break_message)
 		_sync_ally_weapon_stats(attacker)
@@ -702,6 +721,24 @@ func _can_unit_switch(unit: CombatUnit) -> bool:
 	return not GameState.get_switchable_weapons(unit.source_id).is_empty()
 
 
+func _build_spell_menu_entries(unit: CombatUnit) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for spell_id: String in GameState.get_unlocked_spells_for_character(unit.source_id):
+		if not _spells.has(spell_id):
+			continue
+		var spell: SpellData = _spells[spell_id] as SpellData
+		var effective_stats: Dictionary = GameState.get_effective_spell_stats(unit.source_id, spell_id)
+		entries.append({
+			"spell_id": spell_id,
+			"label": "%s T%d (MP %d)" % [
+				spell.display_name,
+				int(effective_stats.get("tier", 1)),
+				int(effective_stats.get("mp_cost", spell.mp_cost)),
+			],
+		})
+	return entries
+
+
 func _sync_ally_weapon_stats(unit: CombatUnit) -> void:
 	var characters := DataLoader.load_characters()
 	if not characters.has(unit.source_id):
@@ -783,7 +820,7 @@ func _get_movement_row_bounds(unit: CombatUnit) -> Vector2i:
 
 func _is_valid_spell_target(_caster: CombatUnit, target: CombatUnit, spell: SpellData) -> bool:
 	if spell.healing:
-		return target.is_ally and (not target.is_ko or spell.id == "mend")
+		return target.is_ally and not target.is_ko
 	if spell.targets == "enemy":
 		return not target.is_ally and not target.is_ko
 	return false

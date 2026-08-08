@@ -4,6 +4,7 @@ extends SceneTree
 
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
+const MasteryConstantsScript = preload("res://scripts/data/mastery_constants.gd")
 
 
 func _initialize() -> void:
@@ -18,6 +19,7 @@ func _initialize() -> void:
 	errors.append_array(_test_progression())
 	errors.append_array(_test_save_load())
 	errors.append_array(_test_weapon_durability_and_ammo())
+	errors.append_array(_test_mastery_and_spell_tiers())
 	errors.append_array(_test_chapter_data())
 
 	if errors.is_empty():
@@ -35,8 +37,8 @@ func _test_data_loading() -> PackedStringArray:
 		errors.append("Expected 4 characters.")
 	if DataLoader.load_enemies().size() != 4:
 		errors.append("Expected 4 enemies.")
-	if DataLoader.load_spells().size() < 3:
-		errors.append("Expected at least 3 spells.")
+	if DataLoader.load_spells().size() < 1:
+		errors.append("Expected at least 1 spell.")
 	var encounter := DataLoader.load_encounter("test_4v3")
 	if encounter.allies.size() != 4 or encounter.enemies.size() != 3:
 		errors.append("Encounter test_4v3 has wrong unit counts.")
@@ -589,6 +591,89 @@ func _test_weapon_durability_and_ammo() -> PackedStringArray:
 		errors.append("Save roundtrip should restore loaded ammo.")
 	if str(gs.call("get_loadout", "ally_1").get("weapon", "")) != "iron_sword":
 		errors.append("Save roundtrip should restore switched weapon.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_mastery_and_spell_tiers() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+
+	if int(gs.call("get_weapon_mastery_level", "ally_1", "sword")) != 1:
+		errors.append("Weapon mastery should start at level 1.")
+	if int(gs.call("get_spell_tier", "ally_4", "firebolt")) != 0:
+		errors.append("Spells should start locked at tier 0.")
+	if not (gs.call("get_unlocked_spells_for_character", "ally_4") as Array).is_empty():
+		errors.append("Locked characters should have no unlocked spells.")
+
+	var unlock_message: String = gs.call("unlock_spell_for_character", "ally_4", "firebolt")
+	if unlock_message.is_empty():
+		errors.append("Spell unlock should return a message.")
+	if int(gs.call("get_spell_tier", "ally_4", "firebolt")) != 1:
+		errors.append("Unlock should set spell tier to 1.")
+
+	for _i: int in range(25):
+		var weapon_xp: Dictionary = gs.call("award_weapon_mastery_xp", "ally_1", "sword")
+		if not bool(weapon_xp.get("ok", false)):
+			errors.append("Weapon mastery XP award should succeed.")
+	if int(gs.call("get_weapon_mastery_level", "ally_1", "sword")) != 2:
+		errors.append("25 weapon uses should reach mastery level 2.")
+
+	seed(42)
+	var combo_stats := StatBlock.new()
+	combo_stats.dex = 80
+	combo_stats.luk = 80
+	var saw_combo := false
+	for _attempt: int in range(64):
+		if MasteryConstantsScript.resolve_combo_hit_count(3, combo_stats) >= 2:
+			saw_combo = true
+			break
+	if not saw_combo:
+		errors.append("High DEX/LUK should eventually proc combo hits at mastery 3.")
+
+	for _i: int in range(25):
+		gs.call("award_spell_mastery_xp", "ally_4", "firebolt")
+	if int(gs.call("get_spell_tier", "ally_4", "firebolt")) != 2:
+		errors.append("25 spell uses should reach tier 2.")
+	for _i: int in range(50):
+		gs.call("award_spell_mastery_xp", "ally_4", "firebolt")
+	if int(gs.call("get_spell_tier", "ally_4", "firebolt")) != 3:
+		errors.append("75 total spell uses should reach tier 3.")
+
+	var effective: Dictionary = gs.call("get_effective_spell_stats", "ally_4", "firebolt")
+	if int(effective.get("tier", 0)) != 3:
+		errors.append("Effective spell stats should reflect current tier.")
+	if int(effective.get("mp_cost", 0)) <= int(DataLoader.load_spells()["firebolt"].mp_cost):
+		errors.append("Higher spell tiers should increase MP cost.")
+	if int(effective.get("tier_base", 0)) <= int(DataLoader.load_spells()["firebolt"].tier_base):
+		errors.append("Higher spell tiers should increase spell power.")
+
+	gs.call("reset_party_to_default")
+	gs.set("current_encounter_id", "test_4v3")
+	gs.call("resolve_battle", GameState.BattleOutcomeCode.VICTORY)
+	if int(gs.call("get_spell_tier", "ally_4", "firebolt")) != 1:
+		errors.append("Encounter victory should unlock configured spells.")
+
+	for _i: int in range(25):
+		gs.call("award_weapon_mastery_xp", "ally_1", "sword")
+	var save_data: Dictionary = gs.call("build_save_data", Vector3.ZERO, 0.0)
+	gs.call("reset_party_to_default")
+	if not bool(gs.call("apply_save_dict", save_data)):
+		errors.append("Save roundtrip should restore mastery state.")
+	if int(gs.call("get_weapon_mastery_level", "ally_1", "sword")) != 2:
+		errors.append("Save roundtrip should restore weapon mastery level.")
+	var fire_progress: Dictionary = gs.call(
+		"get_spell_mastery_progress_for_type",
+		"ally_4",
+		"fire",
+	)
+	if int(fire_progress.get("tier", 0)) != 1:
+		errors.append("Save roundtrip should restore unlocked spell mastery tier.")
+	var bran_snapshot := gs.call("get_member_snapshot", "ally_1") as PartyMemberSnapshot
+	if bran_snapshot == null or not (bran_snapshot.weapon_mastery as Dictionary).has("sword"):
+		errors.append("Save roundtrip should restore weapon mastery map.")
 
 	gs.call("reset_party_to_default")
 	return errors

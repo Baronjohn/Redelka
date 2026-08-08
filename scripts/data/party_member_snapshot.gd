@@ -13,6 +13,8 @@ var max_mp: int = 0
 var is_ko: bool = false
 var pending_spell_id: String = ""
 var pending_spell_target_id: String = ""
+var weapon_mastery: Dictionary = {}
+var spell_mastery: Dictionary = {}
 
 
 static func from_dict(data: Dictionary) -> PartyMemberSnapshot:
@@ -29,6 +31,8 @@ static func from_dict(data: Dictionary) -> PartyMemberSnapshot:
 	snapshot.is_ko = bool(data.get("is_ko", false))
 	snapshot.pending_spell_id = str(data.get("pending_spell_id", ""))
 	snapshot.pending_spell_target_id = str(data.get("pending_spell_target_id", ""))
+	snapshot.weapon_mastery = _restore_mastery_dict(data.get("weapon_mastery", {}))
+	snapshot.spell_mastery = _restore_mastery_dict(data.get("spell_mastery", {}))
 	return snapshot
 
 
@@ -55,6 +59,8 @@ func to_dict() -> Dictionary:
 		"is_ko": is_ko,
 		"pending_spell_id": pending_spell_id,
 		"pending_spell_target_id": pending_spell_target_id,
+		"weapon_mastery": _duplicate_mastery_dict(weapon_mastery),
+		"spell_mastery": _duplicate_mastery_dict(spell_mastery),
 	}
 
 
@@ -73,6 +79,8 @@ static func from_combat_unit(unit: CombatUnit, existing: PartyMemberSnapshot = n
 		snapshot.xp = existing.xp
 		snapshot.unspent_stat_points = existing.unspent_stat_points
 		snapshot.allocated_stats = existing.allocated_stats.duplicate_block()
+		snapshot.weapon_mastery = _duplicate_mastery_dict(existing.weapon_mastery)
+		snapshot.spell_mastery = _duplicate_mastery_dict(existing.spell_mastery)
 	return snapshot
 
 
@@ -89,3 +97,22 @@ func apply_to_combat_unit(unit: CombatUnit) -> void:
 	unit.pending_spell_target_id = pending_spell_target_id
 	unit.hp_changed.emit(unit.current_hp, unit.max_hp)
 	unit.mp_changed.emit(unit.current_mp, unit.max_mp)
+
+
+static func _duplicate_mastery_dict(source: Dictionary) -> Dictionary:
+	var copy: Dictionary = {}
+	for key: Variant in source.keys():
+		var entry := source[key] as Dictionary
+		copy[str(key)] = entry.duplicate()
+	return copy
+
+
+static func _restore_mastery_dict(source: Variant) -> Dictionary:
+	var restored: Dictionary = {}
+	if source == null or not source is Dictionary:
+		return restored
+	for key: Variant in (source as Dictionary).keys():
+		var entry: Variant = (source as Dictionary)[key]
+		if entry is Dictionary:
+			restored[str(key)] = (entry as Dictionary).duplicate()
+	return restored

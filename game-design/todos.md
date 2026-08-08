@@ -88,14 +88,15 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 **Tasks:**
 
-- [ ] Decide and document mastery scope (per-character vs. shared per weapon class) — default to per-character unless revised
-- [ ] Add mastery level + use-XP tracking (e.g. `PartyMemberSnapshot.weapon_mastery: Dictionary` keyed by weapon class)
-- [ ] Add placeholder mastery XP thresholds in a new `scripts/data/mastery_constants.gd` (mirrors `progression_constants.gd` pattern)
-- [ ] Award mastery XP on weapon attacks in `scripts/battle/combat_resolver.gd` / `battle_controller.gd`
-- [ ] Implement DEX+LUK combo proc roll and apply 1–3 hits per successful attack (no re-rolling the original hit chance)
-- [ ] Surface mastery level in Status tab / equipment tab; show combo hit count in the battle log (e.g. "Bran hits Wretch x2!")
-- [ ] Persist mastery levels/XP in save data
-- [ ] Extend `combat_smoke_test.gd` for mastery XP gain and combo resolution
+- [x] Decide and document mastery scope (per-character vs. shared per weapon class) — default to per-character unless revised
+- [x] Add mastery level + use-XP tracking (e.g. `PartyMemberSnapshot.weapon_mastery: Dictionary` keyed by weapon class)
+- [x] Add placeholder mastery XP thresholds in a new `scripts/data/mastery_constants.gd` (mirrors `progression_constants.gd` pattern)
+- [x] Award mastery XP on weapon attacks in `scripts/battle/combat_resolver.gd` / `battle_controller.gd`
+- [x] Implement DEX+LUK combo proc roll and apply 1–3 hits per successful attack (no re-rolling the original hit chance)
+- [x] Surface mastery level in Status tab / equipment tab; show combo hit count in the battle log (e.g. "Bran hits Wretch x2!")
+- [x] Persist mastery levels/XP in save data
+- [x] Extend `combat_smoke_test.gd` for mastery XP gain and combo resolution
+- [x] Per-character spell tiers (0=locked, 1–3), unlock rewards, tier-scaled power/MP, and battle integration
 
 **References:** [attributes.md](attributes.md#weapon-mastery), [progression.md](progression.md#weapon-mastery), `scripts/battle/combat_resolver.gd`, `scripts/data/progression_constants.gd`
 

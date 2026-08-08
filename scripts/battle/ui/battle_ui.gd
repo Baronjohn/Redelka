@@ -81,14 +81,14 @@ func show_action_submenu(unit: CombatUnit, allow_retreat: bool, can_attack: bool
 	_set_back_visible(true)
 
 
-func show_spell_menu(spells: Array) -> void:
+func show_spell_menu(entries: Array) -> void:
 	hide_menus()
 	spell_menu.clear()
-	for spell_variant: Variant in spells:
-		var spell: SpellData = spell_variant as SpellData
+	for entry_variant: Variant in entries:
+		var entry := entry_variant as Dictionary
 		var index := spell_menu.item_count
-		spell_menu.add_item("%s (MP %d)" % [spell.display_name, spell.mp_cost])
-		spell_menu.set_item_metadata(index, spell.id)
+		spell_menu.add_item(str(entry.get("label", "")))
+		spell_menu.set_item_metadata(index, entry.get("spell_id", ""))
 	spell_menu.visible = true
 	_set_back_visible(true)
 

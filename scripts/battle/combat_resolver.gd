@@ -1,6 +1,8 @@
 class_name CombatResolver
 extends RefCounted
 
+const MasteryConstantsScript = preload("res://scripts/data/mastery_constants.gd")
+
 
 static func roll_percent(chance: float) -> bool:
 	return randf() * 100.0 <= chance
@@ -22,10 +24,11 @@ static func spell_hit_chance(caster: CombatUnit, target: CombatUnit) -> float:
 	return clampf(chance, CombatConstants.HIT_FLOOR, CombatConstants.HIT_CEILING)
 
 
-static func resolve_physical_attack(attacker: CombatUnit, defender: CombatUnit) -> Dictionary:
+static func resolve_physical_attack(attacker: CombatUnit, defender: CombatUnit, mastery_level: int = 1) -> Dictionary:
 	var result := {
 		"hit": false,
 		"damage": 0,
+		"hit_count": 0,
 		"critical": false,
 		"message": "",
 	}
@@ -35,18 +38,38 @@ static func resolve_physical_attack(attacker: CombatUnit, defender: CombatUnit) 
 		result["message"] = "%s missed %s." % [attacker.display_name, defender.display_name]
 		return result
 
+	var attacker_stats := attacker.get_effective_stats_for_attack()
+	var hit_count := MasteryConstantsScript.resolve_combo_hit_count(mastery_level, attacker_stats)
+	result["hit_count"] = hit_count
 	var damage_range := attacker.get_physical_damage_range()
 	var rolled := randi_range(damage_range.x, damage_range.y)
-	var attacker_stats := attacker.get_effective_stats_for_attack()
 	var mitigation := int(float(defender.stats.vit) * CombatConstants.VIT_WEIGHT)
 	if defender.enemy_data != null:
 		mitigation = defender.enemy_data.def_stat
 	result["damage"] = maxi(rolled + attacker_stats.str - mitigation, 1)
-	result["message"] = "%s hit %s for %d." % [attacker.display_name, defender.display_name, result["damage"]]
+	if hit_count > 1:
+		result["message"] = "%s hit %s x%d for %d." % [
+			attacker.display_name,
+			defender.display_name,
+			hit_count,
+			result["damage"],
+		]
+	else:
+		result["message"] = "%s hit %s for %d." % [
+			attacker.display_name,
+			defender.display_name,
+			result["damage"],
+		]
 	return result
 
 
-static func resolve_spell(caster: CombatUnit, target: CombatUnit, spell: SpellData) -> Dictionary:
+static func resolve_spell(
+	caster: CombatUnit,
+	target: CombatUnit,
+	spell: SpellData,
+	effective_tier_base: int = -1,
+) -> Dictionary:
+	var tier_base := effective_tier_base if effective_tier_base >= 0 else spell.tier_base
 	var result := {
 		"hit": false,
 		"amount": 0,
@@ -55,7 +78,7 @@ static func resolve_spell(caster: CombatUnit, target: CombatUnit, spell: SpellDa
 	}
 	if spell.healing:
 		result["hit"] = true
-		result["amount"] = spell.tier_base + int(float(caster.stats.int_stat) * 0.5)
+		result["amount"] = tier_base + int(float(caster.stats.int_stat) * 0.5)
 		result["message"] = "%s cast %s on %s for %d HP." % [
 			caster.display_name, spell.display_name, target.display_name, result["amount"]
 		]
@@ -68,7 +91,7 @@ static func resolve_spell(caster: CombatUnit, target: CombatUnit, spell: SpellDa
 		return result
 
 	var multiplier := 1.0 + float(caster.stats.int_stat) * CombatConstants.INT_FACTOR
-	result["amount"] = int(float(spell.tier_base) * multiplier)
+	result["amount"] = int(float(tier_base) * multiplier)
 	if spell.damage_type == "fire":
 		var resist := 0
 		if target.enemy_data != null:

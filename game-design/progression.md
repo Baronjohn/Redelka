@@ -17,24 +17,25 @@ Summary of growth rules (detail in attributes doc):
 
 Progression treats **spells** and **skills** as separate systems.
 
-### Spells (global pool)
+### Spells (per character)
 
 **Decided:**
 
-- **All characters share one global spell pool** — unlock once, available to the whole party (any character who can cast may equip/use an unlocked spell; loadout rules **TBD**).
-- **Every spell must be unlocked** before use — e.g. story progress, defeating specific foes, finding key items, or other authored triggers (**TBD** per spell).
-- Unlocks are **not** bought from shops; discovery and progression gate the pool.
-- Once unlocked, a spell earns **XP through use** in battle.
-- Spells **level a capped number of times**, unlocking **stronger tiers** (e.g. tier 1 → tier 2 → tier 3).
-- **Spell damage:** tier sets base power; **Intelligence** is the multiplier ([attributes.md](attributes.md)).
+- **Spell unlock and tier progression are per character** — each ally tracks their own spell tiers independently.
+- **Tier 0 = locked** — spells must be unlocked via story progress, encounter victory rewards, or other authored triggers before use.
+- Unlocks are **not** bought from shops; discovery and progression gate access.
+- Once unlocked (tier 1), a spell earns **+40 XP per use** in battle (on unleash resolve, hit or miss).
+- Spells advance to **tier 3 max** with per-step thresholds: **1000 XP** (T1→T2), **2000 XP** (T2→T3).
+- **Higher tiers** increase both **base power** and **MP cost** (see `scripts/data/mastery_constants.gd`).
+- **Spell damage:** tier sets scaled base power; **Intelligence** is the multiplier ([attributes.md](attributes.md)).
 - **MP pool:** from **Resilience** only; **Mind** affects spell hit.
+- **v0:** All unlocked spells for a character appear in battle (no equip slot limit yet).
 
 **TBD:**
 
-- Max tier per spell and XP thresholds
-- MP cost per spell, cooldowns, or CTB-based cast delay
-- Full-game per-character spell slot limits (v0: all unlocked spells usable — [prototype.md](prototype.md))
-- Full unlock trigger list per spell
+- Cooldowns or CTB-based cast delay beyond existing delayed cast
+- Full unlock trigger list per spell across all chapters
+- Per-character spell slot limits (full-game loadout rules)
 
 ### Skills (character-specific)
 
@@ -52,9 +53,7 @@ Progression treats **spells** and **skills** as separate systems.
 
 ## Weapon mastery
 
-**Decided:** Separate from spell tiers — **weapon class mastery** levels 1–3 unlock combo potential (1 / 1–2 / 1–3 hits). Earned through weapon use. See [attributes.md](attributes.md#weapon-mastery).
-
-**TBD:** Mastery XP thresholds, full weapon class list.
+**Decided:** Separate from spell tiers — **weapon class mastery** levels 1–3 unlock combo potential (1 / 1–2 / 1–3 hits). Earned through weapon attacks (+40 XP per resolve). Per-character; starts at level 1 in all classes (`sword`, `bow`, `staff`, `dagger`). Level thresholds: **1000 XP per level**. See [attributes.md](attributes.md#weapon-mastery).
 
 ## Roster and party selection
 

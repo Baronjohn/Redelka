@@ -3,6 +3,7 @@ extends Node
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
+const MasteryConstantsScript = preload("res://scripts/data/mastery_constants.gd")
 
 enum BattleSource { STANDALONE, EXPLORE }
 
@@ -70,6 +71,7 @@ func ensure_party_initialized(encounter_id: String = DEFAULT_ENCOUNTER_ID) -> vo
 		snapshot.current_hp = snapshot.max_hp
 		snapshot.max_mp = CombatConstants.MP_BASE + stats.res * CombatConstants.MP_PER_RES
 		snapshot.current_mp = snapshot.max_mp
+		_initialize_mastery_defaults(snapshot)
 		party_members.append(snapshot)
 
 
@@ -251,6 +253,180 @@ func switch_weapon(character_id: String, weapon_id: String) -> Dictionary:
 	return {
 		"ok": true,
 		"message": "Switched to %s." % _get_loot_item_name(weapon_id),
+	}
+
+
+func get_weapon_mastery_level(character_id: String, weapon_class: String) -> int:
+	var entry := _get_weapon_mastery_entry(character_id, weapon_class)
+	return int(entry.get("level", 1))
+
+
+func get_weapon_mastery_xp(character_id: String, weapon_class: String) -> int:
+	var entry := _get_weapon_mastery_entry(character_id, weapon_class)
+	return int(entry.get("xp", 0))
+
+
+func get_weapon_mastery_progress(character_id: String, weapon_class: String) -> Dictionary:
+	var level := get_weapon_mastery_level(character_id, weapon_class)
+	var xp := get_weapon_mastery_xp(character_id, weapon_class)
+	return {
+		"level": level,
+		"xp": xp,
+		"xp_to_next": MasteryConstantsScript.weapon_xp_to_next_level(level),
+	}
+
+
+func award_weapon_mastery_xp(
+	character_id: String,
+	weapon_class: String,
+	amount: int = MasteryConstantsScript.MASTERY_XP_PER_USE,
+) -> Dictionary:
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null or weapon_class.is_empty():
+		return {"ok": false, "message": ""}
+	_ensure_mastery_defaults(snapshot)
+	var entry: Dictionary = snapshot.weapon_mastery[weapon_class] as Dictionary
+	var level := int(entry.get("level", 1))
+	if level >= MasteryConstantsScript.WEAPON_MAX_LEVEL:
+		return {"ok": true, "message": "", "level_up": false}
+	entry["xp"] = int(entry.get("xp", 0)) + amount
+	var messages: PackedStringArray = []
+	while level < MasteryConstantsScript.WEAPON_MAX_LEVEL:
+		var threshold := MasteryConstantsScript.weapon_xp_to_next_level(level)
+		if threshold <= 0 or int(entry.get("xp", 0)) < threshold:
+			break
+		entry["xp"] = int(entry.get("xp", 0)) - threshold
+		level += 1
+		entry["level"] = level
+		messages.append("%s %s mastery reached level %d." % [
+			_get_character_name(character_id),
+			weapon_class.capitalize(),
+			level,
+		])
+	snapshot.weapon_mastery[weapon_class] = entry
+	return {
+		"ok": true,
+		"message": ", ".join(messages),
+		"level_up": not messages.is_empty(),
+	}
+
+
+func get_spell_tier(character_id: String, spell_id: String) -> int:
+	var mastery_id := _resolve_spell_mastery_id(spell_id)
+	if mastery_id.is_empty():
+		return 0
+	return int(_get_spell_mastery_entry(character_id, mastery_id).get("tier", 0))
+
+
+func get_spell_mastery_xp(character_id: String, spell_id: String) -> int:
+	var mastery_id := _resolve_spell_mastery_id(spell_id)
+	if mastery_id.is_empty():
+		return 0
+	return int(_get_spell_mastery_entry(character_id, mastery_id).get("xp", 0))
+
+
+func get_spell_mastery_progress(character_id: String, spell_id: String) -> Dictionary:
+	return get_spell_mastery_progress_for_type(character_id, _resolve_spell_mastery_id(spell_id))
+
+
+func get_spell_mastery_progress_for_type(character_id: String, mastery_id: String) -> Dictionary:
+	if mastery_id.is_empty():
+		return {"tier": 0, "xp": 0, "xp_to_next": 0}
+	var entry := _get_spell_mastery_entry(character_id, mastery_id)
+	var tier := int(entry.get("tier", 0))
+	return {
+		"tier": tier,
+		"xp": int(entry.get("xp", 0)),
+		"xp_to_next": MasteryConstantsScript.spell_xp_to_next_tier(tier),
+	}
+
+
+func unlock_spell_for_character(character_id: String, spell_id: String) -> String:
+	var spells := DataLoader.load_spells()
+	if not spells.has(spell_id):
+		return "Unknown spell."
+	var mastery_id := _resolve_spell_mastery_id(spell_id)
+	if mastery_id.is_empty():
+		return "Spell has no mastery type."
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null:
+		return "Invalid character."
+	_ensure_mastery_defaults(snapshot)
+	var entry: Dictionary = snapshot.spell_mastery[mastery_id] as Dictionary
+	if int(entry.get("tier", 0)) > 0:
+		return "%s already knows %s." % [
+			_get_character_name(character_id),
+			MasteryConstantsScript.get_spell_mastery_display_name(mastery_id),
+		]
+	entry["tier"] = 1
+	entry["xp"] = 0
+	snapshot.spell_mastery[mastery_id] = entry
+	return "%s learned %s." % [
+		_get_character_name(character_id),
+		(spells[spell_id] as SpellData).display_name,
+	]
+
+
+func award_spell_mastery_xp(
+	character_id: String,
+	spell_id: String,
+	amount: int = MasteryConstantsScript.MASTERY_XP_PER_USE,
+) -> Dictionary:
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null or spell_id.is_empty():
+		return {"ok": false, "message": ""}
+	var mastery_id := _resolve_spell_mastery_id(spell_id)
+	if mastery_id.is_empty():
+		return {"ok": false, "message": ""}
+	var tier := int(_get_spell_mastery_entry(character_id, mastery_id).get("tier", 0))
+	if tier <= 0:
+		return {"ok": false, "message": ""}
+	var entry: Dictionary = snapshot.spell_mastery[mastery_id] as Dictionary
+	var messages: PackedStringArray = []
+	entry["xp"] = int(entry.get("xp", 0)) + amount
+	while tier < MasteryConstantsScript.SPELL_MAX_TIER:
+		var threshold := MasteryConstantsScript.spell_xp_to_next_tier(tier)
+		if threshold <= 0 or int(entry.get("xp", 0)) < threshold:
+			break
+		entry["xp"] = int(entry.get("xp", 0)) - threshold
+		tier += 1
+		entry["tier"] = tier
+		messages.append("%s's %s mastery reached tier %d." % [
+			_get_character_name(character_id),
+			MasteryConstantsScript.get_spell_mastery_display_name(mastery_id),
+			tier,
+		])
+	snapshot.spell_mastery[mastery_id] = entry
+	return {
+		"ok": true,
+		"message": ", ".join(messages),
+		"tier_up": not messages.is_empty(),
+	}
+
+
+func get_unlocked_spells_for_character(character_id: String) -> Array[String]:
+	var result: Array[String] = []
+	for spell_id: String in DataLoader.load_spells().keys():
+		if get_spell_tier(character_id, spell_id) >= 1:
+			result.append(spell_id)
+	result.sort()
+	return result
+
+
+func get_effective_spell_stats(character_id: String, spell_id: String) -> Dictionary:
+	var spells := DataLoader.load_spells()
+	if not spells.has(spell_id):
+		return {"tier": 0, "tier_base": 0, "mp_cost": 0}
+	var spell: SpellData = spells[spell_id]
+	var tier := get_spell_tier(character_id, spell_id)
+	if tier <= 0:
+		return {"tier": 0, "tier_base": spell.tier_base, "mp_cost": spell.mp_cost}
+	var power_mult := MasteryConstantsScript.get_spell_power_multiplier(tier)
+	var mp_mult := MasteryConstantsScript.get_spell_mp_multiplier(tier)
+	return {
+		"tier": tier,
+		"tier_base": maxi(int(round(float(spell.tier_base) * power_mult)), 1),
+		"mp_cost": maxi(int(round(float(spell.mp_cost) * mp_mult)), 1),
 	}
 
 
@@ -703,6 +879,7 @@ func resolve_battle(outcome: int) -> void:
 			last_battle_xp = roll_encounter_xp(current_encounter_id)
 			if last_battle_xp > 0:
 				grant_xp_to_party(last_battle_xp)
+			_apply_encounter_spell_unlocks(current_encounter_id)
 			if not overworld_enemy_id.is_empty() and overworld_enemy_id not in defeated_enemy_ids:
 				defeated_enemy_ids.append(overworld_enemy_id)
 			_begin_post_battle_explore()
@@ -780,7 +957,9 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 		collected_pickup_ids.append(str(pickup_id))
 	party_members.clear()
 	for member_data: Variant in state.get("party_members", []) as Array:
-		party_members.append(PartyMemberSnapshot.from_dict(member_data as Dictionary))
+		var snapshot := PartyMemberSnapshot.from_dict(member_data as Dictionary)
+		_ensure_mastery_defaults(snapshot)
+		party_members.append(snapshot)
 	inventory = (state.get("inventory", {}) as Dictionary).duplicate()
 	equipped = (state.get("equipped", {}) as Dictionary).duplicate(true)
 	for character_id: String in equipped.keys():
@@ -1100,3 +1279,81 @@ func _get_loot_item_name(item_id: String) -> String:
 	if equipment.has(item_id):
 		return equipment[item_id].display_name
 	return item_id
+
+
+func _get_character_name(character_id: String) -> String:
+	var characters := _get_characters()
+	if characters.has(character_id):
+		return (characters[character_id] as CharacterData).display_name
+	return character_id
+
+
+func _initialize_mastery_defaults(snapshot: PartyMemberSnapshot) -> void:
+	snapshot.weapon_mastery.clear()
+	for weapon_class: String in MasteryConstantsScript.WEAPON_CLASSES:
+		snapshot.weapon_mastery[weapon_class] = {"level": 1, "xp": 0}
+	snapshot.spell_mastery.clear()
+	for mastery_id: String in MasteryConstantsScript.SPELL_MASTERY_TYPES:
+		snapshot.spell_mastery[mastery_id] = {"tier": 0, "xp": 0}
+
+
+func _ensure_mastery_defaults(snapshot: PartyMemberSnapshot) -> void:
+	_migrate_spell_mastery(snapshot)
+	for weapon_class: String in MasteryConstantsScript.WEAPON_CLASSES:
+		if not snapshot.weapon_mastery.has(weapon_class):
+			snapshot.weapon_mastery[weapon_class] = {"level": 1, "xp": 0}
+	for mastery_id: String in MasteryConstantsScript.SPELL_MASTERY_TYPES:
+		if not snapshot.spell_mastery.has(mastery_id):
+			snapshot.spell_mastery[mastery_id] = {"tier": 0, "xp": 0}
+
+
+func _migrate_spell_mastery(snapshot: PartyMemberSnapshot) -> void:
+	for spell_id: String in DataLoader.load_spells().keys():
+		if not snapshot.spell_mastery.has(spell_id):
+			continue
+		var mastery_id := _resolve_spell_mastery_id(spell_id)
+		if mastery_id.is_empty():
+			snapshot.spell_mastery.erase(spell_id)
+			continue
+		if not snapshot.spell_mastery.has(mastery_id):
+			snapshot.spell_mastery[mastery_id] = (snapshot.spell_mastery[spell_id] as Dictionary).duplicate()
+		snapshot.spell_mastery.erase(spell_id)
+	for legacy_id: String in ["mend", "arc_bolt"]:
+		snapshot.spell_mastery.erase(legacy_id)
+
+
+func _resolve_spell_mastery_id(spell_id: String) -> String:
+	var spells := DataLoader.load_spells()
+	if not spells.has(spell_id):
+		return ""
+	return (spells[spell_id] as SpellData).mastery_id
+
+
+func _get_weapon_mastery_entry(character_id: String, weapon_class: String) -> Dictionary:
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null:
+		return {"level": 1, "xp": 0}
+	_ensure_mastery_defaults(snapshot)
+	if snapshot.weapon_mastery.has(weapon_class):
+		return snapshot.weapon_mastery[weapon_class] as Dictionary
+	return {"level": 1, "xp": 0}
+
+
+func _get_spell_mastery_entry(character_id: String, mastery_id: String) -> Dictionary:
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null or mastery_id.is_empty():
+		return {"tier": 0, "xp": 0}
+	_ensure_mastery_defaults(snapshot)
+	if snapshot.spell_mastery.has(mastery_id):
+		return snapshot.spell_mastery[mastery_id] as Dictionary
+	return {"tier": 0, "xp": 0}
+
+
+func _apply_encounter_spell_unlocks(encounter_id: String) -> void:
+	var encounter := DataLoader.load_encounter(encounter_id)
+	for unlock_entry: Dictionary in encounter.spell_unlocks:
+		var character_id := str(unlock_entry.get("character_id", ""))
+		var spell_id := str(unlock_entry.get("spell_id", ""))
+		if character_id.is_empty() or spell_id.is_empty():
+			continue
+		unlock_spell_for_character(character_id, spell_id)

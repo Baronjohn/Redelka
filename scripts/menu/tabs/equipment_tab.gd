@@ -2,6 +2,7 @@ extends Control
 
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
+const PlaceholderIconsScript = preload("res://scripts/ui/placeholder_icons.gd")
 
 var menu: Control
 var _selected_slot: String = "weapon"
@@ -31,6 +32,7 @@ func setup() -> void:
 		var index := _slot_list.item_count
 		_slot_list.add_item(EquipmentDataScript.slot_label(slot_name))
 		_slot_list.set_item_metadata(index, slot_name)
+		_slot_list.set_item_icon(index, PlaceholderIconsScript.get_slot_icon(slot_name))
 
 	var right := VBoxContainer.new()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -94,10 +96,19 @@ func _refresh_slots() -> void:
 func _populate_candidates() -> void:
 	_candidate_list.clear()
 	var character_id := str(menu.call("get_selected_character_id"))
+	var weapons := DataLoader.load_weapons()
+	var equipment := DataLoader.load_equipment()
 	for candidate: Dictionary in GameState.get_equipment_candidates_for_slot(character_id, _selected_slot):
+		var item_id := str(candidate.get("item_id", ""))
 		var index := _candidate_list.item_count
 		_candidate_list.add_item(_format_candidate_label(candidate))
 		_candidate_list.set_item_metadata(index, candidate)
+		if weapons.has(item_id):
+			var weapon: WeaponData = weapons[item_id]
+			_candidate_list.set_item_icon(index, PlaceholderIconsScript.get_weapon_class_icon(weapon.weapon_class))
+		elif equipment.has(item_id):
+			var piece = equipment[item_id]
+			_candidate_list.set_item_icon(index, PlaceholderIconsScript.get_slot_icon(piece.slot))
 
 
 func _on_candidate_clicked(index: int, _at_position: Vector2, _mouse_button_index: int) -> void:
@@ -156,6 +167,22 @@ func _update_preview() -> void:
 		preview_loadout[_selected_slot] = pending_item_id
 	var preview_stats := PartyStatsHelper.get_effective_stats(character, preview_loadout)
 	var lines: PackedStringArray = []
+	if _selected_slot == EquipmentDataScript.SLOT_WEAPON:
+		var weapon_id := str(preview_loadout.get(EquipmentDataScript.SLOT_WEAPON, ""))
+		if not weapon_id.is_empty():
+			var weapons := DataLoader.load_weapons()
+			if weapons.has(weapon_id):
+				var weapon: WeaponData = weapons[weapon_id]
+				var progress: Dictionary = GameState.get_weapon_mastery_progress(
+					character_id,
+					weapon.weapon_class,
+				)
+				var xp_to_next := int(progress.get("xp_to_next", 0))
+				var xp_text := "%d / %d XP" % [int(progress.get("xp", 0)), xp_to_next] if xp_to_next > 0 else "MAX"
+				lines.append(
+					"%s mastery: Lv %d (%s)" % [weapon.weapon_class.capitalize(), int(progress.get("level", 1)), xp_text]
+				)
+				lines.append("")
 	if _pending_candidate.is_empty():
 		lines.append("[i]Select an item to preview changes.[/i]")
 	else:
