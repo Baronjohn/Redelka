@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "level_cap": 99,
+  "points_per_level": 4,
+  "xp_curve": {
+	"description": "XP required to advance from the current level to the next.",
+	"formula": "level_times_base",
+	"base": 100,
+	"lookup": {}
+  }
+}

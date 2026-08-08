@@ -121,6 +121,10 @@ static func load_new_game_setup() -> Dictionary:
 	return load_json_object("res://data/setup.json")
 
 
+static func load_progression() -> Dictionary:
+	return load_json_object("res://data/progression.json")
+
+
 static func load_attributes() -> Dictionary:
 	return load_json_object("res://data/attributes.json")
 

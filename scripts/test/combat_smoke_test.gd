@@ -522,6 +522,14 @@ func _test_progression() -> PackedStringArray:
 	if encounter_xp < 100:
 		errors.append("Explore encounter XP should reach level-up threshold.")
 
+	var progression_data := DataLoader.load_progression()
+	if int(progression_data.get("level_cap", 0)) != 99:
+		errors.append("progression.json should define level_cap.")
+	if ProgressionConstantsScript.xp_required_for_level(2) != 200:
+		errors.append("Level 2 XP requirement should follow progression.json curve.")
+	if ProgressionConstantsScript.POINTS_PER_LEVEL != int(progression_data.get("points_per_level", 0)):
+		errors.append("Progression constants should load points_per_level from progression.json.")
+
 	var bran := gs.call("get_member_snapshot", "ally_1") as PartyMemberSnapshot
 	var old_level := bran.level
 	gs.call("grant_xp_to_party", 200)
