@@ -34,13 +34,16 @@ func _ready() -> void:
 
 func load_settings() -> void:
 	if _config.load(SETTINGS_PATH) != OK:
+		master_volume = AudioSettings.master_volume_default
+		music_volume = AudioSettings.music_volume_default
+		sfx_volume = AudioSettings.sfx_volume_default
 		return
 	window_mode = str(_config.get_value("graphics", "window_mode", window_mode))
 	vsync_enabled = bool(_config.get_value("graphics", "vsync_enabled", vsync_enabled))
 	resolution_scale = float(_config.get_value("graphics", "resolution_scale", resolution_scale))
-	master_volume = float(_config.get_value("audio", "master_volume", master_volume))
-	music_volume = float(_config.get_value("audio", "music_volume", music_volume))
-	sfx_volume = float(_config.get_value("audio", "sfx_volume", sfx_volume))
+	master_volume = float(_config.get_value("audio", "master_volume", AudioSettings.master_volume_default))
+	music_volume = float(_config.get_value("audio", "music_volume", AudioSettings.music_volume_default))
+	sfx_volume = float(_config.get_value("audio", "sfx_volume", AudioSettings.sfx_volume_default))
 	input_overrides = _config.get_value("input", "overrides", {}) as Dictionary
 
 

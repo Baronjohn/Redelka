@@ -65,6 +65,7 @@ func _physics_process(delta: float) -> void:
 		var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 		var speed_ratio := clampf(horizontal_speed / MOVE_SPEED, 0.0, 1.0)
 		_walk_model.update_animation(delta, speed_ratio)
+		SfxManager.update_walk_steps(delta, speed_ratio)
 
 
 func _update_mouse_facing(delta: float) -> void:

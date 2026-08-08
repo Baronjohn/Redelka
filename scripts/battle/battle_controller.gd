@@ -771,6 +771,7 @@ func _begin_spell_cast(caster: CombatUnit, target: CombatUnit, spell: SpellData)
 	if not caster.spend_mp(mp_cost):
 		log_message.emit("Not enough MP.")
 		return
+	SfxManager.play("item_use", randf_range(0.98, 1.02))
 	caster.set_pending_spell(spell.id, target.runtime_id)
 	_consume_action(caster)
 	log_message.emit(
@@ -888,6 +889,7 @@ func _perform_attack(
 		break_message = str(resource_result.get("message", ""))
 	_consume_action(attacker)
 	if _unit_views.has(attacker.runtime_id):
+		SfxManager.play("attack", randf_range(0.96, 1.04))
 		await (_unit_views[attacker.runtime_id] as UnitView).play_attack_animation()
 	var mastery_level := 1
 	var weapon_class := ""
@@ -937,6 +939,7 @@ func _perform_enemy_debuff(
 func _perform_skill(attacker: CombatUnit, defender: CombatUnit) -> void:
 	_consume_action(attacker)
 	if _unit_views.has(attacker.runtime_id):
+		SfxManager.play("attack", randf_range(0.94, 1.02), -2.0)
 		await (_unit_views[attacker.runtime_id] as UnitView).play_attack_animation()
 	var result := CombatResolver.resolve_skill(attacker, defender)
 	log_message.emit(str(result["message"]))
@@ -961,6 +964,7 @@ func _perform_item(actor: CombatUnit, target: CombatUnit, item_id: String) -> vo
 		return
 	_consume_action(actor)
 	_inventory[item_id] = int(_inventory[item_id]) - 1
+	SfxManager.play("item_use")
 	if item.revive and target.is_ko:
 		target.revive_with_hp(item.heal_amount)
 		_show_floating_number(target, item.heal_amount, true)

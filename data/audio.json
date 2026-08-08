@@ -1,0 +1,38 @@
+{
+  "volumes": {
+	"master": 0.5,
+	"music": 0.5,
+	"sfx": 0.5
+  },
+  "music": {
+	"fade_duration": 1.2,
+	"tracks": {
+	  "main_menu": "res://assets/audio/bgm/main_menu.ogg",
+	  "overworld": "res://assets/audio/bgm/overworld.ogg",
+	  "battle": "res://assets/audio/bgm/battle.ogg"
+	}
+  },
+  "sfx": {
+	"pool_size": 10,
+	"paths": {
+	  "walk_step": "res://assets/audio/sfx/walk_step.ogg",
+	  "battle_move": "res://assets/audio/sfx/battle_move.ogg",
+	  "attack": "res://assets/audio/sfx/attack.ogg",
+	  "item_use": "res://assets/audio/sfx/item_use.ogg",
+	  "menu_nav": "res://assets/audio/sfx/menu_nav.ogg",
+	  "menu_confirm": "res://assets/audio/sfx/menu_confirm.ogg",
+	  "pickup": "res://assets/audio/sfx/pickup.ogg",
+	  "door_open": "res://assets/audio/sfx/door_open.ogg",
+	  "closet_open": "res://assets/audio/sfx/closet_open.ogg"
+	},
+	"walk_step": {
+	  "min_speed_ratio": 0.12,
+	  "cooldown_min": 0.28,
+	  "cooldown_max": 0.52,
+	  "volume_min_db": -8.0,
+	  "volume_max_db": -2.0,
+	  "pitch_min": 0.9,
+	  "pitch_max": 1.08
+	}
+  }
+}

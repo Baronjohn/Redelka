@@ -62,6 +62,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func interact() -> bool:
 	if not can_use():
 		return false
+	SfxManager.play("door_open")
 	GameState.travel_to_area(target_area_id, target_spawn, target_rotation_y)
 	SceneTransition.go_to_explore()
 	return true

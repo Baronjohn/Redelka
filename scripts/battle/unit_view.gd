@@ -118,6 +118,7 @@ func move_to_world(world_pos: Vector3, instant: bool = false, duration: float = 
 	if move_duration < 0.0:
 		move_duration = DebugSettings.scale_battle_duration(CombatConstants.UNIT_MOVE_DURATION)
 	_moving = true
+	SfxManager.play("battle_move", randf_range(0.95, 1.05), -3.0)
 	var tween := create_tween()
 	tween.tween_property(self, "position", world_pos, move_duration).set_trans(Tween.TRANS_QUAD)
 	tween.finished.connect(func() -> void:

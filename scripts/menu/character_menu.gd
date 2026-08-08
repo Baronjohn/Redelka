@@ -49,6 +49,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func close_menu() -> void:
+	SfxManager.play("menu_nav")
 	closed.emit()
 	queue_free()
 
@@ -85,6 +86,7 @@ func _register_tab(label: String, script_type: Script) -> void:
 	button.text = label
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(_select_tab.bind(label))
+	SfxManager.wire_menu_button(button)
 	tab_buttons.add_child(button)
 	var tab := Control.new()
 	tab.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -180,6 +182,7 @@ func _build_party_sidebar() -> void:
 		select_button.set_anchors_preset(Control.PRESET_FULL_RECT)
 		select_button.focus_mode = Control.FOCUS_ALL
 		select_button.pressed.connect(set_selected_character.bind(snapshot.character_id))
+		SfxManager.wire_menu_button(select_button)
 		entry.add_child(select_button)
 
 		party_sidebar.add_child(entry)

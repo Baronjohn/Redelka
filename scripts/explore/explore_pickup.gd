@@ -69,6 +69,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func interact() -> bool:
 	if not can_interact():
 		return false
+	SfxManager.play("pickup")
 	var message := GameState.collect_pickup(pickup_id, item_id, count)
 	pickup_collected.emit(message)
 	queue_free()

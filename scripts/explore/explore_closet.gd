@@ -61,6 +61,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func interact() -> bool:
 	if not can_interact():
 		return false
+	SfxManager.play("closet_open")
 	if not GameState.is_enemy_defeated(ambush_enemy_id):
 		var player := _get_player()
 		if player != null:

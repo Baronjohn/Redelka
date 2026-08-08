@@ -129,6 +129,10 @@ static func load_debug() -> Dictionary:
 	return load_json_object("res://data/debug.json")
 
 
+static func load_audio() -> Dictionary:
+	return load_json_object("res://data/audio.json")
+
+
 static func load_attributes() -> Dictionary:
 	return load_json_object("res://data/attributes.json")
 

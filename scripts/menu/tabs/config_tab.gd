@@ -66,6 +66,9 @@ func _build_audio_tab() -> void:
 	_audio_box = VBoxContainer.new()
 	_sub_tabs.add_child(_audio_box)
 	_sub_tabs.set_tab_title(1, "Audio")
+	var info_label := Label.new()
+	info_label.text = "Default volumes load from data/audio.json."
+	_audio_box.add_child(info_label)
 	_audio_box.add_child(_make_volume_row("Master", Settings.master_volume, Settings.set_master_volume))
 	_audio_box.add_child(_make_volume_row("Music", Settings.music_volume, Settings.set_music_volume))
 	_audio_box.add_child(_make_volume_row("SFX", Settings.sfx_volume, Settings.set_sfx_volume))
