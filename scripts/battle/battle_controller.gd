@@ -64,6 +64,7 @@ var _allow_retreat: bool = true
 var _scheduled_enemy_removals: Dictionary = {}
 var _save_panel: Control = null
 var _hovered_cell: Vector2i = INVALID_CELL
+var _resolving_action: bool = false
 
 
 func _ready() -> void:
@@ -463,6 +464,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not event is InputEventMouseButton:
 		return
+	if _resolving_action:
+		return
 	var mouse_event := event as InputEventMouseButton
 	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
 		return
@@ -628,13 +631,18 @@ func _collider_to_unit_view(collider: Node) -> UnitView:
 
 
 func _on_tile_clicked(cell: Vector2i) -> void:
+	if _resolving_action:
+		return
 	match _phase:
 		BattlePhase.SELECT_MOVE:
 			var unit: CombatUnit = _units[_current_unit_id]
 			var reachable := grid_reachable(unit)
 			if cell not in reachable:
 				return
+			if not _try_begin_action_resolution():
+				return
 			await _apply_player_move(unit, cell)
+			_end_action_resolution()
 		BattlePhase.SELECT_ATTACK_TARGET, BattlePhase.SELECT_SPELL_TARGET, BattlePhase.SELECT_SKILL_TARGET, BattlePhase.SELECT_ITEM_TARGET:
 			var occupant_id := _grid.get_occupant(cell)
 			if occupant_id.is_empty() or not _units.has(occupant_id):
@@ -674,7 +682,7 @@ func _move_unit_to_cell(unit: CombatUnit, cell: Vector2i) -> void:
 
 
 func _on_unit_clicked(runtime_id: String) -> void:
-	if _phase == BattlePhase.BATTLE_END:
+	if _phase == BattlePhase.BATTLE_END or _resolving_action:
 		return
 	var target: CombatUnit = _units[runtime_id]
 	var actor: CombatUnit = _units[_current_unit_id]
@@ -684,31 +692,43 @@ func _on_unit_clicked(runtime_id: String) -> void:
 				return
 			if not _can_attack(actor, target):
 				return
+			if not _try_begin_action_resolution():
+				return
 			await _perform_attack(actor, target)
 			_clear_highlights()
 			_end_player_turn_if_done(actor)
+			_end_action_resolution()
 		BattlePhase.SELECT_SPELL_TARGET:
 			if _selected_spell == null:
 				return
 			if not _is_valid_spell_target(actor, target, _selected_spell):
 				return
+			if not _try_begin_action_resolution():
+				return
 			_begin_spell_cast(actor, target, _selected_spell)
+			_end_action_resolution()
 			get_viewport().set_input_as_handled()
 		BattlePhase.SELECT_SKILL_TARGET:
 			if target.is_ally or target.is_ko:
 				return
 			if _grid.manhattan(actor.grid_pos, target.grid_pos) > actor.skill.range_tiles:
 				return
+			if not _try_begin_action_resolution():
+				return
 			await _perform_skill(actor, target)
 			_clear_highlights()
 			_end_player_turn_if_done(actor)
+			_end_action_resolution()
 		BattlePhase.SELECT_ITEM_TARGET:
 			if not _is_valid_item_target(actor, target, _selected_item_id):
+				return
+			if not _try_begin_action_resolution():
 				return
 			await _perform_item(actor, target, _selected_item_id)
 			_selected_item_id = ""
 			_clear_highlights()
 			_end_player_turn_if_done(actor)
+			_end_action_resolution()
 
 
 func _on_spell_selected(spell_id: String) -> void:
@@ -1241,6 +1261,17 @@ func _on_battle_save_loaded() -> void:
 func _set_phase(new_phase: BattlePhase) -> void:
 	_phase = new_phase
 	phase_changed.emit(new_phase)
+
+
+func _try_begin_action_resolution() -> bool:
+	if _resolving_action:
+		return false
+	_resolving_action = true
+	return true
+
+
+func _end_action_resolution() -> void:
+	_resolving_action = false
 
 
 func _update_turn_highlight() -> void:

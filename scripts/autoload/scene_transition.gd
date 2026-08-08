@@ -34,6 +34,10 @@ func change_scene(scene: PackedScene) -> void:
 	await tween.finished
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_busy = false
+	if MusicManager != null:
+		var current := get_tree().current_scene
+		if current != null:
+			MusicManager.play_for_scene_path(current.scene_file_path)
 
 
 func go_to_battle() -> void:
