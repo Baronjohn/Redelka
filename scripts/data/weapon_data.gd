@@ -8,6 +8,9 @@ var damage_min: int = 0
 var damage_max: int = 0
 var damage_type: String = "physical"
 var attack_range: int = 1
+var durability_max: int = 0
+var ammo_item_id: String = ""
+var magazine_size: int = 0
 var stat_bonuses: Dictionary = {}
 
 
@@ -20,5 +23,16 @@ static func from_dict(data: Dictionary) -> WeaponData:
 	weapon.damage_max = int(data.get("damage_max", 0))
 	weapon.damage_type = str(data.get("damage_type", "physical"))
 	weapon.attack_range = int(data.get("attack_range", 1))
+	weapon.durability_max = int(data.get("durability_max", 0))
+	weapon.ammo_item_id = str(data.get("ammo_item_id", ""))
+	weapon.magazine_size = int(data.get("magazine_size", 0))
 	weapon.stat_bonuses = data.get("stat_bonuses", {}) as Dictionary
 	return weapon
+
+
+func uses_durability() -> bool:
+	return durability_max > 0
+
+
+func uses_ammo() -> bool:
+	return not ammo_item_id.is_empty() and magazine_size > 0

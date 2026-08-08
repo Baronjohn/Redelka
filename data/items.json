@@ -31,5 +31,10 @@
 	"id": "cellar_key",
 	"name": "Cellar Key",
 	"type": "key"
+  },
+  {
+	"id": "arrow",
+	"name": "Arrow",
+	"type": "ammo"
   }
 ]

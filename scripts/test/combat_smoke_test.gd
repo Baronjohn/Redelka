@@ -17,6 +17,7 @@ func _initialize() -> void:
 	errors.append_array(_test_pickups_and_loot())
 	errors.append_array(_test_progression())
 	errors.append_array(_test_save_load())
+	errors.append_array(_test_weapon_durability_and_ammo())
 	errors.append_array(_test_chapter_data())
 
 	if errors.is_empty():
@@ -507,6 +508,87 @@ func _test_save_load() -> PackedStringArray:
 		errors.append("Hard save should succeed with Memory Tape.")
 	if int(gs.get("inventory").get("memory_tape", 0)) != 0:
 		errors.append("Hard save should consume Memory Tape.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_weapon_durability_and_ammo() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+
+	var weapons := DataLoader.load_weapons()
+	var sword: WeaponData = weapons["iron_sword"]
+	var bow: WeaponData = weapons["short_bow"]
+	if not sword.uses_durability():
+		errors.append("Melee weapons should use durability.")
+	if not bow.uses_ammo():
+		errors.append("Ranged weapons should use ammo.")
+	if bow.ammo_item_id != "arrow":
+		errors.append("Short bow should consume arrows.")
+
+	if int(gs.call("get_weapon_loaded_ammo", "ally_3", "short_bow")) != bow.magazine_size:
+		errors.append("Equipped bow should start fully loaded.")
+
+	var ammo_attack: Dictionary = gs.call("consume_attack_resource", "ally_3")
+	if not bool(ammo_attack.get("ok", false)):
+		errors.append("Bow attack should consume loaded ammo.")
+	var loaded_after_attack := int(gs.call("get_weapon_loaded_ammo", "ally_3", "short_bow"))
+	if loaded_after_attack != bow.magazine_size - 1:
+		errors.append("Bow ammo should decrement by one per attack.")
+
+	gs.get("weapon_loaded_ammo")["ally_3"]["short_bow"] = 0
+	if bool(gs.call("can_attack_with_equipped_weapon", "ally_3")):
+		errors.append("Empty bow should disable attacks.")
+
+	gs.get("inventory")["arrow"] = 4
+	var reload_result: Dictionary = gs.call("reload_equipped_weapon", "ally_3")
+	if not bool(reload_result.get("ok", false)):
+		errors.append("Reload should succeed with arrows in inventory.")
+	if int(gs.call("get_weapon_loaded_ammo", "ally_3", "short_bow")) != mini(bow.magazine_size, 4):
+		errors.append("Reload should transfer available arrows into the magazine.")
+	if int(gs.get("inventory").get("arrow", 0)) != 0:
+		errors.append("Reload should consume inventory arrows.")
+
+	gs.get("inventory")["arrow"] = 2
+	if not bool(gs.call("can_reload_with_ammo", "ally_3", "arrow")):
+		errors.append("Partially loaded bow should accept more arrows.")
+	gs.get("inventory")["arrow"] = 10
+	var outside_reload: String = gs.call("use_item_outside_battle", "arrow", "ally_3")
+	if outside_reload.is_empty():
+		errors.append("Outside battle ammo use should return a message.")
+	if int(gs.call("get_weapon_loaded_ammo", "ally_3", "short_bow")) != bow.magazine_size:
+		errors.append("Outside battle reload should fill the magazine.")
+
+	gs.get("weapon_durability")["ally_1"]["iron_sword"] = 1
+	var break_result: Dictionary = gs.call("consume_attack_resource", "ally_1")
+	if not bool(break_result.get("ok", false)) or not bool(break_result.get("broke", false)):
+		errors.append("Final durability hit should break the weapon.")
+	if bool(gs.call("can_attack_with_equipped_weapon", "ally_1")):
+		errors.append("Broken weapon should disable attacks.")
+	if not str(gs.call("get_loadout", "ally_1").get("weapon", "")).is_empty():
+		errors.append("Broken weapon should be unequipped.")
+
+	var suffix: String = gs.call("get_weapon_status_suffix", "ally_3", "weapon")
+	if not suffix.contains("/"):
+		errors.append("Weapon status suffix should show ammo counts.")
+
+	gs.get("owned_equipment")["iron_sword"] = 1
+	var switch_result: Dictionary = gs.call("switch_weapon", "ally_1", "iron_sword")
+	if not bool(switch_result.get("ok", false)):
+		errors.append("Switch weapon should succeed with a spare weapon.")
+	if str(gs.call("get_loadout", "ally_1").get("weapon", "")) != "iron_sword":
+		errors.append("Switch weapon should equip the selected weapon.")
+
+	var save_data: Dictionary = gs.call("build_save_data", Vector3.ZERO, 0.0)
+	gs.call("reset_party_to_default")
+	if not bool(gs.call("apply_save_dict", save_data)):
+		errors.append("Save roundtrip should restore weapon durability and ammo state.")
+	if int(gs.call("get_weapon_loaded_ammo", "ally_3", "short_bow")) != bow.magazine_size:
+		errors.append("Save roundtrip should restore loaded ammo.")
+	if str(gs.call("get_loadout", "ally_1").get("weapon", "")) != "iron_sword":
+		errors.append("Save roundtrip should restore switched weapon.")
 
 	gs.call("reset_party_to_default")
 	return errors

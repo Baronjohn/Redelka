@@ -28,6 +28,8 @@ var party_members: Array = []
 var inventory: Dictionary = {}
 var equipped: Dictionary = {}
 var owned_equipment: Dictionary = {}
+var weapon_durability: Dictionary = {}
+var weapon_loaded_ammo: Dictionary = {}
 var difficulty: int = Difficulty.NORMAL
 var last_battle_outcome: int = BattleOutcomeCode.NONE
 var last_battle_loot: Array[Dictionary] = []
@@ -86,6 +88,7 @@ func _initialize_equipment_defaults() -> void:
 			owned_equipment[item_id] = maxi(int(owned_equipment.get(item_id, 0)) - 1, 0)
 			if int(owned_equipment[item_id]) <= 0:
 				owned_equipment.erase(item_id)
+	_initialize_weapon_states_for_party()
 
 
 func get_loadout(character_id: String) -> Dictionary:
@@ -105,6 +108,150 @@ func get_effective_stats(character_id: String) -> StatBlock:
 
 func get_equipped_weapon(character_id: String) -> WeaponData:
 	return PartyStatsHelper.get_equipped_weapon(get_loadout(character_id))
+
+
+func get_weapon_status_suffix(character_id: String, slot_name: String) -> String:
+	if slot_name != EquipmentDataScript.SLOT_WEAPON:
+		return ""
+	var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+	if weapon_id.is_empty():
+		return ""
+	var weapons := DataLoader.load_weapons()
+	if not weapons.has(weapon_id):
+		return ""
+	var weapon: WeaponData = weapons[weapon_id]
+	if weapon.uses_ammo():
+		var loaded := get_weapon_loaded_ammo(character_id, weapon_id)
+		return " (%d/%d)" % [loaded, weapon.magazine_size]
+	if weapon.uses_durability():
+		var durability := get_weapon_durability(character_id, weapon_id)
+		return " (%d/%d)" % [durability, weapon.durability_max]
+	return ""
+
+
+func get_weapon_durability(character_id: String, weapon_id: String) -> int:
+	var per_weapon: Dictionary = _get_durability_map(character_id)
+	if per_weapon.has(weapon_id):
+		return int(per_weapon[weapon_id])
+	var weapons := DataLoader.load_weapons()
+	if weapons.has(weapon_id):
+		return (weapons[weapon_id] as WeaponData).durability_max
+	return 0
+
+
+func get_weapon_loaded_ammo(character_id: String, weapon_id: String) -> int:
+	return int(_get_loaded_map(character_id).get(weapon_id, 0))
+
+
+func can_attack_with_equipped_weapon(character_id: String) -> bool:
+	var weapon := get_equipped_weapon(character_id)
+	if weapon == null:
+		return false
+	if weapon.uses_ammo():
+		var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+		return get_weapon_loaded_ammo(character_id, weapon_id) > 0
+	if weapon.uses_durability():
+		var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+		return get_weapon_durability(character_id, weapon_id) > 0
+	return true
+
+
+func can_reload_with_ammo(character_id: String, ammo_item_id: String) -> bool:
+	var weapon := get_equipped_weapon(character_id)
+	if weapon == null or not weapon.uses_ammo():
+		return false
+	if weapon.ammo_item_id != ammo_item_id:
+		return false
+	var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+	if get_weapon_loaded_ammo(character_id, weapon_id) >= weapon.magazine_size:
+		return false
+	return int(inventory.get(ammo_item_id, 0)) > 0
+
+
+func reload_equipped_weapon(character_id: String) -> Dictionary:
+	var weapon := get_equipped_weapon(character_id)
+	if weapon == null or not weapon.uses_ammo():
+		return {"ok": false, "message": "No ranged weapon equipped."}
+	var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+	var loaded := get_weapon_loaded_ammo(character_id, weapon_id)
+	if loaded >= weapon.magazine_size:
+		return {"ok": false, "message": "%s is already fully loaded." % weapon.display_name}
+	var available := int(inventory.get(weapon.ammo_item_id, 0))
+	if available <= 0:
+		return {"ok": false, "message": "No %s available." % _get_loot_item_name(weapon.ammo_item_id)}
+	var needed := weapon.magazine_size - loaded
+	var transfer := mini(available, needed)
+	inventory[weapon.ammo_item_id] = available - transfer
+	if int(inventory[weapon.ammo_item_id]) <= 0:
+		inventory.erase(weapon.ammo_item_id)
+	_set_loaded_ammo(character_id, weapon_id, loaded + transfer)
+	return {
+		"ok": true,
+		"message": "Reloaded %s (%d/%d)." % [weapon.display_name, loaded + transfer, weapon.magazine_size],
+	}
+
+
+func consume_attack_resource(character_id: String) -> Dictionary:
+	var weapon := get_equipped_weapon(character_id)
+	if weapon == null:
+		return {"ok": false, "reason": "no_weapon", "message": "No weapon equipped."}
+	var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+	if weapon.uses_ammo():
+		var loaded := get_weapon_loaded_ammo(character_id, weapon_id)
+		if loaded <= 0:
+			return {"ok": false, "reason": "empty", "message": "%s is out of ammo." % weapon.display_name}
+		_set_loaded_ammo(character_id, weapon_id, loaded - 1)
+		return {"ok": true, "broke": false, "message": ""}
+	if weapon.uses_durability():
+		var durability := get_weapon_durability(character_id, weapon_id)
+		if durability <= 0:
+			return {"ok": false, "reason": "broken", "message": "%s is broken." % weapon.display_name}
+		durability -= 1
+		if durability <= 0:
+			_set_durability(character_id, weapon_id, 0)
+			_destroy_equipped_weapon(character_id)
+			return {
+				"ok": true,
+				"broke": true,
+				"message": "%s broke!" % weapon.display_name,
+			}
+		_set_durability(character_id, weapon_id, durability)
+		return {"ok": true, "broke": false, "message": ""}
+	return {"ok": true, "broke": false, "message": ""}
+
+
+func get_switchable_weapons(character_id: String) -> Array[String]:
+	var result: Array[String] = []
+	var weapons := DataLoader.load_weapons()
+	for item_id: String in owned_equipment.keys():
+		if int(owned_equipment[item_id]) <= 0:
+			continue
+		if not weapons.has(item_id):
+			continue
+		if not _item_fits_slot(item_id, EquipmentDataScript.SLOT_WEAPON):
+			continue
+		if not _find_equipped_location(item_id, "", "").is_empty():
+			continue
+		result.append(item_id)
+	result.sort()
+	return result
+
+
+func switch_weapon(character_id: String, weapon_id: String) -> Dictionary:
+	if weapon_id not in get_switchable_weapons(character_id):
+		return {"ok": false, "message": "Weapon unavailable."}
+	var current_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+	if not current_id.is_empty():
+		var unequip_result := unequip_slot(character_id, EquipmentDataScript.SLOT_WEAPON)
+		if unequip_result != "Unequipped.":
+			return {"ok": false, "message": unequip_result}
+	var equip_result := equip_item(character_id, EquipmentDataScript.SLOT_WEAPON, weapon_id)
+	if equip_result != "Equipped.":
+		return {"ok": false, "message": equip_result}
+	return {
+		"ok": true,
+		"message": "Switched to %s." % _get_loot_item_name(weapon_id),
+	}
 
 
 func get_derived_values(character_id: String) -> Dictionary:
@@ -343,6 +490,11 @@ func use_item_outside_battle(item_id: String, target_character_id: String) -> St
 	if not items.has(item_id):
 		return "Unknown item."
 	var item: ItemData = items[item_id]
+	if item.item_type == "ammo":
+		if not can_reload_with_ammo(target_character_id, item_id):
+			return "Cannot reload with this ammo."
+		var reload_result: Dictionary = reload_equipped_weapon(target_character_id)
+		return str(reload_result.get("message", "Reload failed."))
 	var snapshot := get_member_snapshot(target_character_id)
 	if snapshot == null:
 		return "Invalid target."
@@ -393,6 +545,8 @@ func equip_item(character_id: String, slot_name: String, item_id: String) -> Str
 	owned_equipment[item_id] = maxi(int(owned_equipment.get(item_id, 0)) - 1, 0)
 	if int(owned_equipment[item_id]) <= 0:
 		owned_equipment.erase(item_id)
+	if slot_name == EquipmentDataScript.SLOT_WEAPON:
+		_ensure_weapon_state(character_id, item_id)
 	_recalculate_member_caps(character_id)
 	return "Equipped."
 
@@ -487,7 +641,8 @@ func get_equipped_item_name(character_id: String, slot_name: String) -> String:
 	if slot_name == EquipmentDataScript.SLOT_WEAPON:
 		var weapons := DataLoader.load_weapons()
 		if weapons.has(item_id):
-			return (weapons[item_id] as WeaponData).display_name
+			var weapon_name := (weapons[item_id] as WeaponData).display_name
+			return weapon_name + get_weapon_status_suffix(character_id, slot_name)
 		return item_id
 	var equipment := DataLoader.load_equipment()
 	if equipment.has(item_id):
@@ -591,6 +746,8 @@ func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> D
 		"inventory": inventory.duplicate(),
 		"equipped": equipped.duplicate(true),
 		"owned_equipment": owned_equipment.duplicate(),
+		"weapon_durability": _duplicate_nested_int_dict(weapon_durability),
+		"weapon_loaded_ammo": _duplicate_nested_int_dict(weapon_loaded_ammo),
 	}
 
 
@@ -629,6 +786,8 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 	for character_id: String in equipped.keys():
 		equipped[character_id] = _normalize_loadout(equipped[character_id] as Dictionary)
 	owned_equipment = (state.get("owned_equipment", {}) as Dictionary).duplicate()
+	weapon_durability = _restore_nested_int_dict(state.get("weapon_durability", {}))
+	weapon_loaded_ammo = _restore_nested_int_dict(state.get("weapon_loaded_ammo", {}))
 	pending_load_spawn = {
 		"area_id": current_area_id,
 		"position": return_position,
@@ -758,6 +917,8 @@ func reset_party_to_default() -> void:
 	inventory.clear()
 	equipped.clear()
 	owned_equipment.clear()
+	weapon_durability.clear()
+	weapon_loaded_ammo.clear()
 	defeated_enemy_ids.clear()
 	visited_area_ids.clear()
 	collected_pickup_ids.clear()
@@ -844,6 +1005,81 @@ func _item_fits_slot(item_id: String, slot_name: String) -> bool:
 
 func _is_equipment_item(item_id: String) -> bool:
 	return DataLoader.load_weapons().has(item_id) or DataLoader.load_equipment().has(item_id)
+
+
+func _initialize_weapon_states_for_party() -> void:
+	for character_id: String in equipped.keys():
+		var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+		if weapon_id.is_empty():
+			continue
+		_ensure_weapon_state(character_id, weapon_id)
+
+
+func _ensure_weapon_state(character_id: String, weapon_id: String) -> void:
+	var weapons := DataLoader.load_weapons()
+	if not weapons.has(weapon_id):
+		return
+	var weapon: WeaponData = weapons[weapon_id]
+	if weapon.uses_durability():
+		var durability_map := _get_durability_map(character_id)
+		if not durability_map.has(weapon_id):
+			durability_map[weapon_id] = weapon.durability_max
+	if weapon.uses_ammo():
+		var loaded_map := _get_loaded_map(character_id)
+		if not loaded_map.has(weapon_id):
+			loaded_map[weapon_id] = weapon.magazine_size
+
+
+func _get_durability_map(character_id: String) -> Dictionary:
+	if not weapon_durability.has(character_id):
+		weapon_durability[character_id] = {}
+	return weapon_durability[character_id] as Dictionary
+
+
+func _get_loaded_map(character_id: String) -> Dictionary:
+	if not weapon_loaded_ammo.has(character_id):
+		weapon_loaded_ammo[character_id] = {}
+	return weapon_loaded_ammo[character_id] as Dictionary
+
+
+func _set_durability(character_id: String, weapon_id: String, value: int) -> void:
+	_get_durability_map(character_id)[weapon_id] = maxi(value, 0)
+
+
+func _set_loaded_ammo(character_id: String, weapon_id: String, value: int) -> void:
+	_get_loaded_map(character_id)[weapon_id] = maxi(value, 0)
+
+
+func _destroy_equipped_weapon(character_id: String) -> void:
+	if not equipped.has(character_id):
+		return
+	var loadout: Dictionary = equipped[character_id] as Dictionary
+	var weapon_id := str(loadout.get(EquipmentDataScript.SLOT_WEAPON, ""))
+	if weapon_id.is_empty():
+		return
+	loadout[EquipmentDataScript.SLOT_WEAPON] = ""
+	equipped[character_id] = loadout
+	_get_durability_map(character_id).erase(weapon_id)
+	_get_loaded_map(character_id).erase(weapon_id)
+
+
+func _duplicate_nested_int_dict(source: Dictionary) -> Dictionary:
+	var copy: Dictionary = {}
+	for character_id: Variant in source.keys():
+		var inner := source[character_id] as Dictionary
+		copy[str(character_id)] = inner.duplicate()
+	return copy
+
+
+func _restore_nested_int_dict(source: Variant) -> Dictionary:
+	var restored: Dictionary = {}
+	if source == null or not source is Dictionary:
+		return restored
+	for character_id: Variant in (source as Dictionary).keys():
+		var inner: Variant = (source as Dictionary)[character_id]
+		if inner is Dictionary:
+			restored[str(character_id)] = (inner as Dictionary).duplicate()
+	return restored
 
 
 func _grant_loot_item(item_id: String, count: int) -> void:

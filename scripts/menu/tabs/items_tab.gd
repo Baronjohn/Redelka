@@ -115,7 +115,9 @@ func _on_use_pressed() -> void:
 		var snapshot := member_variant as PartyMemberSnapshot
 		var character: CharacterData = characters[snapshot.character_id]
 		var valid := false
-		if item.revive:
+		if item.item_type == "ammo":
+			valid = GameState.can_reload_with_ammo(snapshot.character_id, _selected_item_id)
+		elif item.revive:
 			valid = snapshot.is_ko
 		else:
 			valid = not snapshot.is_ko and snapshot.current_hp < snapshot.max_hp
@@ -123,7 +125,10 @@ func _on_use_pressed() -> void:
 		_target_list.add_item("%s%s" % [character.display_name, "" if valid else " (invalid)"])
 		_target_list.set_item_metadata(index, snapshot.character_id)
 		_target_list.set_item_disabled(index, not valid)
-	menu.call("show_message", "Choose a target.")
+	if item.item_type == "ammo":
+		menu.call("show_message", "Choose who to reload.")
+	else:
+		menu.call("show_message", "Choose a target.")
 
 
 func _on_target_selected(index: int) -> void:

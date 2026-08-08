@@ -147,6 +147,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(480, 180)
 size_flags_horizontal = 3
 
+[node name="WeaponMenu" type="ItemList" parent="UI/BattleUI/CommandPanel/Margin/VBox"]
+visible = false
+layout_mode = 2
+custom_minimum_size = Vector2(480, 180)
+size_flags_horizontal = 3
+
 [node name="CommandBar" type="HBoxContainer" parent="UI/BattleUI/CommandPanel/Margin/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -195,6 +201,10 @@ text = "Skill"
 [node name="ItemButton" type="Button" parent="UI/BattleUI/CommandPanel/Margin/VBox/CommandBar/ActionMenu"]
 layout_mode = 2
 text = "Item"
+
+[node name="SwitchButton" type="Button" parent="UI/BattleUI/CommandPanel/Margin/VBox/CommandBar/ActionMenu"]
+layout_mode = 2
+text = "Switch"
 
 [node name="RetreatButton" type="Button" parent="UI/BattleUI/CommandPanel/Margin/VBox/CommandBar/ActionMenu"]
 layout_mode = 2

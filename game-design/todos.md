@@ -67,14 +67,14 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 **Tasks:**
 
-- [ ] Add `durability_max` (melee) / `ammo_item_id` (ranged) fields to `data/weapons.json`; parse in `scripts/data/weapon_data.gd`
-- [ ] Track current durability per equipped weapon (new per-character state, since `owned_equipment` only counts by id today)
-- [ ] Consume 1 durability or 1 ammo per weapon attack in `scripts/battle/battle_controller.gd`
-- [ ] On break/empty: unequip weapon, fall back to unarmed stats, log a battle message; disable ranged attack option in `battle_ui.gd` when ammo is empty
-- [ ] Add ammo/durability-repair pickups to explore data (`data/items.json`, `data/areas.json`)
-- [ ] Show durability/ammo counts in `scripts/menu/tabs/equipment_tab.gd`
-- [ ] Persist durability/ammo in save data (`GameState.to_save_state_dict` / `apply_save_dict`, `SaveManager`)
-- [ ] Extend `combat_smoke_test.gd` for break-on-zero-durability and ammo depletion
+- [x] Add `durability_max` (melee) / `ammo_item_id` (ranged) fields to `data/weapons.json`; parse in `scripts/data/weapon_data.gd`
+- [x] Track current durability per equipped weapon (new per-character state, since `owned_equipment` only counts by id today)
+- [x] Consume 1 durability or 1 ammo per weapon attack in `scripts/battle/battle_controller.gd`
+- [x] On break/empty: unequip weapon, fall back to unarmed stats, log a battle message; disable ranged attack option in `battle_ui.gd` when ammo is empty
+- [x] Add ammo/durability-repair pickups to explore data (`data/items.json`, `data/areas.json`)
+- [x] Show durability/ammo counts in `scripts/menu/tabs/equipment_tab.gd`
+- [x] Persist durability/ammo in save data (`GameState.to_save_state_dict` / `apply_save_dict`, `SaveManager`)
+- [x] Extend `combat_smoke_test.gd` for break-on-zero-durability and ammo depletion
 
 **References:** [equipment-economy.md](equipment-economy.md), [attributes.md](attributes.md#weapon-mastery), `scripts/data/weapon_data.gd`, `scripts/battle/battle_controller.gd`
 

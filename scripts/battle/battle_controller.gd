@@ -14,6 +14,7 @@ enum BattlePhase {
 	SELECT_SKILL_TARGET,
 	SELECT_ITEM,
 	SELECT_ITEM_TARGET,
+	SELECT_SWITCH_WEAPON,
 	ENEMY_TURN,
 	BATTLE_END,
 }
@@ -66,6 +67,7 @@ func _ready() -> void:
 	battle_ui.wait_requested.connect(_on_ui_wait_requested)
 	battle_ui.spell_selected.connect(_on_spell_selected)
 	battle_ui.item_selected.connect(_on_item_selected)
+	battle_ui.weapon_selected.connect(_on_weapon_selected)
 	battle_ui.back_requested.connect(_on_ui_back_requested)
 	log_message.connect(battle_ui.append_log)
 	turn_order_changed.connect(_on_turn_order_changed)
@@ -245,7 +247,12 @@ func _on_ui_action_requested(action: String) -> void:
 			battle_ui.show_back_only()
 		"action":
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
-			battle_ui.show_action_submenu(unit, _allow_retreat, _has_attack_target(unit))
+			battle_ui.show_action_submenu(
+				unit,
+				_allow_retreat,
+				_can_unit_attack(unit),
+				_can_unit_switch(unit),
+			)
 
 
 func _on_ui_sub_action_requested(action: String) -> void:
@@ -255,8 +262,11 @@ func _on_ui_sub_action_requested(action: String) -> void:
 		return
 	match action:
 		"attack":
-			if not _has_attack_target(unit):
-				log_message.emit("No enemies in range.")
+			if not _can_unit_attack(unit):
+				if not GameState.can_attack_with_equipped_weapon(unit.source_id):
+					log_message.emit("Cannot attack without a usable weapon.")
+				else:
+					log_message.emit("No enemies in range.")
 				return
 			_set_phase(BattlePhase.SELECT_ATTACK_TARGET)
 			_show_attack_targets(unit)
@@ -283,6 +293,12 @@ func _on_ui_sub_action_requested(action: String) -> void:
 		"item":
 			_set_phase(BattlePhase.SELECT_ITEM)
 			battle_ui.show_item_menu(_inventory, _items)
+		"switch":
+			if not _can_unit_switch(unit):
+				log_message.emit("No spare weapons available.")
+				return
+			_set_phase(BattlePhase.SELECT_SWITCH_WEAPON)
+			battle_ui.show_weapon_switch_menu(GameState.get_switchable_weapons(unit.source_id))
 		"retreat":
 			if not _allow_retreat:
 				log_message.emit("Retreat unavailable.")
@@ -304,21 +320,44 @@ func _on_ui_back_requested() -> void:
 			battle_ui.show_main_menu(unit, _allow_retreat)
 		BattlePhase.SELECT_ATTACK_TARGET, BattlePhase.SELECT_SKILL_TARGET:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
-			battle_ui.show_action_submenu(unit, _allow_retreat, _has_attack_target(unit))
+			battle_ui.show_action_submenu(
+				unit,
+				_allow_retreat,
+				_can_unit_attack(unit),
+				_can_unit_switch(unit),
+			)
 		BattlePhase.SELECT_SPELL:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
-			battle_ui.show_action_submenu(unit, _allow_retreat, _has_attack_target(unit))
+			battle_ui.show_action_submenu(
+				unit,
+				_allow_retreat,
+				_can_unit_attack(unit),
+				_can_unit_switch(unit),
+			)
 		BattlePhase.SELECT_SPELL_TARGET:
 			_selected_spell = null
 			_set_phase(BattlePhase.SELECT_SPELL)
 			battle_ui.show_spell_menu(_spells.values())
 		BattlePhase.SELECT_ITEM:
 			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
-			battle_ui.show_action_submenu(unit, _allow_retreat, _has_attack_target(unit))
+			battle_ui.show_action_submenu(
+				unit,
+				_allow_retreat,
+				_can_unit_attack(unit),
+				_can_unit_switch(unit),
+			)
 		BattlePhase.SELECT_ITEM_TARGET:
 			_selected_item_id = ""
 			_set_phase(BattlePhase.SELECT_ITEM)
 			battle_ui.show_item_menu(_inventory, _items)
+		BattlePhase.SELECT_SWITCH_WEAPON:
+			_set_phase(BattlePhase.PLAYER_ACTION_SUB)
+			battle_ui.show_action_submenu(
+				unit,
+				_allow_retreat,
+				_can_unit_attack(unit),
+				_can_unit_switch(unit),
+			)
 
 
 func _on_ui_wait_requested() -> void:
@@ -454,12 +493,15 @@ func _on_spell_selected(spell_id: String) -> void:
 
 
 func _on_item_selected(item_id: String) -> void:
+	var item: ItemData = _items[item_id]
+	if item.item_type == "ammo":
+		await _perform_ammo_reload(_units[_current_unit_id], item_id)
+		return
 	if int(_inventory.get(item_id, 0)) <= 0:
 		return
 	_selected_item_id = item_id
 	_set_phase(BattlePhase.SELECT_ITEM_TARGET)
 	battle_ui.show_back_only()
-	var item: ItemData = _items[item_id]
 	log_message.emit("Select target for %s." % item.display_name)
 	_show_item_targets(_units[_current_unit_id], item)
 
@@ -523,13 +565,63 @@ func _apply_spell_effect(caster: CombatUnit, target: CombatUnit, spell: SpellDat
 			_handle_combat_damage(target)
 
 
+func _on_weapon_selected(weapon_id: String) -> void:
+	var unit: CombatUnit = _units[_current_unit_id]
+	if unit.has_acted:
+		log_message.emit("Already acted.")
+		return
+	var switch_result: Dictionary = GameState.switch_weapon(unit.source_id, weapon_id)
+	log_message.emit(str(switch_result.get("message", "Switch failed.")))
+	if not bool(switch_result.get("ok", false)):
+		return
+	_consume_action(unit)
+	_sync_ally_weapon_stats(unit)
+	await get_tree().create_timer(0.25).timeout
+	_end_player_turn_if_done(unit)
+
+
+func _perform_ammo_reload(actor: CombatUnit, item_id: String) -> void:
+	if actor.has_acted:
+		log_message.emit("Already acted.")
+		return
+	var item: ItemData = _items[item_id]
+	if item.item_type != "ammo":
+		return
+	if not GameState.can_reload_with_ammo(actor.source_id, item_id):
+		log_message.emit("Cannot reload with this ammo.")
+		return
+	_consume_action(actor)
+	var reload_result: Dictionary = GameState.reload_equipped_weapon(actor.source_id)
+	log_message.emit(str(reload_result.get("message", "Reload failed.")))
+	if bool(reload_result.get("ok", false)):
+		_inventory = GameState.inventory.duplicate()
+		_sync_ally_weapon_stats(actor)
+	await get_tree().create_timer(0.25).timeout
+	_end_player_turn_if_done(actor)
+
+
 func _perform_attack(attacker: CombatUnit, defender: CombatUnit) -> void:
+	var broke := false
+	var break_message := ""
+	if attacker.is_ally:
+		if not GameState.can_attack_with_equipped_weapon(attacker.source_id):
+			log_message.emit("Cannot attack without a usable weapon.")
+			return
+		var resource_result: Dictionary = GameState.consume_attack_resource(attacker.source_id)
+		if not bool(resource_result.get("ok", false)):
+			log_message.emit(str(resource_result.get("message", "Cannot attack.")))
+			return
+		broke = bool(resource_result.get("broke", false))
+		break_message = str(resource_result.get("message", ""))
 	_consume_action(attacker)
 	var result := CombatResolver.resolve_physical_attack(attacker, defender)
 	log_message.emit(str(result["message"]))
 	if result["hit"]:
 		defender.apply_damage(int(result["damage"]))
 		_handle_combat_damage(defender)
+	if broke:
+		log_message.emit(break_message)
+		_sync_ally_weapon_stats(attacker)
 	await get_tree().create_timer(0.25).timeout
 	_check_battle_end()
 
@@ -598,6 +690,30 @@ func _show_attack_targets(unit: CombatUnit) -> void:
 
 func _can_attack(attacker: CombatUnit, target: CombatUnit) -> bool:
 	return _grid.can_attack_cell(attacker.grid_pos, target.grid_pos, attacker.attack_range)
+
+
+func _can_unit_attack(unit: CombatUnit) -> bool:
+	if unit.is_ally and not GameState.can_attack_with_equipped_weapon(unit.source_id):
+		return false
+	return _has_attack_target(unit)
+
+
+func _can_unit_switch(unit: CombatUnit) -> bool:
+	return not GameState.get_switchable_weapons(unit.source_id).is_empty()
+
+
+func _sync_ally_weapon_stats(unit: CombatUnit) -> void:
+	var characters := DataLoader.load_characters()
+	if not characters.has(unit.source_id):
+		return
+	var character: CharacterData = characters[unit.source_id]
+	var loadout: Dictionary = GameState.get_loadout(unit.source_id)
+	var snapshot := GameState.get_member_snapshot(unit.source_id)
+	var weapon: WeaponData = PartyStatsHelper.get_equipped_weapon(loadout)
+	var effective_stats := PartyStatsHelper.get_effective_stats(character, loadout, snapshot)
+	unit.weapon = weapon
+	unit.stats = effective_stats
+	unit.attack_range = weapon.attack_range if weapon != null else 1
 
 
 func _has_attack_target(unit: CombatUnit) -> bool:

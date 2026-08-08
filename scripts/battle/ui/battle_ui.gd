@@ -6,12 +6,14 @@ signal sub_action_requested(action: String)
 signal wait_requested
 signal spell_selected(spell_id: String)
 signal item_selected(item_id: String)
+signal weapon_selected(weapon_id: String)
 signal back_requested
 
 @onready var main_menu: HBoxContainer = $CommandPanel/Margin/VBox/CommandBar/MainMenu
 @onready var action_menu: HBoxContainer = $CommandPanel/Margin/VBox/CommandBar/ActionMenu
 @onready var spell_menu: ItemList = $CommandPanel/Margin/VBox/SpellMenu
 @onready var item_menu: ItemList = $CommandPanel/Margin/VBox/ItemMenu
+@onready var weapon_menu: ItemList = $CommandPanel/Margin/VBox/WeaponMenu
 @onready var back_button: Button = $CommandPanel/Margin/VBox/CommandBar/BackButton
 @onready var log_label: RichTextLabel = $LogPanel/LogLabel
 @onready var turn_order_label: Label = $TopLeftHud/TurnOrderPanel/Margin/TurnOrderLabel
@@ -40,6 +42,7 @@ func _ready() -> void:
 	action_menu.mouse_filter = Control.MOUSE_FILTER_STOP
 	spell_menu.mouse_filter = Control.MOUSE_FILTER_STOP
 	item_menu.mouse_filter = Control.MOUSE_FILTER_STOP
+	weapon_menu.mouse_filter = Control.MOUSE_FILTER_STOP
 	back_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	move_button.pressed.connect(func() -> void: action_requested.emit("move"))
 	action_button.pressed.connect(func() -> void: action_requested.emit("action"))
@@ -48,10 +51,12 @@ func _ready() -> void:
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/SpellButton.pressed.connect(func() -> void: sub_action_requested.emit("spell"))
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/SkillButton.pressed.connect(func() -> void: sub_action_requested.emit("skill"))
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/ItemButton.pressed.connect(func() -> void: sub_action_requested.emit("item"))
+	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/SwitchButton.pressed.connect(func() -> void: sub_action_requested.emit("switch"))
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/RetreatButton.pressed.connect(func() -> void: sub_action_requested.emit("retreat"))
 	back_button.pressed.connect(func() -> void: back_requested.emit())
 	spell_menu.item_selected.connect(_on_spell_selected)
 	item_menu.item_selected.connect(_on_item_selected)
+	weapon_menu.item_selected.connect(_on_weapon_selected)
 	hide_menus()
 
 
@@ -64,13 +69,14 @@ func show_main_menu(unit: CombatUnit, allow_retreat: bool) -> void:
 	_set_back_visible(false)
 
 
-func show_action_submenu(unit: CombatUnit, allow_retreat: bool, can_attack: bool) -> void:
+func show_action_submenu(unit: CombatUnit, allow_retreat: bool, can_attack: bool, can_switch: bool) -> void:
 	hide_menus()
 	action_menu.visible = true
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/AttackButton.disabled = unit.has_acted or not can_attack
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/SpellButton.disabled = unit.has_acted
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/SkillButton.disabled = unit.has_acted or unit.skill == null
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/ItemButton.disabled = unit.has_acted
+	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/SwitchButton.disabled = unit.has_acted or not can_switch
 	$CommandPanel/Margin/VBox/CommandBar/ActionMenu/RetreatButton.disabled = unit.has_acted or not allow_retreat
 	_set_back_visible(true)
 
@@ -102,6 +108,21 @@ func show_item_menu(inventory: Dictionary, item_defs: Dictionary) -> void:
 	_set_back_visible(true)
 
 
+func show_weapon_switch_menu(weapon_ids: Array[String]) -> void:
+	hide_menus()
+	weapon_menu.clear()
+	var weapons := DataLoader.load_weapons()
+	for weapon_id: String in weapon_ids:
+		if not weapons.has(weapon_id):
+			continue
+		var weapon: WeaponData = weapons[weapon_id]
+		var index := weapon_menu.item_count
+		weapon_menu.add_item(weapon.display_name)
+		weapon_menu.set_item_metadata(index, weapon_id)
+	weapon_menu.visible = true
+	_set_back_visible(true)
+
+
 func show_back_only() -> void:
 	hide_menus()
 	_set_back_visible(true)
@@ -112,6 +133,7 @@ func hide_menus() -> void:
 	action_menu.visible = false
 	spell_menu.visible = false
 	item_menu.visible = false
+	weapon_menu.visible = false
 	back_button.visible = false
 
 
@@ -179,10 +201,14 @@ func _on_item_selected(index: int) -> void:
 	item_selected.emit(str(item_menu.get_item_metadata(index)))
 
 
+func _on_weapon_selected(index: int) -> void:
+	weapon_selected.emit(str(weapon_menu.get_item_metadata(index)))
+
+
 func is_pointer_over_interactive_ui(screen_pos: Vector2) -> bool:
 	if back_button.visible and back_button.get_global_rect().has_point(screen_pos):
 		return true
-	for menu: Control in [main_menu, action_menu, spell_menu, item_menu]:
+	for menu: Control in [main_menu, action_menu, spell_menu, item_menu, weapon_menu]:
 		if menu.visible and menu.get_global_rect().has_point(screen_pos):
 			return true
 	var hovered := get_viewport().gui_get_hovered_control()
