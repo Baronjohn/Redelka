@@ -21,6 +21,8 @@ enum BattlePhase {
 
 enum BattleOutcome { NONE, VICTORY, DEFEAT, ESCAPED }
 
+enum PostBattlePhase { NONE, LOOT, LEVEL_UP }
+
 signal log_message(text: String)
 signal phase_changed(phase: BattlePhase)
 signal turn_order_changed(order: Array[String])
@@ -51,6 +53,7 @@ var _encounter: EncounterData = EncounterData.new()
 
 var _phase: BattlePhase = BattlePhase.START
 var _outcome: BattleOutcome = BattleOutcome.NONE
+var _post_battle_phase: PostBattlePhase = PostBattlePhase.NONE
 var _current_unit_id: String = ""
 var _selected_spell: SpellData = null
 var _selected_item_id: String = ""
@@ -174,6 +177,8 @@ func _spawn_units() -> void:
 
 
 func _begin_next_turn() -> void:
+	if _phase == BattlePhase.BATTLE_END:
+		return
 	if _check_battle_end():
 		return
 	if _turn_queue.peek_current().is_empty():
@@ -479,6 +484,8 @@ func _move_unit_to_cell(unit: CombatUnit, cell: Vector2i) -> void:
 
 
 func _on_unit_clicked(runtime_id: String) -> void:
+	if _phase == BattlePhase.BATTLE_END:
+		return
 	var target: CombatUnit = _units[runtime_id]
 	var actor: CombatUnit = _units[_current_unit_id]
 	match _phase:
@@ -593,10 +600,16 @@ func _apply_spell_effect(caster: CombatUnit, target: CombatUnit, spell: SpellDat
 	log_message.emit(str(result["message"]))
 	if result["hit"]:
 		if spell.healing:
+			var hp_before := target.current_hp
 			target.heal(int(result["amount"]))
+			_show_floating_number(target, target.current_hp - hp_before, true)
 		else:
+			var hp_before := target.current_hp
 			target.apply_damage(int(result["amount"]))
+			_show_floating_number(target, hp_before - target.current_hp, false)
 			_handle_combat_damage(target)
+	elif not spell.healing:
+		_show_floating_miss(target)
 	if caster.is_ally:
 		var xp_result: Dictionary = GameState.award_spell_mastery_xp(caster.source_id, spell.id)
 		if not str(xp_result.get("message", "")).is_empty():
@@ -666,8 +679,12 @@ func _perform_attack(
 	if result["hit"]:
 		var hit_count := int(result.get("hit_count", 1))
 		for _hit_index: int in range(maxi(hit_count, 1)):
+			var hp_before := defender.current_hp
 			defender.apply_damage(int(result["damage"]))
+			_show_floating_number(defender, hp_before - defender.current_hp, false)
 		_handle_combat_damage(defender)
+	else:
+		_show_floating_miss(defender)
 	if attacker.is_ally and not weapon_class.is_empty():
 		var xp_result: Dictionary = GameState.award_weapon_mastery_xp(attacker.source_id, weapon_class)
 		if not str(xp_result.get("message", "")).is_empty():
@@ -702,8 +719,16 @@ func _perform_skill(attacker: CombatUnit, defender: CombatUnit) -> void:
 	var result := CombatResolver.resolve_skill(attacker, defender)
 	log_message.emit(str(result["message"]))
 	if bool(result["hit"]) and int(result.get("damage", 0)) > 0:
+		var hp_before := defender.current_hp
 		defender.apply_damage(int(result["damage"]))
+		_show_floating_number(defender, hp_before - defender.current_hp, false)
 		_handle_combat_damage(defender)
+	elif (
+		not bool(result["hit"])
+		and attacker.skill != null
+		and attacker.skill.mp_restore <= 0
+	):
+		_show_floating_miss(defender)
 	await get_tree().create_timer(0.25).timeout
 	_check_battle_end()
 
@@ -716,9 +741,12 @@ func _perform_item(actor: CombatUnit, target: CombatUnit, item_id: String) -> vo
 	_inventory[item_id] = int(_inventory[item_id]) - 1
 	if item.revive and target.is_ko:
 		target.revive_with_hp(item.heal_amount)
+		_show_floating_number(target, item.heal_amount, true)
 		log_message.emit("%s revived %s." % [actor.display_name, target.display_name])
 	elif not target.is_ko:
+		var hp_before := target.current_hp
 		target.heal(item.heal_amount)
+		_show_floating_number(target, target.current_hp - hp_before, true)
 		log_message.emit("%s used %s on %s." % [actor.display_name, item.display_name, target.display_name])
 	else:
 		log_message.emit("Revive failed.")
@@ -730,6 +758,8 @@ func _consume_action(unit: CombatUnit) -> void:
 
 
 func _end_player_turn_if_done(unit: CombatUnit) -> void:
+	if _phase == BattlePhase.BATTLE_END:
+		return
 	_clear_highlights()
 	battle_ui.hide_menus()
 	if unit.has_moved and unit.has_acted:
@@ -890,6 +920,8 @@ func _is_valid_item_target(actor: CombatUnit, target: CombatUnit, item_id: Strin
 
 
 func _check_battle_end() -> bool:
+	if _phase == BattlePhase.BATTLE_END:
+		return true
 	var allies_alive := false
 	for unit: CombatUnit in _ally_units():
 		if unit.can_act():
@@ -916,10 +948,12 @@ func _finish_battle(outcome: BattleOutcome) -> void:
 	GameState.update_party_from_battle(_ally_units(), _inventory)
 	GameState.resolve_battle(outcome)
 	_set_phase(BattlePhase.BATTLE_END)
+	_post_battle_phase = PostBattlePhase.LOOT
 	_current_unit_id = ""
 	_update_turn_highlight()
 	battle_ui.hide_menus()
 	_clear_highlights()
+	level_up_panel.visible = false
 	var from_explore := GameState.battle_source == GameState.BattleSource.EXPLORE
 	result_panel.show_result(outcome, from_explore)
 	battle_finished.emit(outcome)
@@ -930,8 +964,15 @@ func _on_restart_requested() -> void:
 
 
 func _on_continue_requested() -> void:
-	if GameState.has_pending_level_ups():
-		_show_next_level_up()
+	if _post_battle_phase == PostBattlePhase.LOOT:
+		if GameState.has_pending_level_ups():
+			_post_battle_phase = PostBattlePhase.LEVEL_UP
+			_show_next_level_up()
+			return
+		_post_battle_phase = PostBattlePhase.NONE
+		SceneTransition.go_to_explore()
+		return
+	if _post_battle_phase == PostBattlePhase.LEVEL_UP:
 		return
 	SceneTransition.go_to_explore()
 
@@ -939,14 +980,19 @@ func _on_continue_requested() -> void:
 func _show_next_level_up() -> void:
 	result_panel.visible = false
 	var character_id := GameState.peek_level_up_character()
+	if character_id.is_empty():
+		_post_battle_phase = PostBattlePhase.NONE
+		SceneTransition.go_to_explore()
+		return
 	level_up_panel.show_level_up(character_id)
 
 
 func _on_level_up_confirmed() -> void:
 	if GameState.has_pending_level_ups():
 		_show_next_level_up()
-	else:
-		SceneTransition.go_to_explore()
+		return
+	_post_battle_phase = PostBattlePhase.NONE
+	SceneTransition.go_to_explore()
 
 
 func _on_load_save_requested() -> void:
@@ -999,6 +1045,20 @@ func _on_unit_ko_changed(is_ko: bool, runtime_id: String) -> void:
 func _handle_combat_damage(unit: CombatUnit) -> void:
 	if unit.is_ko and not unit.is_ally:
 		_schedule_enemy_removal(unit.runtime_id)
+
+
+func _show_floating_number(unit: CombatUnit, amount: int, is_healing: bool) -> void:
+	if amount <= 0 or not _unit_views.has(unit.runtime_id):
+		return
+	var view: UnitView = _unit_views[unit.runtime_id] as UnitView
+	view.show_floating_number(amount, is_healing)
+
+
+func _show_floating_miss(unit: CombatUnit) -> void:
+	if not _unit_views.has(unit.runtime_id):
+		return
+	var view: UnitView = _unit_views[unit.runtime_id] as UnitView
+	view.show_floating_miss()
 
 
 func _schedule_enemy_removal(runtime_id: String) -> void:

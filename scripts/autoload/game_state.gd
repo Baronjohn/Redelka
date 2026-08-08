@@ -544,10 +544,6 @@ func grant_xp_to_party(amount: int) -> Array[Dictionary]:
 			snapshot.level += 1
 			snapshot.unspent_stat_points += ProgressionConstantsScript.POINTS_PER_LEVEL
 			_recalculate_member_caps(snapshot.character_id)
-			snapshot.current_hp = snapshot.max_hp
-			snapshot.current_mp = snapshot.max_mp
-			if snapshot.is_ko:
-				snapshot.is_ko = false
 		if snapshot.level > old_level:
 			var levels_gained := snapshot.level - old_level
 			last_level_ups.append({
@@ -559,6 +555,13 @@ func grant_xp_to_party(amount: int) -> Array[Dictionary]:
 			})
 			if snapshot.unspent_stat_points > 0:
 				pending_level_up_queue.append(snapshot.character_id)
+	for member: Variant in party_members:
+		var pending_snapshot := member as PartyMemberSnapshot
+		if (
+			pending_snapshot.unspent_stat_points > 0
+			and pending_snapshot.character_id not in pending_level_up_queue
+		):
+			pending_level_up_queue.append(pending_snapshot.character_id)
 	return last_level_ups
 
 
@@ -601,6 +604,7 @@ func confirm_draft_allocation() -> String:
 	snapshot.allocated_stats.add_block(_draft_allocated)
 	snapshot.unspent_stat_points = 0
 	_recalculate_member_caps(_draft_character_id)
+	_apply_level_up_heal(_draft_character_id)
 	var confirmed_id := _draft_character_id
 	if confirmed_id in pending_level_up_queue:
 		pending_level_up_queue.erase(confirmed_id)
@@ -608,6 +612,18 @@ func confirm_draft_allocation() -> String:
 	_draft_allocated = StatBlock.new()
 	_draft_budget = 0
 	return confirmed_id
+
+
+func _apply_level_up_heal(character_id: String) -> void:
+	if get_level_up_entry(character_id).is_empty():
+		return
+	var snapshot := get_member_snapshot(character_id)
+	if snapshot == null:
+		return
+	snapshot.current_hp = snapshot.max_hp
+	snapshot.current_mp = snapshot.max_mp
+	if snapshot.is_ko:
+		snapshot.is_ko = false
 
 
 func has_pending_level_ups() -> bool:
@@ -872,6 +888,8 @@ func get_member_snapshot(character_id: String) -> PartyMemberSnapshot:
 
 
 func resolve_battle(outcome: int) -> void:
+	if last_battle_outcome == outcome and outcome != BattleOutcomeCode.NONE:
+		return
 	last_battle_outcome = outcome
 	last_battle_loot.clear()
 	last_battle_xp = 0

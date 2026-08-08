@@ -34,6 +34,50 @@ func move_to_world(world_pos: Vector3, instant: bool = false) -> void:
 	tween.tween_property(self, "position", world_pos, 0.25).set_trans(Tween.TRANS_QUAD)
 
 
+func show_floating_number(amount: int, is_healing: bool) -> void:
+	if amount <= 0:
+		return
+	var text := "+%d" % amount if is_healing else "-%d" % amount
+	var color := (
+		CombatConstants.HEAL_NUMBER_COLOR
+		if is_healing
+		else CombatConstants.DAMAGE_NUMBER_COLOR
+	)
+	_spawn_floating_label(text, color)
+
+
+func show_floating_miss() -> void:
+	_spawn_floating_label("Miss", CombatConstants.DAMAGE_NUMBER_COLOR)
+
+
+func _spawn_floating_label(text: String, color: Color) -> void:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 32
+	label.outline_size = 8
+	label.modulate = color
+	label.position = Vector3(randf_range(-0.2, 0.2), 1.75, 0.0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	add_child(label)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(
+		label,
+		"position:y",
+		label.position.y + CombatConstants.FLOATING_NUMBER_RISE,
+		CombatConstants.FLOATING_NUMBER_DURATION,
+	)
+	tween.tween_property(
+		label,
+		"modulate:a",
+		0.0,
+		CombatConstants.FLOATING_NUMBER_DURATION,
+	)
+	tween.chain().tween_callback(label.queue_free)
+
+
 func _apply_visual_state() -> void:
 	if combat_unit == null:
 		return

@@ -48,10 +48,15 @@ func refresh() -> void:
 	var base_stats := character.stats
 	var progression_stats := PartyStatsHelper.get_progression_stats(character, snapshot) if snapshot != null else base_stats
 	var effective_stats := GameState.get_effective_stats(character_id)
+	var equipment_bonuses := PartyStatsHelper.aggregate_bonuses(
+		GameState.get_loadout(character_id),
+		DataLoader.load_weapons(),
+		DataLoader.load_equipment(),
+	)
 	var derived := GameState.get_derived_values(character_id)
 
 	_populate_overview(character, snapshot, derived)
-	_populate_stats(base_stats, progression_stats, effective_stats)
+	_populate_stats(base_stats, progression_stats, effective_stats, equipment_bonuses)
 	_populate_derived(derived)
 	_populate_weapon_mastery(character_id)
 	_populate_spell_mastery(character_id)
@@ -93,13 +98,13 @@ func _build_stats_page() -> void:
 	page.add_child(scroll)
 
 	_stats_grid = GridContainer.new()
-	_stats_grid.columns = 5
+	_stats_grid.columns = 6
 	_stats_grid.add_theme_constant_override("h_separation", 24)
 	_stats_grid.add_theme_constant_override("v_separation", 4)
 	_stats_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_stats_grid)
 
-	for header: String in ["", "Stat", "Base", "Growth", "Effective"]:
+	for header: String in ["", "Stat", "Base", "Growth", "Equipment", "Effective"]:
 		_add_grid_header(_stats_grid, header)
 
 
@@ -213,22 +218,18 @@ func _populate_stats(
 	base_stats: StatBlock,
 	progression_stats: StatBlock,
 	effective_stats: StatBlock,
+	equipment_bonuses: Dictionary,
 ) -> void:
 	_clear_stat_rows()
 	for stat_name: String in STAT_NAMES:
 		_add_grid_icon(_stats_grid, PlaceholderIconsScript.get_stat_icon(stat_name))
 		_add_grid_cell(_stats_grid, stat_name.to_upper())
 		_add_grid_cell(_stats_grid, str(_get_stat_value(base_stats, stat_name)))
-		_add_grid_cell(_stats_grid, str(_get_stat_value(progression_stats, stat_name)))
-		var effective_value := _get_stat_value(effective_stats, stat_name)
-		var base_value := _get_stat_value(base_stats, stat_name)
-		var delta := effective_value - base_value
-		if delta > 0:
-			_add_grid_cell(_stats_grid, "%d [color=green](+%d)[/color]" % [effective_value, delta], true)
-		elif delta < 0:
-			_add_grid_cell(_stats_grid, "%d [color=red](%d)[/color]" % [effective_value, delta], true)
-		else:
-			_add_grid_cell(_stats_grid, str(effective_value))
+		var growth := _get_stat_value(progression_stats, stat_name) - _get_stat_value(base_stats, stat_name)
+		_add_grid_cell(_stats_grid, _format_bonus(growth))
+		var equipment_bonus := int(equipment_bonuses.get(stat_name, 0))
+		_add_grid_cell(_stats_grid, _format_bonus(equipment_bonus))
+		_add_grid_cell(_stats_grid, str(_get_stat_value(effective_stats, stat_name)))
 
 
 func _populate_derived(derived: Dictionary) -> void:
@@ -284,8 +285,8 @@ func _populate_spell_mastery(character_id: String) -> void:
 
 
 func _clear_stat_rows() -> void:
-	while _stats_grid.get_child_count() > 5:
-		var child: Node = _stats_grid.get_child(5)
+	while _stats_grid.get_child_count() > 6:
+		var child: Node = _stats_grid.get_child(6)
 		_stats_grid.remove_child(child)
 		child.queue_free()
 
@@ -311,19 +312,18 @@ func _add_grid_header(grid: GridContainer, text: String) -> void:
 	grid.add_child(label)
 
 
-func _add_grid_cell(grid: GridContainer, text: String, bbcode: bool = false) -> void:
-	if bbcode:
-		var rich_label := RichTextLabel.new()
-		rich_label.custom_minimum_size = Vector2(72, 0)
-		rich_label.fit_content = true
-		rich_label.bbcode_enabled = true
-		rich_label.scroll_active = false
-		rich_label.text = text
-		grid.add_child(rich_label)
-		return
+func _add_grid_cell(grid: GridContainer, text: String) -> void:
 	var plain_label := Label.new()
 	plain_label.text = text
 	grid.add_child(plain_label)
+
+
+func _format_bonus(value: int) -> String:
+	if value > 0:
+		return "+%d" % value
+	if value < 0:
+		return str(value)
+	return "0"
 
 
 func _add_derived_row(label_text: String, value_text: String) -> void:

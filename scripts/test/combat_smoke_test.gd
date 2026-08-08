@@ -529,6 +529,8 @@ func _test_progression() -> PackedStringArray:
 		errors.append("200 XP should level ally_1.")
 	if bran.unspent_stat_points != ProgressionConstantsScript.POINTS_PER_LEVEL:
 		errors.append("Single level-up should grant four stat points.")
+	if not bool(gs.call("has_pending_level_ups")):
+		errors.append("Level-up should queue stat allocation after XP grant.")
 
 	var progression_before := PartyStatsHelper.get_progression_stats(bran_char, bran)
 	gs.call("begin_level_up_allocation", "ally_1")
@@ -544,6 +546,18 @@ func _test_progression() -> PackedStringArray:
 	var progression_after := PartyStatsHelper.get_progression_stats(bran_char, bran)
 	if progression_after.str <= progression_before.str:
 		errors.append("Confirmed allocation should increase progression stats.")
+
+	gs.call("grant_xp_to_party", 200)
+	bran.current_hp = 1
+	var pre_confirm_max_hp := bran.max_hp
+	gs.call("begin_level_up_allocation", "ally_1")
+	for _i: int in range(ProgressionConstantsScript.POINTS_PER_LEVEL):
+		gs.call("draft_allocate_stat", "vit")
+	gs.call("confirm_draft_allocation")
+	if bran.current_hp != bran.max_hp:
+		errors.append("Level-up heal should restore HP after stat allocation is confirmed.")
+	if bran.max_hp <= pre_confirm_max_hp:
+		errors.append("Level-up heal should apply after final allocated stats update max HP.")
 
 	bran.unspent_stat_points = ProgressionConstantsScript.POINTS_PER_LEVEL
 	gs.call("begin_level_up_allocation", "ally_1")
@@ -566,6 +580,18 @@ func _test_progression() -> PackedStringArray:
 	var effective: StatBlock = gs.call("get_effective_stats", "ally_1")
 	if effective.str <= bran_char.stats.str:
 		errors.append("Effective stats should reflect progression and equipment.")
+
+	gs.call("reset_party_to_default")
+	gs.set("current_encounter_id", "test_4v3")
+	gs.call("grant_xp_to_party", 200)
+	if not bool(gs.call("has_pending_level_ups")):
+		errors.append("Victory XP grant should queue stat allocation.")
+	gs.call("resolve_battle", GameState.BattleOutcomeCode.VICTORY)
+	if not bool(gs.call("has_pending_level_ups")):
+		errors.append("Victory resolve should keep pending level-ups while points remain unspent.")
+	gs.call("resolve_battle", GameState.BattleOutcomeCode.VICTORY)
+	if not bool(gs.call("has_pending_level_ups")):
+		errors.append("Duplicate resolve_battle should not clear pending level-up queue.")
 
 	gs.call("reset_party_to_default")
 	return errors
