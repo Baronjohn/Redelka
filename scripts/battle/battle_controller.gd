@@ -104,18 +104,15 @@ func _load_data() -> void:
 	_encounter = DataLoader.load_encounter(encounter_id)
 	_spells = DataLoader.load_spells()
 	_items = DataLoader.load_items()
-	if GameState.battle_source == GameState.BattleSource.EXPLORE:
-		GameState.ensure_party_initialized(_encounter.id)
-		_inventory = GameState.inventory.duplicate()
-	else:
-		_inventory = _encounter.party_inventory.duplicate()
+	GameState.ensure_party_initialized(_encounter.id)
+	_inventory = GameState.inventory.duplicate()
 	_allow_retreat = _encounter.allow_retreat
 	var weapons := DataLoader.load_weapons()
 	var skills := DataLoader.load_skills()
 	var characters := DataLoader.load_characters()
 	var enemies := DataLoader.load_enemies()
 
-	for ally_entry: Dictionary in _encounter.allies:
+	for ally_entry: Dictionary in GameState.get_formation_spawn_entries():
 		var character_id := str(ally_entry.get("character_id", ""))
 		var pos_array: Array = ally_entry.get("position", [0, 0]) as Array
 		var pos := Vector2i(int(pos_array[0]), int(pos_array[1]))
@@ -124,8 +121,14 @@ func _load_data() -> void:
 		var snapshot := GameState.get_member_snapshot(character_id)
 		var weapon: WeaponData = PartyStatsHelper.get_equipped_weapon(loadout)
 		if weapon == null:
-			weapon = weapons[character.weapon_id]
-		var skill: SkillData = skills[character.skill_id]
+			push_error("Missing starting weapon for %s." % character_id)
+			continue
+		var skill: SkillData = null
+		if not character.skill_id.is_empty():
+			if not skills.has(character.skill_id):
+				push_error("Missing skill %s for %s." % [character.skill_id, character_id])
+				continue
+			skill = skills[character.skill_id]
 		var runtime_id := "ally_%s" % character_id
 		var effective_stats := PartyStatsHelper.get_effective_stats(character, loadout, snapshot)
 		var unit := CombatUnit.from_character_with_stats(
@@ -210,29 +213,50 @@ func _begin_next_turn() -> void:
 
 
 func _run_enemy_turn(actor: CombatUnit) -> void:
+	var selected_action := EnemyAI.roll_action(actor.enemy_data.actions)
 	var row_bounds := _get_movement_row_bounds(actor)
 	var action := EnemyAI.choose_action(
-		actor, _ally_units(), _enemy_units(), _grid, row_bounds.x, row_bounds.y
+		actor, selected_action, _ally_units(), _grid, row_bounds.x, row_bounds.y
 	)
+	await _execute_enemy_action(actor, action, selected_action)
+	if actor.can_act() and not actor.has_moved:
+		var follow_up := EnemyAI.choose_action(
+			actor, selected_action, _ally_units(), _grid, row_bounds.x, row_bounds.y
+		)
+		if str(follow_up.get("type", "")) == "move":
+			await _move_unit(actor, follow_up["cell"] as Vector2i)
+			var after_move := EnemyAI.choose_action(
+				actor, selected_action, _ally_units(), _grid, row_bounds.x, row_bounds.y
+			)
+			await _execute_enemy_action(actor, after_move, selected_action)
+		elif str(follow_up.get("type", "")) in ["attack", "debuff"] and not actor.has_acted:
+			await _execute_enemy_action(actor, follow_up, selected_action)
+	await get_tree().create_timer(0.25).timeout
+	_begin_next_turn()
+
+
+func _execute_enemy_action(
+	actor: CombatUnit,
+	action: Dictionary,
+	selected_action: EnemyActionData,
+) -> void:
 	match str(action.get("type", "wait")):
 		"move":
 			var cell: Vector2i = action["cell"]
 			await _move_unit(actor, cell)
 		"attack":
+			var attack_action := EnemyAI.get_action(
+				actor.enemy_data,
+				str(action.get("action_id", selected_action.id if selected_action != null else "")),
+			)
 			var target: CombatUnit = _units[str(action["target_id"])]
-			await _perform_attack(actor, target)
-		_:
-			pass
-	if actor.can_act() and not actor.has_moved:
-		var follow_up := EnemyAI.choose_action(
-			actor, _ally_units(), _enemy_units(), _grid, row_bounds.x, row_bounds.y
-		)
-		if str(follow_up.get("type", "")) == "move":
-			await _move_unit(actor, follow_up["cell"] as Vector2i)
-		elif str(follow_up.get("type", "")) == "attack" and not actor.has_acted:
-			await _perform_attack(actor, _units[str(follow_up["target_id"])])
-	await get_tree().create_timer(0.25).timeout
-	_begin_next_turn()
+			await _perform_attack(actor, target, attack_action)
+		"debuff":
+			var debuff_action := EnemyAI.get_action(
+				actor.enemy_data,
+				str(action.get("action_id", selected_action.id if selected_action != null else "")),
+			)
+			await _perform_enemy_debuff(actor, debuff_action, action["targets"] as Array)
 
 
 func _on_ui_action_requested(action: String) -> void:
@@ -285,6 +309,12 @@ func _on_ui_sub_action_requested(action: String) -> void:
 				_consume_action(unit)
 				unit.restore_mp(unit.skill.mp_restore)
 				log_message.emit("%s used %s." % [unit.display_name, unit.skill.display_name])
+				_end_player_turn_if_done(unit)
+				return
+			if unit.skill.endure:
+				_consume_action(unit)
+				unit.set_enduring(true)
+				log_message.emit("%s used %s and braced for impact." % [unit.display_name, unit.skill.display_name])
 				_end_player_turn_if_done(unit)
 				return
 			_set_phase(BattlePhase.SELECT_SKILL_TARGET)
@@ -608,7 +638,11 @@ func _perform_ammo_reload(actor: CombatUnit, item_id: String) -> void:
 	_end_player_turn_if_done(actor)
 
 
-func _perform_attack(attacker: CombatUnit, defender: CombatUnit) -> void:
+func _perform_attack(
+	attacker: CombatUnit,
+	defender: CombatUnit,
+	enemy_action: EnemyActionData = null,
+) -> void:
 	var broke := false
 	var break_message := ""
 	if attacker.is_ally:
@@ -627,7 +661,7 @@ func _perform_attack(attacker: CombatUnit, defender: CombatUnit) -> void:
 	if attacker.is_ally and attacker.weapon != null:
 		weapon_class = attacker.weapon.weapon_class
 		mastery_level = GameState.get_weapon_mastery_level(attacker.source_id, weapon_class)
-	var result := CombatResolver.resolve_physical_attack(attacker, defender, mastery_level)
+	var result := CombatResolver.resolve_physical_attack(attacker, defender, mastery_level, enemy_action)
 	log_message.emit(str(result["message"]))
 	if result["hit"]:
 		var hit_count := int(result.get("hit_count", 1))
@@ -641,6 +675,24 @@ func _perform_attack(attacker: CombatUnit, defender: CombatUnit) -> void:
 	if broke:
 		log_message.emit(break_message)
 		_sync_ally_weapon_stats(attacker)
+	await get_tree().create_timer(0.25).timeout
+	_check_battle_end()
+
+
+func _perform_enemy_debuff(
+	actor: CombatUnit,
+	action: EnemyActionData,
+	targets: Array,
+) -> void:
+	_consume_action(actor)
+	var target_units: Array[CombatUnit] = []
+	for target_variant: Variant in targets:
+		target_units.append(target_variant as CombatUnit)
+	var result := CombatResolver.resolve_enemy_debuff(action, target_units)
+	if str(result.get("message", "")).is_empty():
+		log_message.emit("%s used %s, but it had no effect." % [actor.display_name, action.display_name])
+	else:
+		log_message.emit("%s used %s. %s" % [actor.display_name, action.display_name, str(result["message"])])
 	await get_tree().create_timer(0.25).timeout
 	_check_battle_end()
 

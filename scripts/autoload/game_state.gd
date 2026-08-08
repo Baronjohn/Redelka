@@ -4,6 +4,7 @@ const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
 const MasteryConstantsScript = preload("res://scripts/data/mastery_constants.gd")
+const PartyFormationScript = preload("res://scripts/data/party_formation.gd")
 
 enum BattleSource { STANDALONE, EXPLORE }
 
@@ -27,6 +28,7 @@ var visited_area_ids: Array[String] = []
 var collected_pickup_ids: Array[String] = []
 var party_members: Array = []
 var inventory: Dictionary = {}
+var party_formation: Dictionary = {}
 var equipped: Dictionary = {}
 var owned_equipment: Dictionary = {}
 var weapon_durability: Dictionary = {}
@@ -51,15 +53,16 @@ var _draft_allocated: StatBlock = StatBlock.new()
 var _draft_budget: int = 0
 
 
-func ensure_party_initialized(encounter_id: String = DEFAULT_ENCOUNTER_ID) -> void:
+func ensure_party_initialized(_encounter_id: String = DEFAULT_ENCOUNTER_ID) -> void:
 	if not party_members.is_empty():
 		return
-	var encounter := DataLoader.load_encounter(encounter_id)
-	inventory = encounter.party_inventory.duplicate()
 	_initialize_equipment_defaults()
+	if inventory.is_empty():
+		inventory = get_setup_inventory()
+	if party_formation.is_empty():
+		reset_formation_to_default()
 	var characters := _get_characters()
-	for ally_entry: Dictionary in encounter.allies:
-		var character_id := str(ally_entry.get("character_id", ""))
+	for character_id: String in get_party_character_ids():
 		if not characters.has(character_id):
 			continue
 		var character: CharacterData = characters[character_id]
@@ -73,14 +76,15 @@ func ensure_party_initialized(encounter_id: String = DEFAULT_ENCOUNTER_ID) -> vo
 		snapshot.current_mp = snapshot.max_mp
 		_initialize_mastery_defaults(snapshot)
 		party_members.append(snapshot)
+	ensure_formation_for_party()
 
 
 func _initialize_equipment_defaults() -> void:
 	if not equipped.is_empty():
 		return
-	var defaults := DataLoader.load_party_equipment_defaults()
-	owned_equipment = (defaults.get("owned_pool", {}) as Dictionary).duplicate()
-	var loadouts: Dictionary = defaults.get("starting_loadouts", {}) as Dictionary
+	var setup := DataLoader.load_new_game_setup()
+	owned_equipment = (setup.get("owned_equipment", {}) as Dictionary).duplicate()
+	var loadouts: Dictionary = setup.get("loadouts", {}) as Dictionary
 	for character_id: String in loadouts.keys():
 		equipped[character_id] = _normalize_loadout(loadouts[character_id] as Dictionary)
 		for slot_name: String in (equipped[character_id] as Dictionary).keys():
@@ -920,6 +924,8 @@ func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> D
 		"visited_area_ids": visited_area_ids.duplicate(),
 		"collected_pickup_ids": collected_pickup_ids.duplicate(),
 		"party_members": members,
+		"party_formation": PartyFormationScript.serialize_positions(party_formation),
+		"formation_coord_space": "menu",
 		"inventory": inventory.duplicate(),
 		"equipped": equipped.duplicate(true),
 		"owned_equipment": owned_equipment.duplicate(),
@@ -961,6 +967,17 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 		_ensure_mastery_defaults(snapshot)
 		party_members.append(snapshot)
 	inventory = (state.get("inventory", {}) as Dictionary).duplicate()
+	party_formation = PartyFormationScript.parse_positions(
+		state.get("party_formation", {}) as Dictionary
+	)
+	if str(state.get("formation_coord_space", "battle")) != "menu":
+		var migrated: Dictionary = {}
+		for character_id: String in party_formation.keys():
+			migrated[character_id] = PartyFormationScript.battle_to_menu(party_formation[character_id])
+		party_formation = migrated
+	if party_formation.is_empty():
+		reset_formation_to_default()
+	ensure_formation_for_party()
 	equipped = (state.get("equipped", {}) as Dictionary).duplicate(true)
 	for character_id: String in equipped.keys():
 		equipped[character_id] = _normalize_loadout(equipped[character_id] as Dictionary)
@@ -1094,6 +1111,7 @@ func travel_to_area(area_id: String, spawn_pos: Vector3, spawn_rot_y: float) -> 
 func reset_party_to_default() -> void:
 	party_members.clear()
 	inventory.clear()
+	party_formation.clear()
 	equipped.clear()
 	owned_equipment.clear()
 	weapon_durability.clear()
@@ -1111,7 +1129,88 @@ func reset_party_to_default() -> void:
 	_draft_character_id = ""
 	_draft_allocated = StatBlock.new()
 	_draft_budget = 0
+	inventory = get_setup_inventory()
+	reset_formation_to_default()
 	ensure_party_initialized(DEFAULT_ENCOUNTER_ID)
+
+
+func get_setup_inventory() -> Dictionary:
+	var setup := DataLoader.load_new_game_setup()
+	return (setup.get("inventory", {}) as Dictionary).duplicate()
+
+
+func get_party_character_ids() -> Array[String]:
+	var setup := DataLoader.load_new_game_setup()
+	var result: Array[String] = []
+	for character_id: Variant in setup.get("party", []) as Array:
+		result.append(str(character_id))
+	return result
+
+
+func get_default_formation() -> Dictionary:
+	return DataLoader.load_default_formation()
+
+
+func reset_formation_to_default() -> void:
+	party_formation = get_default_formation().duplicate()
+
+
+func ensure_formation_for_party() -> void:
+	var defaults := get_default_formation()
+	var used_cells: Dictionary = {}
+	for character_id: String in get_party_character_ids():
+		if party_formation.has(character_id):
+			var cell: Vector2i = party_formation[character_id]
+			var cell_key := "%d,%d" % [cell.x, cell.y]
+			if PartyFormationScript.is_valid_cell(cell) and not used_cells.has(cell_key):
+				used_cells[cell_key] = character_id
+				continue
+		if defaults.has(character_id):
+			var default_cell: Vector2i = defaults[character_id]
+			var default_key := "%d,%d" % [default_cell.x, default_cell.y]
+			if PartyFormationScript.is_valid_cell(default_cell) and not used_cells.has(default_key):
+				party_formation[character_id] = default_cell
+				used_cells[default_key] = character_id
+				continue
+		for y: int in range(PartyFormationScript.ROW_MIN, PartyFormationScript.ROW_MAX + 1):
+			var placed := false
+			for x: int in CombatConstants.GRID_SIZE:
+				var fallback := Vector2i(x, y)
+				var fallback_key := "%d,%d" % [fallback.x, fallback.y]
+				if used_cells.has(fallback_key):
+					continue
+				party_formation[character_id] = fallback
+				used_cells[fallback_key] = character_id
+				placed = true
+				break
+			if placed:
+				break
+
+
+func get_formation_spawn_entries() -> Array[Dictionary]:
+	ensure_formation_for_party()
+	return PartyFormationScript.build_spawn_entries(party_formation)
+
+
+func get_formation_position(character_id: String) -> Vector2i:
+	if party_formation.has(character_id):
+		return party_formation[character_id]
+	return Vector2i(-1, -1)
+
+
+func set_formation_position(character_id: String, cell: Vector2i) -> Dictionary:
+	var result := PartyFormationScript.assign_position(party_formation, character_id, cell)
+	if bool(result.get("ok", false)):
+		party_formation = result.get("formation", party_formation) as Dictionary
+	return result
+
+
+func clear_formation_position(character_id: String) -> void:
+	party_formation = PartyFormationScript.clear_position(party_formation, character_id)
+
+
+func get_formation_character_at(cell: Vector2i) -> String:
+	return PartyFormationScript.find_character_at(party_formation, cell)
 
 
 func is_enemy_defeated(enemy_id: String) -> bool:

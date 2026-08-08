@@ -26,6 +26,7 @@ var current_mp: int = 0
 var is_ko: bool = false
 var has_moved: bool = false
 var has_acted: bool = false
+var is_enduring: bool = false
 
 var pending_spell_id: String = ""
 var pending_spell_target_id: String = ""
@@ -36,6 +37,11 @@ var enemy_data: EnemyData = null
 func reset_turn_flags() -> void:
 	has_moved = false
 	has_acted = false
+	is_enduring = false
+
+
+func set_enduring(value: bool) -> void:
+	is_enduring = value
 
 
 func can_act() -> bool:
@@ -45,6 +51,9 @@ func can_act() -> bool:
 func apply_damage(amount: int) -> void:
 	if is_ko:
 		return
+	if is_enduring:
+		amount = maxi(int(amount * 0.5), 1)
+		is_enduring = false
 	current_hp = maxi(current_hp - amount, 0)
 	hp_changed.emit(current_hp, max_hp)
 	if current_hp <= 0:
@@ -160,8 +169,7 @@ static func from_enemy(
 	unit.max_mp = 0
 	unit.current_mp = 0
 	unit.stats.agi = enemy.agi
-	unit.stats.dex = enemy.hit
-	unit.stats.vit = enemy.def_stat
+	unit.stats.vit = enemy.vit
 	unit.stats.res = enemy.res
 	return unit
 
@@ -173,20 +181,18 @@ func get_agility() -> int:
 
 
 func get_effective_stats_for_attack() -> StatBlock:
+	if enemy_data != null:
+		var attack_stats := StatBlock.new()
+		attack_stats.dex = enemy_data.dex
+		return attack_stats
 	return stats
 
 
 func get_physical_damage_range() -> Vector2i:
-	if enemy_data != null:
-		return Vector2i(enemy_data.damage_min, enemy_data.damage_max)
-	if weapon != null:
-		return Vector2i(weapon.damage_min, weapon.damage_max)
-	return Vector2i(1, 1)
+	return Vector2i.ZERO
 
 
 func get_damage_type() -> String:
-	if enemy_data != null:
-		return enemy_data.damage_type
 	if weapon != null:
 		return weapon.damage_type
 	return "physical"

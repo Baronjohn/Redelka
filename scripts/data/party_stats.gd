@@ -64,12 +64,8 @@ static func get_equipped_weapon(loadout: Dictionary) -> WeaponData:
 
 
 static func get_derived_values(stats: StatBlock, weapon: WeaponData, move_range: int) -> Dictionary:
-	var damage_min := 0
-	var damage_max := 0
 	var attack_range := 1
 	if weapon != null:
-		damage_min = weapon.damage_min
-		damage_max = weapon.damage_max
 		attack_range = weapon.attack_range
 	var max_hp := CombatConstants.HP_BASE + stats.vit * CombatConstants.HP_PER_VIT
 	var max_mp := CombatConstants.MP_BASE + stats.res * CombatConstants.MP_PER_RES
@@ -79,8 +75,7 @@ static func get_derived_values(stats: StatBlock, weapon: WeaponData, move_range:
 	return {
 		"max_hp": max_hp,
 		"max_mp": max_mp,
-		"damage_min": damage_min,
-		"damage_max": damage_max,
+		"attack_power": stats.str,
 		"attack_range": attack_range,
 		"hit_mod": hit_mod,
 		"vit_mitigation": vit_mitigation,

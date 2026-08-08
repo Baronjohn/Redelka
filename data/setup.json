@@ -1,0 +1,44 @@
+{
+  "party": ["ally_1", "ally_2", "ally_3", "ally_4"],
+  "owned_equipment": {
+	"iron_sword": 1,
+	"rusty_dagger": 1,
+	"short_bow": 1,
+	"wooden_staff": 1
+  },
+  "loadouts": {
+	"ally_1": {
+	  "weapon": "iron_sword",
+	  "armor": "",
+	  "helmet": "",
+	  "accessory_1": "",
+	  "accessory_2": ""
+	},
+	"ally_2": {
+	  "weapon": "rusty_dagger",
+	  "armor": "",
+	  "helmet": "",
+	  "accessory_1": "",
+	  "accessory_2": ""
+	},
+	"ally_3": {
+	  "weapon": "short_bow",
+	  "armor": "",
+	  "helmet": "",
+	  "accessory_1": "",
+	  "accessory_2": ""
+	},
+	"ally_4": {
+	  "weapon": "wooden_staff",
+	  "armor": "",
+	  "helmet": "",
+	  "accessory_1": "",
+	  "accessory_2": ""
+	}
+  },
+  "inventory": {
+	"heal_potion": 2,
+	"revive_charm": 1,
+	"arrow": 6
+  }
+}

@@ -1,189 +1,99 @@
 [
   {
-    "id": "test_4v3",
-    "name": "Test Encounter",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 3,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_1", "position": [1, 5] },
-      { "enemy_id": "enemy_2", "position": [2, 5] },
-      { "enemy_id": "enemy_3", "position": [4, 5] }
-    ],
-    "spell_unlocks": [
-      { "character_id": "ally_4", "spell_id": "firebolt" }
-    ]
+	"id": "test_4v3",
+	"name": "Test Encounter",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_1", "position": [1, 5] },
+	  { "enemy_id": "enemy_2", "position": [2, 5] },
+	  { "enemy_id": "enemy_3", "position": [4, 5] }
+	],
+	"spell_unlocks": [
+	  { "character_id": "ally_4", "spell_id": "firebolt" }
+	]
   },
   {
-    "id": "test_room_wretch",
-    "name": "Wretch Ambush",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 3,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_2", "position": [2, 5] },
-      { "enemy_id": "enemy_1", "position": [1, 5] },
-      { "enemy_id": "enemy_3", "position": [4, 5] }
-    ]
+	"id": "test_room_wretch",
+	"name": "Wretch Ambush",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_2", "position": [2, 5] },
+	  { "enemy_id": "enemy_1", "position": [1, 5] },
+	  { "enemy_id": "enemy_3", "position": [4, 5] }
+	]
   },
   {
-    "id": "adjacent_room_hollow",
-    "name": "Hollow Guard",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 3,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_1", "position": [2, 5] },
-      { "enemy_id": "enemy_2", "position": [1, 5] },
-      { "enemy_id": "enemy_3", "position": [4, 5] }
-    ]
+	"id": "adjacent_room_hollow",
+	"name": "Hollow Guard",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_1", "position": [2, 5] },
+	  { "enemy_id": "enemy_2", "position": [1, 5] },
+	  { "enemy_id": "enemy_3", "position": [4, 5] }
+	]
   },
   {
-    "id": "village_square_scuffle",
-    "name": "Square Scuffle",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 2,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_2", "position": [2, 5] }
-    ],
-    "spell_unlocks": [
-      { "character_id": "ally_4", "spell_id": "firebolt" }
-    ]
+	"id": "village_square_scuffle",
+	"name": "Square Scuffle",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_2", "position": [2, 5] }
+	],
+	"spell_unlocks": [
+	  { "character_id": "ally_4", "spell_id": "firebolt" }
+	]
   },
   {
-    "id": "granary_patrol",
-    "name": "Granary Patrol",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 2,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_2", "position": [2, 5] },
-      { "enemy_id": "enemy_3", "position": [4, 5] }
-    ]
+	"id": "granary_patrol",
+	"name": "Granary Patrol",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_2", "position": [2, 5] },
+	  { "enemy_id": "enemy_3", "position": [4, 5] }
+	]
   },
   {
-    "id": "granary_loft",
-    "name": "Loft Ambush",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 2,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_1", "position": [3, 4] },
-      { "enemy_id": "enemy_2", "position": [1, 5] }
-    ]
+	"id": "granary_loft",
+	"name": "Loft Ambush",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_1", "position": [3, 4] },
+	  { "enemy_id": "enemy_2", "position": [1, 5] }
+	]
   },
   {
-    "id": "cottage_closet_ambush",
-    "name": "Closet Ambush",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": false,
-    "party_inventory": {
-      "heal_potion": 2,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_2", "position": [2, 2] },
-      { "enemy_id": "enemy_3", "position": [3, 3] }
-    ]
+	"id": "cottage_closet_ambush",
+	"name": "Closet Ambush",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": false,
+	"enemies": [
+	  { "enemy_id": "enemy_2", "position": [2, 2] },
+	  { "enemy_id": "enemy_3", "position": [3, 3] }
+	]
   },
   {
-    "id": "chapel_warden",
-    "name": "Pale Warden",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": false,
-    "party_inventory": {
-      "heal_potion": 2,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "pale_warden", "position": [2, 5] },
-      { "enemy_id": "enemy_3", "position": [4, 5] }
-    ]
+	"id": "chapel_warden",
+	"name": "Pale Warden",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": false,
+	"enemies": [
+	  { "enemy_id": "pale_warden", "position": [2, 5] },
+	  { "enemy_id": "enemy_3", "position": [4, 5] }
+	]
   },
   {
-    "id": "cellar_guard",
-    "name": "Cellar Guard",
-    "area_texture": "res://assets/battlegrounds/test_area.png",
-    "allow_retreat": true,
-    "party_inventory": {
-      "heal_potion": 2,
-      "revive_charm": 1
-    },
-    "allies": [
-      { "character_id": "ally_1", "position": [0, 0] },
-      { "character_id": "ally_2", "position": [1, 0] },
-      { "character_id": "ally_3", "position": [4, 0] },
-      { "character_id": "ally_4", "position": [5, 0] }
-    ],
-    "enemies": [
-      { "enemy_id": "enemy_1", "position": [2, 5] }
-    ]
+	"id": "cellar_guard",
+	"name": "Cellar Guard",
+	"area_texture": "res://assets/battlegrounds/test_area.png",
+	"allow_retreat": true,
+	"enemies": [
+	  { "enemy_id": "enemy_1", "position": [2, 5] }
+	]
   }
 ]

@@ -5,8 +5,6 @@ var id: String = ""
 var display_name: String = ""
 var area_texture: String = ""
 var allow_retreat: bool = true
-var party_inventory: Dictionary = {}
-var allies: Array[Dictionary] = []
 var enemies: Array[Dictionary] = []
 var spell_unlocks: Array[Dictionary] = []
 
@@ -17,9 +15,6 @@ static func from_dict(data: Dictionary) -> EncounterData:
 	encounter.display_name = str(data.get("name", ""))
 	encounter.area_texture = str(data.get("area_texture", ""))
 	encounter.allow_retreat = bool(data.get("allow_retreat", true))
-	encounter.party_inventory = data.get("party_inventory", {}) as Dictionary
-	for ally_entry: Variant in data.get("allies", []) as Array:
-		encounter.allies.append(ally_entry as Dictionary)
 	for enemy_entry: Variant in data.get("enemies", []) as Array:
 		encounter.enemies.append(enemy_entry as Dictionary)
 	for unlock_entry: Variant in data.get("spell_unlocks", []) as Array:

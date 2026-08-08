@@ -1,0 +1,296 @@
+{
+  "version": 1,
+  "primary_attributes": [
+	{
+	  "id": "str",
+	  "name": "Strength",
+	  "abbrev": "STR",
+	  "description": "Physical attack power for allies. Higher STR increases damage dealt with weapon attacks and physical skills.",
+	  "scales": [
+		{
+		  "target": "ally_physical_damage",
+		  "formula": "max(STR - mitigation, 1)",
+		  "notes": "Mitigation is target VIT * 0.4 for allies, or flat enemy VIT for enemies."
+		},
+		{
+		  "target": "physical_skill_damage",
+		  "formula": "max(STR - mitigation, 1)",
+		  "notes": "Uses the same rule as weapon attacks after a successful hit roll."
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "dex",
+	  "name": "Dexterity",
+	  "abbrev": "DEX",
+	  "description": "Accuracy and combo frequency. Does not increase raw physical damage.",
+	  "scales": [
+		{
+		  "target": "physical_hit_chance",
+		  "formula": "clamp(70 + attacker_DEX - (defender_DEX + defender_LUK * 0.5), 10, 95)",
+		  "notes": "One hit roll per action; combo hits reuse the same hit result."
+		},
+		{
+		  "target": "combo_proc_chance",
+		  "formula": "clamp(DEX + LUK, 10, 95)",
+		  "notes": "Separate roll per extra combo hit at weapon mastery 2+."
+		},
+		{
+		  "target": "hit_modifier_display",
+		  "formula": "70 + DEX",
+		  "notes": "UI preview only; actual hit uses defender stats too."
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "vit",
+	  "name": "Vitality",
+	  "abbrev": "VIT",
+	  "description": "Health pool and physical damage mitigation.",
+	  "scales": [
+		{
+		  "target": "max_hp",
+		  "formula": "20 + VIT * 8"
+		},
+		{
+		  "target": "physical_mitigation",
+		  "formula": "floor(VIT * 0.4)",
+		  "notes": "Subtracted from incoming physical damage. Enemies use a flat VIT stat instead of this formula."
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "agi",
+	  "name": "Agility",
+	  "abbrev": "AGI",
+	  "description": "Turn order weight and retreat success.",
+	  "scales": [
+		{
+		  "target": "turn_order_weight",
+		  "formula": "AGI",
+		  "notes": "Higher AGI appears earlier in the turn queue."
+		},
+		{
+		  "target": "extra_turn_slot",
+		  "formula": "AGI >= battle_average_AGI * 1.35",
+		  "notes": "Qualifying units are added to the turn queue twice per cycle."
+		},
+		{
+		  "target": "retreat_chance",
+		  "formula": "40 + AGI + LUK * 0.5",
+		  "notes": "Percent roll; clamp not applied."
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "int",
+	  "name": "Intelligence",
+	  "abbrev": "INT",
+	  "description": "Spell damage multiplier and healing power.",
+	  "scales": [
+		{
+		  "target": "spell_damage",
+		  "formula": "floor(spell_tier_base * (1 + INT * 0.03))",
+		  "notes": "spell_tier_base scales with spell mastery tier."
+		},
+		{
+		  "target": "spell_healing",
+		  "formula": "spell_tier_base + floor(INT * 0.5)",
+		  "notes": "Used by healing spells when implemented."
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "mnd",
+	  "name": "Mind",
+	  "abbrev": "MND",
+	  "description": "Spell hit chance. Does not affect MP pool size.",
+	  "scales": [
+		{
+		  "target": "spell_hit_chance",
+		  "formula": "clamp(75 + caster_MND - target_RES, 10, 95)"
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "res",
+	  "name": "Resilience",
+	  "abbrev": "RES",
+	  "description": "MP pool and spell defense.",
+	  "scales": [
+		{
+		  "target": "max_mp",
+		  "formula": "10 + RES * 4"
+		},
+		{
+		  "target": "spell_hit_defense",
+		  "formula": "target_RES subtracted from caster spell hit formula",
+		  "notes": "Also resists mental/magic ailments (design target; not fully implemented)."
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	},
+	{
+	  "id": "luk",
+	  "name": "Luck",
+	  "abbrev": "LUK",
+	  "description": "Global fudge stat affecting evasion, combos, and retreat.",
+	  "scales": [
+		{
+		  "target": "physical_hit_defense",
+		  "formula": "defender_LUK * 0.5 subtracted from physical hit chance"
+		},
+		{
+		  "target": "combo_proc_chance",
+		  "formula": "DEX + LUK",
+		  "notes": "Combined with DEX for combo rolls."
+		},
+		{
+		  "target": "retreat_chance",
+		  "formula": "LUK * 0.5 added to retreat roll"
+		}
+	  ],
+	  "sources": ["base_stats", "level_growth", "allocated_points", "equipment_bonuses"]
+	}
+  ],
+  "non_attributes": [
+	{
+	  "id": "move_range",
+	  "name": "Move Range",
+	  "description": "Tiles a character can move per turn. Defined per character, not scaled by primary attributes.",
+	  "sources": ["character_definition"]
+	}
+  ],
+  "effective_stat_layers": [
+	{
+	  "layer": "base_stats",
+	  "description": "Starting values from characters.json."
+	},
+	{
+	  "layer": "level_growth",
+	  "description": "Automatic per-level gains defined in characters.json level_growth."
+	},
+	{
+	  "layer": "allocated_points",
+	  "description": "Player-assigned points on level-up."
+	},
+	{
+	  "layer": "equipment_bonuses",
+	  "description": "Flat bonuses from equipped weapons and armor."
+	}
+  ],
+  "derived_stats": [
+	{
+	  "id": "max_hp",
+	  "name": "Max HP",
+	  "formula": "20 + VIT * 8"
+	},
+	{
+	  "id": "max_mp",
+	  "name": "Max MP",
+	  "formula": "10 + RES * 4"
+	},
+	{
+	  "id": "attack_power",
+	  "name": "Attack Power",
+	  "formula": "STR",
+	  "notes": "Displayed in UI; actual damage subtracts target mitigation."
+	},
+	{
+	  "id": "physical_mitigation",
+	  "name": "Physical Mitigation",
+	  "formula": "floor(VIT * 0.4)"
+	},
+	{
+	  "id": "physical_hit_chance",
+	  "name": "Physical Hit Chance",
+	  "formula": "clamp(70 + attacker_DEX - (defender_DEX + defender_LUK * 0.5), 10, 95)"
+	},
+	{
+	  "id": "spell_hit_chance",
+	  "name": "Spell Hit Chance",
+	  "formula": "clamp(75 + caster_MND - target_RES, 10, 95)"
+	},
+	{
+	  "id": "spell_damage",
+	  "name": "Spell Damage",
+	  "formula": "floor(spell_tier_base * (1 + INT * 0.03)) - elemental_resist",
+	  "notes": "Minimum 1 after resist."
+	},
+	{
+	  "id": "retreat_chance",
+	  "name": "Retreat Chance",
+	  "formula": "40 + AGI + LUK * 0.5"
+	},
+	{
+	  "id": "combo_proc_chance",
+	  "name": "Combo Proc Chance",
+	  "formula": "clamp(DEX + LUK, 10, 95)"
+	}
+  ],
+  "constants": {
+	"hp_base": 20,
+	"hp_per_vit": 8,
+	"mp_base": 10,
+	"mp_per_res": 4,
+	"base_physical_hit": 70,
+	"base_spell_hit": 75,
+	"hit_floor": 10,
+	"hit_ceiling": 95,
+	"luk_weight": 0.5,
+	"vit_weight": 0.4,
+	"int_factor": 0.03,
+	"retreat_base": 40,
+	"extra_turn_agi_factor": 1.35
+  },
+  "progression": {
+	"level_cap": 99,
+	"points_per_level": 4,
+	"xp_to_next_level": "max(level, 1) * 100",
+	"weapon_mastery_xp_per_use": 40,
+	"weapon_mastery_xp_per_level": 1000,
+	"weapon_mastery_max_level": 3,
+	"spell_mastery_xp_per_use": 40,
+	"spell_mastery_xp_to_tier": [1000, 2000],
+	"spell_mastery_max_tier": 3,
+	"spell_power_multipliers_by_tier": [1.0, 1.25, 1.5],
+	"spell_mp_multipliers_by_tier": [1.0, 1.15, 1.3]
+  },
+  "enemy_stats": {
+	"description": "Enemies use a simplified stat block separate from the eight primaries.",
+	"fields": [
+	  {
+		"id": "hp",
+		"description": "Hit points."
+	  },
+	  {
+		"id": "agi",
+		"description": "Turn order weight; uses the same extra-turn rule as allies."
+	  },
+	  {
+		"id": "dex",
+		"description": "Physical hit accuracy when attacking allies. Enemies do not use DEX for evasion."
+	  },
+	  {
+		"id": "vit",
+		"description": "Flat physical mitigation when enemies are attacked."
+	  },
+	  {
+		"id": "res",
+		"description": "Spell hit defense when enemies are targeted by spells."
+	  },
+	  {
+		"id": "fire_resist",
+		"description": "Flat subtraction from fire spell damage."
+	  }
+	],
+	"physical_damage": "max(action_damage_roll - target_mitigation, 1)",
+	"actions": "Enemy damage and effects are defined per action in enemies.json."
+  }
+}

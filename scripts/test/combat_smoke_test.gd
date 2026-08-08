@@ -5,6 +5,15 @@ extends SceneTree
 const PartyStatsHelper = preload("res://scripts/data/party_stats.gd")
 const ProgressionConstantsScript = preload("res://scripts/data/progression_constants.gd")
 const MasteryConstantsScript = preload("res://scripts/data/mastery_constants.gd")
+const PartyFormationScript = preload("res://scripts/data/party_formation.gd")
+
+
+func _get_setup_weapon(character_id: String) -> WeaponData:
+	var setup := DataLoader.load_new_game_setup()
+	var loadouts: Dictionary = setup.get("loadouts", {}) as Dictionary
+	var loadout: Dictionary = loadouts.get(character_id, {}) as Dictionary
+	var weapon_id := str(loadout.get("weapon", ""))
+	return DataLoader.load_weapons()[weapon_id] as WeaponData
 
 
 func _initialize() -> void:
@@ -37,25 +46,48 @@ func _test_data_loading() -> PackedStringArray:
 		errors.append("Expected 4 characters.")
 	if DataLoader.load_enemies().size() != 4:
 		errors.append("Expected 4 enemies.")
+	for enemy: EnemyData in DataLoader.load_enemies().values():
+		if enemy.actions.is_empty():
+			errors.append("Enemy %s should define actions." % enemy.id)
+		if enemy.get_action_chance_total() != 100:
+			errors.append("Enemy %s action chances should total 100." % enemy.id)
+		if enemy.dex <= 0:
+			errors.append("Enemy %s should define positive DEX." % enemy.id)
 	if DataLoader.load_spells().size() < 1:
 		errors.append("Expected at least 1 spell.")
+	var setup := DataLoader.load_new_game_setup()
+	if not setup.has("loadouts"):
+		errors.append("New game setup should define loadouts.")
+	if DataLoader.load_items().size() < 6:
+		errors.append("Expected merged item definitions from split JSON files.")
+	var attributes := DataLoader.load_attributes()
+	if attributes.get("primary_attributes", []).size() != 8:
+		errors.append("attributes.json should define 8 primary attributes.")
+	var default_formation := DataLoader.load_default_formation()
+	if default_formation.size() != 4:
+		errors.append("formation.json should define 4 starting positions.")
+	for cell: Vector2i in default_formation.values():
+		if not PartyFormationScript.is_valid_cell(cell):
+			errors.append("Default formation positions must use the first two rows.")
 	var encounter := DataLoader.load_encounter("test_4v3")
-	if encounter.allies.size() != 4 or encounter.enemies.size() != 3:
-		errors.append("Encounter test_4v3 has wrong unit counts.")
+	if encounter.enemies.size() != 3:
+		errors.append("Encounter test_4v3 has wrong enemy count.")
 	return errors
 
 
 func _test_combat_formulas() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var characters := DataLoader.load_characters()
-	var weapons := DataLoader.load_weapons()
 	var skills := DataLoader.load_skills()
 	var bran: CharacterData = characters["ally_1"]
+	var bran_skill: SkillData = null
+	if not bran.skill_id.is_empty() and skills.has(bran.skill_id):
+		bran_skill = skills[bran.skill_id]
 	var unit := CombatUnit.from_character(
 		"ally_1",
 		bran,
-		weapons[bran.weapon_id],
-		skills[bran.skill_id],
+		_get_setup_weapon("ally_1"),
+		bran_skill,
 		Vector2i(0, 0)
 	)
 	var enemy := CombatUnit.from_enemy(
@@ -67,6 +99,18 @@ func _test_combat_formulas() -> PackedStringArray:
 	var hit := CombatResolver.physical_hit_chance(unit, enemy)
 	if hit < CombatConstants.HIT_FLOOR or hit > CombatConstants.HIT_CEILING:
 		errors.append("Physical hit chance out of bounds.")
+	var ally_vs_enemy_hit := CombatConstants.BASE_HIT + float(unit.stats.dex)
+	if absf(hit - ally_vs_enemy_hit) > 0.01:
+		errors.append("Allies attacking enemies should ignore enemy DEX evasion.")
+	var enemy_vs_ally_hit := CombatResolver.physical_hit_chance(enemy, unit)
+	var expected_enemy_hit := (
+		CombatConstants.BASE_HIT
+		+ float(enemy.enemy_data.dex)
+		- (float(unit.stats.dex) + float(unit.stats.luk) * CombatConstants.LUK_WEIGHT)
+	)
+	expected_enemy_hit = clampf(expected_enemy_hit, CombatConstants.HIT_FLOOR, CombatConstants.HIT_CEILING)
+	if absf(enemy_vs_ally_hit - expected_enemy_hit) > 0.01:
+		errors.append("Enemy attacks should use enemy DEX against ally evasion.")
 
 	var attack := CombatResolver.resolve_physical_attack(unit, enemy)
 	if not attack.has("hit") or not attack.has("damage"):
@@ -77,8 +121,44 @@ func _test_combat_formulas() -> PackedStringArray:
 	if not spell.has("amount"):
 		errors.append("Spell result missing amount.")
 
+	var endure_skill: SkillData = skills["endure"]
+	if not endure_skill.endure:
+		errors.append("Endure skill should be flagged as endure.")
+	var mira: CharacterData = characters["ally_2"]
+	var enduring_unit := CombatUnit.from_character(
+		"ally_2",
+		mira,
+		_get_setup_weapon("ally_2"),
+		endure_skill,
+		Vector2i.ZERO,
+	)
+	enduring_unit.current_hp = 100
+	enduring_unit.set_enduring(true)
+	enduring_unit.apply_damage(20)
+	if enduring_unit.current_hp != 90:
+		errors.append("Endure should halve incoming damage.")
+	if enduring_unit.is_enduring:
+		errors.append("Endure should clear after taking damage.")
+
 	if not CombatResolver.resolve_retreat(unit) in [true, false]:
 		errors.append("Retreat must return bool.")
+
+	var howl := EnemyActionData.new()
+	howl.stat_name = "str"
+	howl.amount = -3
+	var debuff_target := CombatUnit.from_character(
+		"ally_1",
+		bran,
+		_get_setup_weapon("ally_1"),
+		bran_skill,
+		Vector2i.ZERO,
+	)
+	debuff_target.stats.str = 12
+	var debuff_result := CombatResolver.resolve_enemy_debuff(howl, [debuff_target])
+	if not bool(debuff_result.get("ok", false)):
+		errors.append("Enemy debuff should reduce ally stats.")
+	if debuff_target.stats.str != 9:
+		errors.append("Howl should reduce ally STR by 3.")
 	return errors
 
 
@@ -86,15 +166,17 @@ func _test_turn_queue() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var units: Array[CombatUnit] = []
 	var characters := DataLoader.load_characters()
-	var weapons := DataLoader.load_weapons()
 	var skills := DataLoader.load_skills()
 	for character: CharacterData in characters.values():
+		var skill: SkillData = null
+		if not character.skill_id.is_empty() and skills.has(character.skill_id):
+			skill = skills[character.skill_id]
 		units.append(
 			CombatUnit.from_character(
 				character.id,
 				character,
-				weapons[character.weapon_id],
-				skills[character.skill_id],
+				_get_setup_weapon(character.id),
+				skill,
 				Vector2i.ZERO
 			)
 		)
@@ -215,9 +297,9 @@ func _test_character_menu_system() -> PackedStringArray:
 	if equipment.is_empty():
 		errors.append("Equipment data should load.")
 
-	var defaults := DataLoader.load_party_equipment_defaults()
-	if not defaults.has("starting_loadouts"):
-		errors.append("Party equipment defaults should define starting loadouts.")
+	var setup := DataLoader.load_new_game_setup()
+	if not setup.has("loadouts"):
+		errors.append("New game setup should define loadouts.")
 
 	var loadout: Dictionary = gs.call("get_loadout", "ally_1")
 	if str(loadout.get("weapon", "")).is_empty():
@@ -314,6 +396,45 @@ func _test_character_menu_system() -> PackedStringArray:
 		errors.append("Second accessory slot should show the Power Ring from the first slot.")
 	if pool_labels != 1:
 		errors.append("Second accessory slot should show the spare Power Ring in the pool.")
+
+	var spawn_entries: Array = gs.call("get_formation_spawn_entries")
+	if spawn_entries.size() != 4:
+		errors.append("Formation should provide one spawn entry per party member.")
+	var used_cells: Dictionary = {}
+	for entry_variant: Variant in spawn_entries:
+		var entry: Dictionary = entry_variant as Dictionary
+		var pos_array: Array = entry.get("position", []) as Array
+		if pos_array.size() < 2:
+			errors.append("Formation spawn entry missing position.")
+			continue
+		var cell := Vector2i(int(pos_array[0]), int(pos_array[1]))
+		if cell.y < PartyFormationScript.ROW_MIN or cell.y > PartyFormationScript.ROW_MAX:
+			errors.append("Formation battle spawn positions must use the first two rows.")
+		var cell_key := "%d,%d" % [cell.x, cell.y]
+		if used_cells.has(cell_key):
+			errors.append("Formation should allow only one character per tile.")
+		used_cells[cell_key] = true
+	if gs.call("get_formation_position", "ally_1") != Vector2i(5, 0):
+		errors.append("Default formation should store menu coordinates for battle-left spawn.")
+	var ally_1_spawn: Vector2i = Vector2i(-1, -1)
+	for entry_variant: Variant in spawn_entries:
+		var entry: Dictionary = entry_variant as Dictionary
+		if str(entry.get("character_id", "")) != "ally_1":
+			continue
+		var pos_array: Array = entry.get("position", []) as Array
+		ally_1_spawn = Vector2i(int(pos_array[0]), int(pos_array[1]))
+	if ally_1_spawn != Vector2i(0, 0):
+		errors.append("Menu X should mirror once when converting to battle spawn coordinates.")
+
+	var move_result: Dictionary = gs.call("set_formation_position", "ally_1", Vector2i(3, 1))
+	if not bool(move_result.get("ok", false)):
+		errors.append("Moving a character to a valid tile should succeed.")
+	if gs.call("get_formation_position", "ally_1") != Vector2i(3, 1):
+		errors.append("Formation position should update for the selected character.")
+
+	var blocked_result: Dictionary = gs.call("set_formation_position", "ally_1", Vector2i(3, 5))
+	if bool(blocked_result.get("ok", false)):
+		errors.append("Formation should reject tiles outside the first two rows.")
 
 	gs.call("reset_party_to_default")
 	return errors
@@ -466,6 +587,14 @@ func _test_save_load() -> PackedStringArray:
 		errors.append("apply_save_dict should restore saved state.")
 	if int(gs.get("inventory").get("heal_potion", 0)) != 5:
 		errors.append("Save roundtrip should restore inventory.")
+	gs.get("party_formation")["ally_1"] = Vector2i(2, 1)
+	var formation_save: Dictionary = gs.call("build_save_data", Vector3(3, 0, 4), 1.25)
+	gs.call("reset_formation_to_default")
+	if bool(gs.call("apply_save_dict", formation_save)):
+		if gs.call("get_formation_position", "ally_1") != Vector2i(2, 1):
+			errors.append("Save roundtrip should restore party formation.")
+	else:
+		errors.append("apply_save_dict should restore saved formation.")
 
 	if not bool(gs.call("save_to_slot", 7, Vector3(1, 0, 2), 0.0)):
 		errors.append("save_to_slot should write a manual save.")

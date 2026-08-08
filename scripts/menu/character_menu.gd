@@ -5,6 +5,7 @@ signal closed
 const ITEMS_TAB := preload("res://scripts/menu/tabs/items_tab.gd")
 const EQUIPMENT_TAB := preload("res://scripts/menu/tabs/equipment_tab.gd")
 const STATUS_TAB := preload("res://scripts/menu/tabs/status_tab.gd")
+const FORMATION_TAB := preload("res://scripts/menu/tabs/formation_tab.gd")
 const MAP_TAB := preload("res://scripts/menu/tabs/map_tab.gd")
 const CONFIG_TAB := preload("res://scripts/menu/tabs/config_tab.gd")
 
@@ -28,6 +29,7 @@ func _ready() -> void:
 	_register_tab("Items", ITEMS_TAB)
 	_register_tab("Equipment", EQUIPMENT_TAB)
 	_register_tab("Status", STATUS_TAB)
+	_register_tab("Formation", FORMATION_TAB)
 	_register_tab("Map", MAP_TAB)
 	_register_tab("Config", CONFIG_TAB)
 	_select_tab("Items")
@@ -116,7 +118,7 @@ func _select_tab(label: String) -> void:
 
 
 func _should_highlight_selection() -> bool:
-	return _active_tab_name in ["Items", "Equipment", "Status"]
+	return _active_tab_name in ["Items", "Equipment", "Status", "Formation"]
 
 
 func _build_party_sidebar() -> void:

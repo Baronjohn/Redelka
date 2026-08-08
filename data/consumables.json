@@ -1,0 +1,20 @@
+[
+  {
+	"id": "heal_potion",
+	"name": "Heal Potion",
+	"type": "consumable",
+	"heal_amount": 50,
+	"revive": false,
+	"range": 5,
+	"targets": "ally"
+  },
+  {
+	"id": "revive_charm",
+	"name": "Revive Charm",
+	"type": "consumable",
+	"heal_amount": 50,
+	"revive": true,
+	"range": 5,
+	"targets": "ally"
+  }
+]

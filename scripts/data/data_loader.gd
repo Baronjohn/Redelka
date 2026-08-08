@@ -2,6 +2,14 @@ class_name DataLoader
 extends RefCounted
 
 const EquipmentDataScript = preload("res://scripts/data/equipment_data.gd")
+const PartyFormationScript = preload("res://scripts/data/party_formation.gd")
+
+const ITEM_PATHS: Array[String] = [
+	"res://data/consumables.json",
+	"res://data/keys.json",
+	"res://data/ammo.json",
+]
+
 
 static func load_json_array(path: String) -> Array:
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -13,6 +21,18 @@ static func load_json_array(path: String) -> Array:
 		return parsed as Array
 	push_error("Invalid JSON array: %s" % path)
 	return []
+
+
+static func load_json_object(path: String) -> Dictionary:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("Failed to open JSON: %s" % path)
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if parsed is Dictionary:
+		return parsed as Dictionary
+	push_error("Invalid JSON object: %s" % path)
+	return {}
 
 
 static func load_weapons() -> Dictionary:
@@ -41,9 +61,10 @@ static func load_skills() -> Dictionary:
 
 static func load_items() -> Dictionary:
 	var result: Dictionary = {}
-	for entry: Variant in load_json_array("res://data/items.json"):
-		var item := ItemData.from_dict(entry as Dictionary)
-		result[item.id] = item
+	for path: String in ITEM_PATHS:
+		for entry: Variant in load_json_array(path):
+			var item := ItemData.from_dict(entry as Dictionary)
+			result[item.id] = item
 	return result
 
 
@@ -96,13 +117,14 @@ static func load_equipment() -> Dictionary:
 	return result
 
 
-static func load_party_equipment_defaults() -> Dictionary:
-	var file := FileAccess.open("res://data/party_equipment.json", FileAccess.READ)
-	if file == null:
-		push_error("Failed to open party equipment defaults.")
-		return {}
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if parsed is Dictionary:
-		return parsed as Dictionary
-	push_error("Invalid party equipment JSON.")
-	return {}
+static func load_new_game_setup() -> Dictionary:
+	return load_json_object("res://data/setup.json")
+
+
+static func load_attributes() -> Dictionary:
+	return load_json_object("res://data/attributes.json")
+
+
+static func load_default_formation() -> Dictionary:
+	var data := load_json_object("res://data/formation.json")
+	return PartyFormationScript.parse_positions(data.get("positions", {}) as Dictionary)

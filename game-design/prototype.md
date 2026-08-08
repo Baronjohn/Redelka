@@ -207,7 +207,7 @@ sequenceDiagram
 | **Overworld enemy** | Contact trigger → `test_room_wretch` encounter (4 allies vs 1 Wretch) |
 | **Checkpoint** | Press **E** in checkpoint alcove; defeat restores checkpoint state |
 | **Character menu** | Press **I** in explore for Items, Equipment, Status, Map, Config |
-| **Equipment** | Weapon, armor, helmet, accessory x2 with stat bonuses; owned pool in `data/party_equipment.json` |
+| **Equipment** | Weapon, armor, helmet, accessory x2 with stat bonuses; new-game pool and loadouts in `data/setup.json` |
 | **Settings** | `Settings` autoload persists graphics/audio/input to `user://settings.cfg` |
 | **Result UI** | Explore battles show **Continue**; standalone battle keeps **Restart** |
 | **Data** | `data/areas.json`, explore-linked row in `data/encounters.json` |

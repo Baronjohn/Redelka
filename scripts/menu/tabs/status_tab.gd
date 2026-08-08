@@ -195,9 +195,8 @@ func _populate_overview(
 			lines.append("[i]%d stat point(s) pending next level-up.[/i]" % snapshot.unspent_stat_points)
 	lines.append("")
 	lines.append("[b]Combat Snapshot[/b]")
-	lines.append("Damage %d–%d   Range %d   Move %d" % [
-		int(derived.get("damage_min", 0)),
-		int(derived.get("damage_max", 0)),
+	lines.append("Attack %d   Range %d   Move %d" % [
+		int(derived.get("attack_power", 0)),
 		int(derived.get("attack_range", 1)),
 		int(derived.get("move_range", 0)),
 	])
@@ -237,7 +236,7 @@ func _populate_derived(derived: Dictionary) -> void:
 	var entries: Array[Dictionary] = [
 		{"label": "Max HP", "value": str(int(derived.get("max_hp", 0)))},
 		{"label": "Max MP", "value": str(int(derived.get("max_mp", 0)))},
-		{"label": "Damage", "value": "%d–%d" % [int(derived.get("damage_min", 0)), int(derived.get("damage_max", 0))]},
+		{"label": "Attack Power", "value": str(int(derived.get("attack_power", 0)))},
 		{"label": "Attack Range", "value": str(int(derived.get("attack_range", 1)))},
 		{"label": "Move Range", "value": str(int(derived.get("move_range", 0)))},
 		{"label": "Hit Modifier", "value": "%.0f" % float(derived.get("hit_mod", 0.0))},

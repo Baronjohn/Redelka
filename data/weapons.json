@@ -3,45 +3,37 @@
 	"id": "iron_sword",
 	"name": "Iron Sword",
 	"weapon_class": "sword",
-	"damage_min": 6,
-	"damage_max": 10,
 	"damage_type": "physical",
 	"attack_range": 1,
-	"durability_max": 40,
-	"stat_bonuses": { "str": 2, "dex": 1 }
+	"durability_max": 50,
+	"stat_bonuses": { "str": 6, "dex": 5, "vit": 4 }
   },
   {
 	"id": "wooden_staff",
 	"name": "Wooden Staff",
 	"weapon_class": "staff",
-	"damage_min": 4,
-	"damage_max": 8,
 	"damage_type": "physical",
 	"attack_range": 1,
-	"durability_max": 30,
-	"stat_bonuses": { "str": 1, "int": 2 }
+	"durability_max": 10,
+	"stat_bonuses": { "int": 6, "res": 4, "mnd": 5 }
   },
   {
 	"id": "short_bow",
 	"name": "Short Bow",
 	"weapon_class": "bow",
-	"damage_min": 5,
-	"damage_max": 9,
 	"damage_type": "physical",
-	"attack_range": 3,
+	"attack_range": 5,
 	"ammo_item_id": "arrow",
-	"magazine_size": 6,
-	"stat_bonuses": { "str": 1, "dex": 2 }
+	"magazine_size": 12,
+	"stat_bonuses": { "str": 3, "dex": 2 }
   },
   {
 	"id": "rusty_dagger",
 	"name": "Rusty Dagger",
 	"weapon_class": "dagger",
-	"damage_min": 3,
-	"damage_max": 7,
 	"damage_type": "physical",
 	"attack_range": 1,
-	"durability_max": 25,
-	"stat_bonuses": { "dex": 2 }
+	"durability_max": 30,
+	"stat_bonuses": { "dex": 4, "str": 3, "agi": 4 }
   }
 ]

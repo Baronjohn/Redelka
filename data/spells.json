@@ -1,12 +1,12 @@
 [
   {
-    "id": "firebolt",
-    "name": "Firebolt",
-    "mastery_id": "fire",
-    "tier_base": 12,
-    "damage_type": "fire",
-    "mp_cost": 6,
-    "targets": "enemy",
-    "healing": false
+	"id": "firebolt",
+	"name": "Firebolt",
+	"mastery_id": "fire",
+	"tier_base": 12,
+	"damage_type": "fire",
+	"mp_cost": 6,
+	"targets": "enemy",
+	"healing": false
   }
 ]
