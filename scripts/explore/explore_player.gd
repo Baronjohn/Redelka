@@ -4,12 +4,13 @@ extends CharacterBody3D
 const MOVE_SPEED: float = 4.5
 const ACCELERATION: float = 18.0
 const FACE_SPEED: float = 14.0
+const CharacterRigScript = preload("res://scripts/assets/characters/character_rig.gd")
 const PROTAGONIST_MODEL: PackedScene = preload("res://scenes/characters/bran.tscn")
 
 @export var camera_rig_path: NodePath
 
 var _camera_rig: Node3D
-var _walk_model: Ps1BlockModel = null
+var _walk_model: CharacterRigScript = null
 var movement_enabled: bool = true
 
 
@@ -33,7 +34,7 @@ func _attach_protagonist_model() -> void:
 	if PROTAGONIST_MODEL != null:
 		var model := PROTAGONIST_MODEL.instantiate() as Node3D
 		model_root.add_child(model)
-		_walk_model = model as Ps1BlockModel
+		_walk_model = model as CharacterRigScript
 
 
 func _physics_process(delta: float) -> void:
@@ -42,7 +43,7 @@ func _physics_process(delta: float) -> void:
 		velocity.z = 0.0
 		move_and_slide()
 		if _walk_model != null:
-			_walk_model.update_walk_animation(delta, 0.0)
+			_walk_model.update_animation(delta, 0.0)
 		return
 
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -63,7 +64,7 @@ func _physics_process(delta: float) -> void:
 	if _walk_model != null:
 		var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 		var speed_ratio := clampf(horizontal_speed / MOVE_SPEED, 0.0, 1.0)
-		_walk_model.update_walk_animation(delta, speed_ratio)
+		_walk_model.update_animation(delta, speed_ratio)
 
 
 func _update_mouse_facing(delta: float) -> void:

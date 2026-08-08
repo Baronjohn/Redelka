@@ -1,5 +1,5 @@
 class_name SurvivorModelScene
-extends "res://scripts/assets/ps1_survivor_model.gd"
+extends "res://scripts/assets/characters/character_rig.gd"
 
 @export var character_id: String = "ally_1"
 

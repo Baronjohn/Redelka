@@ -3,6 +3,8 @@ extends RefCounted
 
 const GRID_SIZE: int = 6
 const TILE_SIZE: float = 1.4
+const TILE_FLOOR_Y: float = 0.06
+const LEGACY_UNIT_Y: float = 0.8
 
 const BASE_HIT: float = 70.0
 const BASE_SPELL_HIT: float = 75.0

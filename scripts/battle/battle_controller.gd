@@ -88,10 +88,17 @@ func _ready() -> void:
 	call_deferred("_start_battle")
 
 
+func _unit_world_pos(unit: CombatUnit) -> Vector3:
+	var y_offset := CombatConstants.LEGACY_UNIT_Y
+	if _unit_views.has(unit.runtime_id):
+		y_offset = (_unit_views[unit.runtime_id] as UnitView).get_ground_y_offset()
+	return _grid.grid_to_world(unit.grid_pos) + Vector3(0.0, y_offset, 0.0)
+
+
 func _focus_camera_on_unit(unit: CombatUnit, instant: bool = false) -> void:
 	if camera == null or unit == null:
 		return
-	var unit_pos := _grid.grid_to_world(unit.grid_pos) + Vector3(0.0, 0.8, 0.0)
+	var unit_pos := _unit_world_pos(unit)
 	var look_target := _get_camera_look_target(unit)
 	camera.focus_unit(unit_pos, look_target, instant)
 
@@ -99,7 +106,7 @@ func _focus_camera_on_unit(unit: CombatUnit, instant: bool = false) -> void:
 func _focus_camera_for_board_selection(unit: CombatUnit) -> void:
 	if camera == null or unit == null:
 		return
-	var unit_pos := _grid.grid_to_world(unit.grid_pos) + Vector3(0.0, 0.8, 0.0)
+	var unit_pos := _unit_world_pos(unit)
 	camera.focus_move_selection(unit_pos, _get_grid_center_world())
 
 
@@ -120,8 +127,8 @@ func _get_camera_look_target(actor: CombatUnit) -> Vector3:
 			best_distance = distance
 			best_target = opponent
 	if best_target == null:
-		return _grid.grid_to_world(actor.grid_pos) + Vector3(0.0, 0.8, 0.0)
-	return _grid.grid_to_world(best_target.grid_pos) + Vector3(0.0, 0.8, 0.0)
+		return _unit_world_pos(actor)
+	return _unit_world_pos(best_target)
 
 
 func _start_battle() -> void:
@@ -209,7 +216,7 @@ func _spawn_units() -> void:
 		var view: UnitView = unit_scene.instantiate() as UnitView
 		units_root.add_child(view)
 		view.bind_unit(unit)
-		view.position = _grid.grid_to_world(unit.grid_pos) + Vector3(0.0, 0.8, 0.0)
+		view.position = view.get_world_position_for_cell(unit.grid_pos, _grid)
 		unit.ko_changed.connect(_on_unit_ko_changed.bind(runtime_id))
 		_unit_views[runtime_id] = view
 
@@ -646,11 +653,12 @@ func _apply_player_move(unit: CombatUnit, cell: Vector2i) -> void:
 
 func _move_unit_to_cell(unit: CombatUnit, cell: Vector2i) -> void:
 	var from := unit.grid_pos
-	var from_pos := _grid.grid_to_world(from) + Vector3(0.0, 0.8, 0.0)
+	var view := _unit_views.get(unit.runtime_id) as UnitView
+	var from_pos := view.get_world_position_for_cell(from, _grid) if view != null else _unit_world_pos(unit)
 	_grid.move_unit(from, cell, unit.runtime_id)
 	unit.grid_pos = cell
 	unit.has_moved = true
-	var to_pos := _grid.grid_to_world(cell) + Vector3(0.0, 0.8, 0.0)
+	var to_pos := view.get_world_position_for_cell(cell, _grid) if view != null else _unit_world_pos(unit)
 	var move_duration := DebugSettings.scale_battle_duration(CombatConstants.UNIT_MOVE_DURATION)
 	if camera != null:
 		camera.track_movement(
@@ -659,7 +667,8 @@ func _move_unit_to_cell(unit: CombatUnit, cell: Vector2i) -> void:
 			_get_camera_look_target(unit),
 			move_duration,
 		)
-	var view: UnitView = _unit_views[unit.runtime_id] as UnitView
+	if view == null:
+		return
 	view.move_to_world(to_pos, false, move_duration)
 	await _battle_wait(CombatConstants.UNIT_MOVE_DURATION)
 
@@ -747,6 +756,8 @@ func _begin_spell_cast(caster: CombatUnit, target: CombatUnit, spell: SpellData)
 	log_message.emit(
 		"%s begins casting %s on %s." % [caster.display_name, spell.display_name, target.display_name]
 	)
+	if _unit_views.has(caster.runtime_id):
+		(_unit_views[caster.runtime_id] as UnitView).start_chant_animation()
 	_selected_spell = null
 	_clear_highlights()
 	battle_ui.hide_menus()
@@ -758,18 +769,23 @@ func _unleash_pending_spell(caster: CombatUnit) -> void:
 	var target_id: String = caster.pending_spell_target_id
 	caster.clear_pending_spell()
 	if not _spells.has(spell_id):
+		_stop_unit_chant(caster.runtime_id)
 		return
 	var spell: SpellData = _spells[spell_id] as SpellData
 	if not _units.has(target_id):
 		log_message.emit("%s's %s fizzled." % [caster.display_name, spell.display_name])
+		_stop_unit_chant(caster.runtime_id)
 		await _battle_wait(0.25)
 		return
 	var target: CombatUnit = _units[target_id]
 	if not _is_valid_spell_target(caster, target, spell):
 		log_message.emit("%s's %s fizzled." % [caster.display_name, spell.display_name])
+		_stop_unit_chant(caster.runtime_id)
 		await _battle_wait(0.25)
 		return
 	log_message.emit("%s unleashes %s!" % [caster.display_name, spell.display_name])
+	if _unit_views.has(caster.runtime_id):
+		await (_unit_views[caster.runtime_id] as UnitView).play_chant_release_animation()
 	_apply_spell_effect(caster, target, spell)
 	await _battle_wait(0.25)
 	_check_battle_end()
@@ -851,6 +867,8 @@ func _perform_attack(
 		broke = bool(resource_result.get("broke", false))
 		break_message = str(resource_result.get("message", ""))
 	_consume_action(attacker)
+	if _unit_views.has(attacker.runtime_id):
+		await (_unit_views[attacker.runtime_id] as UnitView).play_attack_animation()
 	var mastery_level := 1
 	var weapon_class := ""
 	if attacker.is_ally and attacker.weapon != null:
@@ -898,6 +916,8 @@ func _perform_enemy_debuff(
 
 func _perform_skill(attacker: CombatUnit, defender: CombatUnit) -> void:
 	_consume_action(attacker)
+	if _unit_views.has(attacker.runtime_id):
+		await (_unit_views[attacker.runtime_id] as UnitView).play_attack_animation()
 	var result := CombatResolver.resolve_skill(attacker, defender)
 	log_message.emit(str(result["message"]))
 	if bool(result["hit"]) and int(result.get("damage", 0)) > 0:
@@ -1238,6 +1258,12 @@ func _on_unit_ko_changed(is_ko: bool, runtime_id: String) -> void:
 func _handle_combat_damage(unit: CombatUnit) -> void:
 	if unit.is_ko and not unit.is_ally:
 		_schedule_enemy_removal(unit.runtime_id)
+
+
+func _stop_unit_chant(runtime_id: String) -> void:
+	if not _unit_views.has(runtime_id):
+		return
+	(_unit_views[runtime_id] as UnitView).stop_chant_animation()
 
 
 func _show_floating_number(unit: CombatUnit, amount: int, is_healing: bool) -> void:

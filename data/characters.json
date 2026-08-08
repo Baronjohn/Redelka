@@ -10,6 +10,23 @@
 	"stats": {
 	  "str": 12, "dex": 12, "vit": 12, "agi": 9,
 	  "int": 8, "mnd": 9, "res": 8, "luk": 10
+	},
+	"description": {
+	  "summary": "A reserved prison guard in his forties — one of four co-protagonists, the group's frontline anchor.",
+	  "appearance": "Taller and stronger than average, with a slightly bulky frame that reads as earned rather than soft. Dark hair kept practical; weathered face, few expressions. Wears a heavy brown coat over dark trousers and black boots — the dress of someone who worked indoors at duty and outdoors at need. Carries an iron sword like a tool he trusts more than prayer.",
+	  "behavior": "Quiet almost to a fault: reserved, grounded, and confident without needing to perform it. In battle he holds the line first and asks questions later. Off the grid he watches doors, backs, and faces — old guard habits. When he finally speaks it is brief, kind, and meant.",
+	  "traits": [
+		"stoic",
+		"reserved",
+		"physically tough",
+		"mentally grounded",
+		"duty-driven",
+		"protective",
+		"faithful skeptic"
+	  ],
+	  "voice": "Few words, blunt structure, no ornament. Gentle when he chooses to speak — never cruel, never empty.",
+	  "lore": "Former prison guard. Raised on village faith but no longer sure what he believes now that the old rites have proved real. One of four equal protagonists tied to the folk horror unfolding around their home.",
+	  "asset_notes": "PS1 block model: brown coat, black coat flap, dark hair, broad silhouette, iron sword. Palette: earth browns, black boots, muted skin. Pose language: planted stance, squared shoulders, minimal gesture."
 	}
   },
   {
@@ -22,6 +39,23 @@
 	"stats": {
 	  "str": 11, "dex": 12, "vit": 10, "agi": 12,
 	  "int": 7, "mnd": 8, "res": 9, "luk": 11
+	},
+	"description": {
+	  "summary": "A defiant late-teen street orphan — one of four co-protagonists, the party's agile knife-fighter.",
+	  "appearance": "Slim, young, and always half in shadow. Gray hooded cloak, red scarf at the throat, auburn hair barely visible beneath the hood. Rusty dagger at hand. Moves like someone who learned early that standing still is dangerous.",
+	  "behavior": "Hot-tempered and defiant — acts before the group agrees, pushes back when told to wait. Fights dirty: distraction, unfair angles, finishing what others start. Distrust is default; loyalty is earned in blood, not words.",
+	  "traits": [
+		"defiant",
+		"hot-tempered",
+		"streetwise",
+		"agile",
+		"distrustful",
+		"loyal once committed",
+		"survivor"
+	  ],
+	  "voice": "Dry sarcasm as armor. Plain speech, no poetry. Cuts with a sentence when she wants silence.",
+	  "lore": "Orphan raised on the margins — no family, no faith, only instinct. One of four equal protagonists. The horror did not teach her superstition; poverty and neglect did.",
+	  "asset_notes": "PS1 block model: gray cloak, hood layers, red scarf accent, auburn hair peek, rusty dagger. Palette: gray cloak, red accent, warm hair. Pose language: low center of gravity, angled shoulders, restless weight shift."
 	}
   },
   {
@@ -34,6 +68,23 @@
 	"stats": {
 	  "str": 11, "dex": 11, "vit": 8, "agi": 10,
 	  "int": 9, "mnd": 9, "res": 11, "luk": 11
+	},
+	"description": {
+	  "summary": "A gentle hunter-gatherer in his thirties — one of four co-protagonists, the party's ranged support and emotional glue.",
+	  "appearance": "Wiry, travel-worn, mid-thirties. Olive coat, brown vest, weathered cap with brim, satchel at the hip. Blond hair cropped short at the sides. Short bow — tool of a life lived between tree-line and sky.",
+	  "behavior": "Calm, gentle, and the one who keeps the group from splitting under fear. Keeps distance in a fight, covers allies, picks targets with a hunter's patience. Was outside the village when the horror struck — returned to people, not walls.",
+	  "traits": [
+		"gentle",
+		"steady",
+		"patient",
+		"observant",
+		"peacemaker",
+		"self-reliant",
+		"outdoorsman"
+	  ],
+	  "voice": "Slow, plain speech. Thinks before talking. No riddles — just what he saw and what he thinks it means.",
+	  "lore": "Hunter-gatherer who was away from the village when catastrophe hit. One of four equal protagonists. Knows the land's signs and seasons better than its sermons.",
+	  "asset_notes": "PS1 block model: olive coat, brown vest and cap, satchel, short bow. Palette: olive, brown, muted blond. Pose language: open posture toward allies, drawn bow or ready hand, grounded but not aggressive."
 	}
   },
   {
@@ -47,6 +98,23 @@
 	"stats": {
 	  "str": 8, "dex": 8, "vit": 8, "agi": 11,
 	  "int": 12, "mnd": 12, "res": 12, "luk": 9
+	},
+	"description": {
+	  "summary": "A secretive self-taught mage in her mid-twenties — one of four co-protagonists, the party's backline spellcaster.",
+	  "appearance": "Slight build, mid-twenties. Deep purple robe with gold trim, black hood with a peaked point, leather-bound book always near. Wooden staff — last resort, not first instinct. Dark hair tucked beneath the hood.",
+	  "behavior": "Guarded and precise. Fights from the back line, casting before closing distance. Knows more than she shares — even with allies. Discipline masks fear; study masks grief.",
+	  "traits": [
+		"secretive",
+		"disciplined",
+		"analytical",
+		"competent",
+		"withholding",
+		"ritual-minded",
+		"self-taught"
+	  ],
+	  "voice": "Precise, formal diction — words chosen like measured steps. Reassuring only when she decides you are ready to hear the truth.",
+	  "lore": "Self-taught from forbidden texts found after the catastrophe. One of four equal protagonists. Magic is knowledge wrested from ruin, not a gift she welcomes.",
+	  "asset_notes": "PS1 block model: purple robe, gold trim, black hood with peak, book prop, wooden staff. Palette: purple, gold accent, black hood. Pose language: upright but inward, book or staff held close, minimal flourish."
 	}
   }
 ]
