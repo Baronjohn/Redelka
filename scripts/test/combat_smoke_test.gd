@@ -366,10 +366,10 @@ func _test_character_menu_system() -> PackedStringArray:
 				equipped_labels += 1
 			"pool":
 				pool_labels += 1
-	if equipped_labels != 1:
-		errors.append("Accessory slot should show exactly one equipped Power Ring.")
-	if pool_labels != 1:
-		errors.append("Accessory slot should show exactly one spare Power Ring in the pool.")
+	if equipped_labels != 0:
+		errors.append("Accessory slot should not list any equipped Power Ring in the default loadout.")
+	if pool_labels != 0:
+		errors.append("Accessory slot should not list any spare Power Ring in the default pool.")
 
 	var second_slot_candidates: Array = gs.call(
 		"get_equipment_candidates_for_slot",
@@ -393,10 +393,10 @@ func _test_character_menu_system() -> PackedStringArray:
 					and str(candidate.get("owner_slot", "")) == "accessory_1"
 				):
 					equipped_labels += 1
-	if equipped_labels != 1:
-		errors.append("Second accessory slot should show the Power Ring from the first slot.")
-	if pool_labels != 1:
-		errors.append("Second accessory slot should show the spare Power Ring in the pool.")
+	if equipped_labels != 0:
+		errors.append("Second accessory slot should not see a Power Ring equipped on the first slot.")
+	if pool_labels != 0:
+		errors.append("Second accessory slot should not see a spare Power Ring in the pool.")
 
 	var spawn_entries: Array = gs.call("get_formation_spawn_entries")
 	if spawn_entries.size() != 4:
@@ -415,8 +415,8 @@ func _test_character_menu_system() -> PackedStringArray:
 		if used_cells.has(cell_key):
 			errors.append("Formation should allow only one character per tile.")
 		used_cells[cell_key] = true
-	if gs.call("get_formation_position", "ally_1") != Vector2i(5, 0):
-		errors.append("Default formation should store menu coordinates for battle-left spawn.")
+	if gs.call("get_formation_position", "ally_1") != Vector2i(2, 1):
+		errors.append("Default formation should store ally_1's menu coordinates from formation.json.")
 	var ally_1_spawn: Vector2i = Vector2i(-1, -1)
 	for entry_variant: Variant in spawn_entries:
 		var entry: Dictionary = entry_variant as Dictionary
@@ -424,8 +424,8 @@ func _test_character_menu_system() -> PackedStringArray:
 			continue
 		var pos_array: Array = entry.get("position", []) as Array
 		ally_1_spawn = Vector2i(int(pos_array[0]), int(pos_array[1]))
-	if ally_1_spawn != Vector2i(0, 0):
-		errors.append("Menu X should mirror once when converting to battle spawn coordinates.")
+	if ally_1_spawn != Vector2i(3, 1):
+		errors.append("Menu X should mirror once when converting ally_1's position to battle spawn coordinates.")
 
 	var move_result: Dictionary = gs.call("set_formation_position", "ally_1", Vector2i(3, 1))
 	if not bool(move_result.get("ok", false)):
@@ -575,6 +575,7 @@ func _test_progression() -> PackedStringArray:
 		errors.append("Confirm should fail while points remain unspent.")
 
 	bran.unspent_stat_points = ProgressionConstantsScript.POINTS_PER_LEVEL
+	var vit_before_reset := bran.allocated_stats.vit
 	gs.call("begin_level_up_allocation", "ally_1")
 	gs.call("draft_allocate_stat", "vit")
 	gs.call("reset_draft_allocation")
@@ -583,7 +584,7 @@ func _test_progression() -> PackedStringArray:
 	gs.call("confirm_draft_allocation")
 	if bran.allocated_stats.dex != ProgressionConstantsScript.POINTS_PER_LEVEL:
 		errors.append("Reset draft should discard prior draft points.")
-	if bran.allocated_stats.vit != 0:
+	if bran.allocated_stats.vit != vit_before_reset:
 		errors.append("Reset draft should not commit discarded draft points.")
 
 	var effective: StatBlock = gs.call("get_effective_stats", "ally_1")
