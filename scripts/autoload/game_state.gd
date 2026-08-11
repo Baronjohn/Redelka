@@ -162,6 +162,19 @@ func can_attack_with_equipped_weapon(character_id: String) -> bool:
 	return true
 
 
+func can_ally_attack_anyhow(character_id: String) -> bool:
+	if can_attack_with_equipped_weapon(character_id):
+		return true
+	return is_ally_unarmed(character_id)
+
+
+func is_ally_unarmed(character_id: String) -> bool:
+	if not equipped.has(character_id):
+		return false
+	var loadout: Dictionary = equipped[character_id] as Dictionary
+	return str(loadout.get(EquipmentDataScript.SLOT_WEAPON, "")).is_empty()
+
+
 func can_reload_with_ammo(character_id: String, ammo_item_id: String) -> bool:
 	var weapon := get_equipped_weapon(character_id)
 	if weapon == null or not weapon.uses_ammo():

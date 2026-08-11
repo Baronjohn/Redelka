@@ -28,6 +28,7 @@ func _initialize() -> void:
 	errors.append_array(_test_progression())
 	errors.append_array(_test_save_load())
 	errors.append_array(_test_weapon_durability_and_ammo())
+	errors.append_array(_test_unarmed_combat())
 	errors.append_array(_test_mastery_and_spell_tiers())
 	errors.append_array(_test_chapter_data())
 
@@ -754,6 +755,62 @@ func _test_weapon_durability_and_ammo() -> PackedStringArray:
 		errors.append("Save roundtrip should restore loaded ammo.")
 	if str(gs.call("get_loadout", "ally_1").get("weapon", "")) != "iron_sword":
 		errors.append("Save roundtrip should restore switched weapon.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_unarmed_combat() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+
+	var characters := DataLoader.load_characters()
+	var bran: CharacterData = characters["ally_1"]
+	var unarmed_unit := CombatUnit.from_character_with_stats(
+		"ally_1",
+		bran,
+		null,
+		null,
+		gs.call("get_effective_stats", "ally_1"),
+		Vector2i(0, 0),
+	)
+	var enemy := CombatUnit.from_enemy(
+		"enemy_1",
+		DataLoader.load_enemies()["enemy_1"],
+		Vector2i(0, 1),
+	)
+
+	if not bool(gs.call("is_ally_unarmed", "ally_1")):
+		gs.call("unequip_slot", "ally_1", "weapon")
+	if not bool(gs.call("is_ally_unarmed", "ally_1")):
+		errors.append("Unarmed slot should be empty after unequip.")
+	if bool(gs.call("can_attack_with_equipped_weapon", "ally_1")):
+		errors.append("Unarmed ally should report no usable weapon.")
+	if not bool(gs.call("can_ally_attack_anyhow", "ally_1")):
+		errors.append("Unarmed ally should still be allowed to attack.")
+
+	seed(1)
+	var unarmed_result := CombatResolver.resolve_physical_attack(unarmed_unit, enemy)
+	if not unarmed_result.has("hit") or not unarmed_result.has("damage"):
+		errors.append("Unarmed physical attack result missing keys.")
+	if not bool(unarmed_result.get("hit", false)):
+		errors.append("Unarmed attack should reliably hit a zero-DEX enemy in seeded run.")
+	if int(unarmed_result.get("damage", 0)) <= 0:
+		errors.append("Unarmed attack should deal positive damage.")
+
+	var armed_unit := CombatUnit.from_character(
+		"ally_1",
+		bran,
+		_get_setup_weapon("ally_1"),
+		null,
+		Vector2i(0, 0),
+	)
+	gs.call("equip_item", "ally_1", "weapon", "iron_sword")
+	if bool(gs.call("is_ally_unarmed", "ally_1")):
+		errors.append("Equipping a weapon should clear unarmed state.")
+	if not bool(gs.call("can_ally_attack_anyhow", "ally_1")):
+		errors.append("Re-equipped ally should be able to attack.")
 
 	gs.call("reset_party_to_default")
 	return errors

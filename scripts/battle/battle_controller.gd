@@ -339,7 +339,7 @@ func _on_ui_sub_action_requested(action: String) -> void:
 	match action:
 		"attack":
 			if not _can_unit_attack(unit):
-				if not GameState.can_attack_with_equipped_weapon(unit.source_id):
+				if unit.is_ally and not GameState.can_ally_attack_anyhow(unit.source_id):
 					log_message.emit("Cannot attack without a usable weapon.")
 				else:
 					log_message.emit("No enemies in range.")
@@ -877,16 +877,20 @@ func _perform_attack(
 ) -> void:
 	var broke := false
 	var break_message := ""
+	var unarmed := false
 	if attacker.is_ally:
-		if not GameState.can_attack_with_equipped_weapon(attacker.source_id):
+		if not GameState.can_ally_attack_anyhow(attacker.source_id):
 			log_message.emit("Cannot attack without a usable weapon.")
 			return
-		var resource_result: Dictionary = GameState.consume_attack_resource(attacker.source_id)
-		if not bool(resource_result.get("ok", false)):
-			log_message.emit(str(resource_result.get("message", "Cannot attack.")))
-			return
-		broke = bool(resource_result.get("broke", false))
-		break_message = str(resource_result.get("message", ""))
+		if not GameState.is_ally_unarmed(attacker.source_id):
+			var resource_result: Dictionary = GameState.consume_attack_resource(attacker.source_id)
+			if not bool(resource_result.get("ok", false)):
+				log_message.emit(str(resource_result.get("message", "Cannot attack.")))
+				return
+			broke = bool(resource_result.get("broke", false))
+			break_message = str(resource_result.get("message", ""))
+		else:
+			unarmed = true
 	_consume_action(attacker)
 	if _unit_views.has(attacker.runtime_id):
 		SfxManager.play("attack", randf_range(0.96, 1.04))
@@ -896,6 +900,8 @@ func _perform_attack(
 	if attacker.is_ally and attacker.weapon != null:
 		weapon_class = attacker.weapon.weapon_class
 		mastery_level = GameState.get_weapon_mastery_level(attacker.source_id, weapon_class)
+	if unarmed:
+		log_message.emit("%s fights unarmed." % attacker.display_name)
 	var result := CombatResolver.resolve_physical_attack(attacker, defender, mastery_level, enemy_action)
 	log_message.emit(str(result["message"]))
 	if result["hit"]:
@@ -1024,7 +1030,7 @@ func _can_attack(attacker: CombatUnit, target: CombatUnit) -> bool:
 
 
 func _can_unit_attack(unit: CombatUnit) -> bool:
-	if unit.is_ally and not GameState.can_attack_with_equipped_weapon(unit.source_id):
+	if unit.is_ally and not GameState.can_ally_attack_anyhow(unit.source_id):
 		return false
 	return _has_attack_target(unit)
 
