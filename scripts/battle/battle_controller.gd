@@ -166,8 +166,7 @@ func _load_data() -> void:
 		var snapshot := GameState.get_member_snapshot(character_id)
 		var weapon: WeaponData = PartyStatsHelper.get_equipped_weapon(loadout)
 		if weapon == null:
-			push_error("Missing starting weapon for %s." % character_id)
-			continue
+			push_warning("%s entered battle unarmed." % character_id)
 		var skill: SkillData = null
 		if not character.skill_id.is_empty():
 			if not skills.has(character.skill_id):

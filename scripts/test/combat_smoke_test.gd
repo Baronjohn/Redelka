@@ -812,6 +812,40 @@ func _test_unarmed_combat() -> PackedStringArray:
 	if not bool(gs.call("can_ally_attack_anyhow", "ally_1")):
 		errors.append("Re-equipped ally should be able to attack.")
 
+	var spawn_entries: Array = gs.call("get_formation_spawn_entries")
+	if spawn_entries.size() != 4:
+		errors.append("Formation should still yield one spawn entry per unarmed ally.")
+
+	var character_catalog := DataLoader.load_characters()
+	for character_id: String in ["ally_1", "ally_2", "ally_3", "ally_4"]:
+		var unequip_result: String = gs.call("unequip_slot", character_id, "weapon")
+		if unequip_result != "Unequipped." and not unequip_result.is_empty():
+			errors.append("Unequipping %s should succeed; got %s." % [character_id, unequip_result])
+		if not bool(gs.call("is_ally_unarmed", character_id)):
+			errors.append("%s should be unarmed after explicit unequip." % character_id)
+		if not bool(gs.call("can_ally_attack_anyhow", character_id)):
+			errors.append("%s should still be allowed to attack while unarmed." % character_id)
+
+		var character: CharacterData = character_catalog[character_id]
+		var loadout: Dictionary = gs.call("get_loadout", character_id)
+		var snapshot: PartyMemberSnapshot = gs.call("get_member_snapshot", character_id)
+		var effective_stats: StatBlock = gs.call("get_effective_stats", character_id)
+		var unarmed_spawn := CombatUnit.from_character_with_stats(
+			"ally_%s" % character_id,
+			character,
+			PartyStatsHelper.get_equipped_weapon(loadout),
+			null,
+			effective_stats,
+			Vector2i(0, 0),
+		)
+		if unarmed_spawn == null:
+			errors.append("Unarmed spawn should produce a unit for %s." % character_id)
+			continue
+		if unarmed_spawn.weapon != null:
+			errors.append("Unarmed spawn should keep weapon slot null for %s." % character_id)
+		if unarmed_spawn.attack_range != 1:
+			errors.append("Unarmed spawn should default attack range to 1 for %s." % character_id)
+
 	gs.call("reset_party_to_default")
 	return errors
 
