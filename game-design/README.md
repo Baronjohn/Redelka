@@ -7,6 +7,7 @@ This folder holds game design documents for **Redelka**.
 | Document | Purpose |
 |----------|---------|
 | [overview.md](overview.md) | Vision, design pillars, genre balance, scope |
+| [story.md](story.md) | Premise, protagonists, antagonist, chapter 1 detail, arc |
 | [world.md](world.md) | Fictional setting, folk-horror themes, protagonist, cast |
 | [combat.md](combat.md) | Grid combat, CTB turn order, action economy, hit model |
 | [attributes.md](attributes.md) | Eight primary stats, formulas, weapon mastery, UI exposure |
