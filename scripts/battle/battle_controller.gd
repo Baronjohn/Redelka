@@ -86,6 +86,7 @@ func _ready() -> void:
 	result_panel.main_menu_requested.connect(_on_main_menu_requested)
 	level_up_panel.allocation_confirmed.connect(_on_level_up_confirmed)
 	DebugSettings.apply_battle_lighting(get_parent() as Node3D)
+	BattleMaterials.add_ground_plane(battleground_root)
 	call_deferred("_start_battle")
 
 

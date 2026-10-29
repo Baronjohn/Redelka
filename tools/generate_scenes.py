@@ -1,4 +1,5 @@
-"""Generate the Chapter 1 intro explore scenes (see game-design/chapter-1-intro.md).
+"""Generate Redelka's explore scenes: the Chapter 1 intro (see game-design/chapter-1-intro.md),
+the Chapter 1 hub, and the main-menu backdrop.
 
 Run (all scenes, or only the listed area ids):
     python3 tools/generate_scenes.py
@@ -22,6 +23,7 @@ from scene_kit import (  # noqa: E402
     actor,
     camera_rig,
     camera_zone,
+    checkpoint,
     color,
     cutscene_player,
     door,
@@ -29,6 +31,7 @@ from scene_kit import (  # noqa: E402
     examinable,
     explore_root,
     explore_ui,
+    fmt,
     sun,
     transform,
     trigger,
@@ -44,23 +47,23 @@ def build_mira_intake_alcove() -> Scene:
     environment(sc, ambient=(0.42, 0.46, 0.56), ambient_energy=0.6, fog_color=(0.2, 0.22, 0.26), fog_density=0.03)
     sun(sc, yaw=-140.0, pitch=-24.0, energy=0.35, col=(0.72, 0.78, 0.9))
 
-    stone = sc.material((0.27, 0.25, 0.23))
-    stone_dark = sc.material((0.19, 0.18, 0.17))
-    plaster = sc.material((0.33, 0.31, 0.28))
-    wood = sc.material((0.3, 0.21, 0.14))
-    wood_dark = sc.material((0.2, 0.14, 0.1))
-    board = sc.material((0.36, 0.27, 0.18))
-    canvas = sc.material((0.36, 0.2, 0.17))
-    blanket_mira = sc.material((0.4, 0.3, 0.23))
-    blanket_lily = sc.material((0.33, 0.28, 0.36))
-    sacking = sc.material((0.42, 0.37, 0.27))
+    stone = sc.tex("cobble", (0.85, 0.84, 0.82), 1.6)
+    stone_dark = sc.tex("rubble", (0.62, 0.61, 0.6), 1.4)
+    plaster = sc.tex("plaster", (0.8, 0.78, 0.75), 3.6)
+    wood = sc.tex("timber", (0.85, 0.8, 0.76), 1.2)
+    wood_dark = sc.tex("boards", (0.7, 0.66, 0.62), 1.2)
+    board = sc.tex("timber", (1.05, 1.0, 0.95), 1.0)
+    canvas = sc.tex("canvas", (0.85, 0.82, 0.8), 2.0)
+    blanket_mira = sc.tex("sackcloth", (0.95, 0.8, 0.7), 0.6)
+    blanket_lily = sc.tex("sackcloth", (0.72, 0.66, 0.85), 0.6)
+    sacking = sc.tex("sackcloth", (0.95, 0.92, 0.85), 0.7)
     chalk = sc.material((0.82, 0.8, 0.74), emission=(0.3, 0.3, 0.28), energy=0.15)
     tin = sc.material((0.4, 0.41, 0.42), roughness=0.5)
-    iron = sc.material((0.16, 0.16, 0.17), roughness=0.6)
+    iron = sc.tex("iron", (0.9, 0.9, 0.92), 0.5)
     ice = sc.material((0.62, 0.7, 0.76), roughness=0.15)
-    shoe = sc.material((0.24, 0.17, 0.12))
+    shoe = sc.tex("boards", (0.75, 0.6, 0.5), 0.3)
     window_warm = sc.material((0.5, 0.34, 0.16), emission=(0.95, 0.6, 0.28), energy=0.55)
-    roof = sc.material((0.17, 0.15, 0.15))
+    roof = sc.tex("shingle", (0.85, 0.85, 0.88), 1.6)
 
     sc.node("Room", "Node3D", ".")
     R = "Room"
@@ -139,7 +142,7 @@ def build_mira_intake_alcove() -> Scene:
 
     door(sc, "DoorWestLane", (-7.2, 1.2, 1.0), (-6.45, 1.0, 1.0), target="mira_chapel_lane", spawn=(0, 0, 11.5),
          rot_y=math.pi, label="Chapel Lane", mat=wood_dark, flag="intro_lane_open",
-         flag_prompt="A handcart blocks the gap. Not yet.")
+         flag_prompt="A handcart blocks the gap. Not yet.", style="passage")
 
     actor(sc, "OrphanTom", "orphan_tom", (2.6, 0, -4.3), -95.0, model="res://scenes/characters/orphan_tom.tscn")
     actor(sc, "OrphanElsa", "orphan_elsa", (3.7, 0, -5.3), -40.0, model="res://scenes/characters/orphan_elsa.tscn")
@@ -203,27 +206,27 @@ def build_mira_chapel_lane() -> Scene:
     environment(sc, ambient=(0.34, 0.38, 0.48), ambient_energy=0.42, fog_color=(0.17, 0.19, 0.23), fog_density=0.06)
     sun(sc, yaw=-160.0, pitch=-18.0, energy=0.22, col=(0.66, 0.72, 0.86))
 
-    cobble = sc.material((0.24, 0.23, 0.22))
-    house = sc.material((0.27, 0.25, 0.22))
-    house_dark = sc.material((0.2, 0.19, 0.17))
-    roof = sc.material((0.14, 0.13, 0.13))
-    wood = sc.material((0.27, 0.19, 0.13))
-    wood_dark = sc.material((0.17, 0.12, 0.09))
-    wall_stone = sc.material((0.25, 0.25, 0.24))
-    grave = sc.material((0.33, 0.33, 0.32))
-    grave_dark = sc.material((0.22, 0.22, 0.22))
-    chapel = sc.material((0.2, 0.19, 0.22))
+    cobble = sc.tex("cobble", (0.78, 0.78, 0.8), 1.6)
+    house = sc.tex("plaster", (0.75, 0.73, 0.7), 3.6)
+    house_dark = sc.tex("rubble", (0.6, 0.6, 0.6), 1.6)
+    roof = sc.tex("shingle", (0.8, 0.8, 0.84), 1.6)
+    wood = sc.tex("timber", (0.8, 0.76, 0.72), 1.2)
+    wood_dark = sc.tex("boards", (0.62, 0.58, 0.55), 1.2)
+    wall_stone = sc.tex("rubble", (0.72, 0.72, 0.72), 1.3)
+    grave = sc.tex("flagstone", (0.85, 0.85, 0.85), 0.8)
+    grave_dark = sc.tex("flagstone", (0.55, 0.55, 0.57), 0.8)
+    chapel = sc.tex("rubble", (0.55, 0.54, 0.6), 2.0)
     glass_cold = sc.material((0.5, 0.55, 0.62), emission=(0.45, 0.52, 0.62), energy=0.6)
     paper = sc.material((0.62, 0.58, 0.5))
     milk = sc.material((0.6, 0.58, 0.52), roughness=0.4)
     scratch = sc.material((0.5, 0.47, 0.42))
     bread = sc.material((0.52, 0.38, 0.22))
     salt = sc.material((0.85, 0.84, 0.8))
-    frost = sc.material((0.5, 0.54, 0.6), roughness=0.9)
+    frost = sc.tex("cobble", (1.2, 1.25, 1.35), 1.6)
     print_bare = sc.material((0.14, 0.14, 0.15))
     print_boot = sc.material((0.1, 0.1, 0.11))
     candle = sc.material((0.7, 0.66, 0.55))
-    earth = sc.material((0.15, 0.13, 0.11))
+    earth = sc.tex("grass", (0.6, 0.6, 0.58), 2.0)
 
     sc.node("Room", "Node3D", ".")
     R = "Room"
@@ -303,8 +306,6 @@ def build_mira_chapel_lane() -> Scene:
         sc.box(props, f"BootPrint{i + 1}", (0.35 + side * 0.13, 0.013, z), (0.12, 0.01, 0.33), print_boot,
                yaw=side * 3.0)
     # Field gate at the north end.
-    sc.box(props, "GatePostW", (-1.7, 0.75, -13.3), (0.2, 1.5, 0.2), wood_dark)
-    sc.box(props, "GatePostE", (1.7, 0.75, -13.3), (0.2, 1.5, 0.2), wood_dark)
 
     sc.node("Enemies", "Node3D", ".")
     sc.node("Pickups", "Node3D", ".")
@@ -318,9 +319,9 @@ def build_mira_chapel_lane() -> Scene:
     camera_zone(sc, "ZoneNorth", (0, 0, -8.5), (6, 4, 11.0), (0.8, 2.0, 8.0), (0, 1.0, -5.0))
 
     door(sc, "DoorSouthDoorway", (0, 1.2, 13.4), (0, 1.0, 12.6), target="mira_intake_alcove", spawn=(-5.2, 0, 1.0),
-         rot_y=math.pi / 2.0, label="the doorway", mat=wood_dark)
+         rot_y=math.pi / 2.0, label="the doorway", mat=wood_dark, style="passage")
     door(sc, "DoorNorthPines", (0, 1.2, -13.4), (0, 1.0, -12.6), target="mira_woods_edge", spawn=(0, 0, 6.0),
-         rot_y=math.pi, label="the pines", mat=wood)
+         rot_y=math.pi, label="the pines", mat=wood, style="gate")
 
     gap = actor(sc, "LaneShutterGap", "lane_shutter_gap", (2.4, 1.9, -5.08), start_hidden=True)
     sc.box(gap, "Light", (0, 0, 0), (0.03, 0.8, 0.06), sc.material((0.9, 0.7, 0.4), emission=(1.0, 0.7, 0.4),
@@ -355,19 +356,18 @@ def build_mira_woods_edge() -> Scene:
     environment(sc, ambient=(0.26, 0.3, 0.38), ambient_energy=0.32, fog_color=(0.2, 0.23, 0.27), fog_density=0.05)
     sun(sc, yaw=180.0, pitch=-12.0, energy=0.2, col=(0.64, 0.7, 0.82))
 
-    grass = sc.material((0.25, 0.27, 0.2))
-    frost_grass = sc.material((0.42, 0.46, 0.44))
-    needles = sc.material((0.17, 0.13, 0.1))
-    path = sc.material((0.24, 0.2, 0.16))
-    bark = sc.material((0.07, 0.06, 0.05))
-    bark_light = sc.material((0.1, 0.08, 0.07))
+    grass = sc.tex("grass", (0.85, 0.85, 0.82), 2.0)
+    frost_grass = sc.tex("grass", (1.25, 1.3, 1.35), 2.0)
+    needles = sc.tex("needles", (1.0, 1.0, 1.0), 1.8)
+    path = sc.tex("dirt", (0.9, 0.88, 0.85), 1.6)
+    bark = sc.tex("bark", (0.5, 0.48, 0.46), 1.0)
+    bark_light = sc.tex("bark", (0.7, 0.66, 0.62), 1.0)
     pine = sc.material((0.035, 0.05, 0.04))
     pine_dark = sc.material((0.02, 0.03, 0.025))
-    rail = sc.material((0.3, 0.25, 0.18))
-    rail_new = sc.material((0.5, 0.42, 0.3))
-    stump = sc.material((0.34, 0.26, 0.17))
+    rail = sc.tex("timber", (0.8, 0.76, 0.7), 1.0)
+    rail_new = sc.tex("timber", (1.25, 1.15, 1.0), 1.0)
+    stump = sc.tex("bark", (1.1, 1.0, 0.9), 0.8)
     stump_top = sc.material((0.52, 0.42, 0.3))
-    bird = sc.material((0.66, 0.54, 0.36))
 
     sc.node("Room", "Node3D", ".")
     R = "Room"
@@ -426,16 +426,14 @@ def build_mira_woods_edge() -> Scene:
     camera_zone(sc, "ZoneStump", (0, 0, -1.3), (20, 4, 4.4), (1.3, 1.6, -1.6), (0.0, 0.6, 4.0), track=0.5)
 
     door(sc, "DoorSouthLane", (0, 1.2, 9.6), (0, 1.0, 8.8), target="mira_chapel_lane", spawn=(0, 0, -11.5),
-         rot_y=0.0, label="the lane", mat=rail)
+         rot_y=0.0, label="the lane", mat=rail, style="gate")
 
     actor(sc, "TallMan", "tall_man", (0.85, 0, -7.0), 180.0, model="res://scenes/characters/tall_man.tscn",
           start_hidden=True)
     bird_actor = actor(sc, "WoodenBird", "wooden_bird", (0.5, 0.53, 0.0), 180.0, hide_when_flag="intro_bird_found")
-    sc.box(bird_actor, "Body", (0, 0.07, 0), (0.1, 0.1, 0.22), bird)
-    sc.box(bird_actor, "Head", (0, 0.16, 0.1), (0.08, 0.08, 0.08), bird)
-    sc.box(bird_actor, "Beak", (0, 0.16, 0.155), (0.025, 0.025, 0.05), stump)
-    sc.box(bird_actor, "Tail", (0, 0.1, -0.14), (0.07, 0.02, 0.1), bird, pitch=-20.0)
-    sc.box(bird_actor, "Base", (0, 0.012, 0), (0.12, 0.024, 0.16), stump)
+    item_model = sc.ext_res("Script", "res://scripts/assets/item_model_node.gd")
+    sc.node("Model", "Node3D", bird_actor, {"transform": transform((0, 0, 0)), "script": f'ExtResource("{item_model}")',
+                                            "item_id": '"wooden_bird"'})
 
     cutscene_player(sc, "mira_woods_hook")
 
@@ -459,14 +457,14 @@ def build_menu_backdrop() -> Scene:
     environment(sc, ambient=(0.26, 0.3, 0.38), ambient_energy=0.42, fog_color=(0.2, 0.23, 0.27), fog_density=0.06)
     sun(sc, yaw=180.0, pitch=-12.0, energy=0.25, col=(0.64, 0.7, 0.82))
 
-    grass = sc.material((0.25, 0.27, 0.2))
-    frost_grass = sc.material((0.42, 0.46, 0.44))
-    path = sc.material((0.24, 0.2, 0.16))
-    bark = sc.material((0.07, 0.06, 0.05))
+    grass = sc.tex("grass", (0.85, 0.85, 0.82), 2.0)
+    frost_grass = sc.tex("grass", (1.25, 1.3, 1.35), 2.0)
+    path = sc.tex("dirt", (0.9, 0.88, 0.85), 1.6)
+    bark = sc.tex("bark", (0.5, 0.48, 0.46), 1.0)
     pine = sc.material((0.035, 0.05, 0.04))
     pine_dark = sc.material((0.02, 0.03, 0.025))
-    rail = sc.material((0.3, 0.25, 0.18))
-    stump = sc.material((0.34, 0.26, 0.17))
+    rail = sc.tex("timber", (0.8, 0.76, 0.7), 1.0)
+    stump = sc.tex("bark", (1.1, 1.0, 0.9), 0.8)
 
     sc.node("Set", "Node3D", ".")
     sc.box("Set", "Ground", (0, -0.2, -2.0), (30, 0.4, 30), grass)
@@ -498,11 +496,489 @@ def build_menu_backdrop() -> Scene:
     return sc
 
 
+# --- Shared props for the Chapter 1 hub ----------------------------------------------
+
+class Mats:
+    """The hub's material set; every scene shares the same textures and tints."""
+
+    def __init__(self, sc: Scene) -> None:
+        self.cobble = sc.tex("cobble", (0.82, 0.82, 0.84), 1.6)
+        self.flag = sc.tex("flagstone", (0.8, 0.8, 0.82), 2.0)
+        self.plaster = sc.tex("plaster", (0.78, 0.76, 0.73), 3.6)
+        self.timber = sc.tex("timber", (0.82, 0.78, 0.74), 1.2)
+        self.beam = sc.tex("timber", (0.55, 0.5, 0.46), 1.0)
+        self.boards = sc.tex("boards", (0.8, 0.76, 0.72), 1.2)
+        self.rubble = sc.tex("rubble", (0.7, 0.7, 0.72), 1.6)
+        self.rubble_dark = sc.tex("rubble", (0.48, 0.48, 0.52), 1.6)
+        self.brick = sc.tex("brick", (0.7, 0.66, 0.66), 1.6)
+        self.earth = sc.tex("earth", (1.0, 1.0, 1.0), 1.6)
+        self.dirt = sc.tex("dirt", (0.85, 0.83, 0.8), 1.6)
+        self.straw = sc.tex("straw", (0.85, 0.82, 0.75), 1.0)
+        self.sack = sc.tex("sackcloth", (0.95, 0.92, 0.86), 0.7)
+        self.thatch = sc.tex("thatch", (0.8, 0.76, 0.7), 1.6)
+        self.shingle = sc.tex("shingle", (0.82, 0.82, 0.86), 1.6)
+        self.iron = sc.tex("iron", (0.9, 0.9, 0.92), 0.6)
+        self.canvas = sc.tex("canvas", (0.8, 0.78, 0.76), 1.6)
+        self.bark = sc.tex("bark", (0.6, 0.56, 0.52), 1.0)
+        self.void = sc.material((0.01, 0.012, 0.016), unshaded=True)
+        self.wax = sc.material((0.82, 0.78, 0.68), emission=(0.89, 0.63, 0.35), energy=0.35)
+        self.ember = sc.material((0.3, 0.08, 0.04), emission=(0.9, 0.3, 0.1), energy=0.9)
+        self.window_warm = sc.material((0.45, 0.3, 0.15), emission=(0.95, 0.6, 0.28), energy=0.55)
+        self.window_cold = sc.material((0.4, 0.45, 0.52), emission=(0.45, 0.52, 0.64), energy=0.45)
+        self.window_dark = sc.material((0.03, 0.035, 0.045))
+        self.glass = sc.material((0.32, 0.36, 0.32), roughness=0.3)
+
+
+def light(sc: Scene, parent: str, name: str, pos, col=(1.0, 0.7, 0.4), energy: float = 1.0,
+          rng: float = 5.0, shadows: bool = False) -> None:
+    props = {"transform": transform(pos), "light_color": color(col), "light_energy": fmt(energy),
+             "omni_range": fmt(rng)}
+    if shadows:
+        props["shadow_enabled"] = "true"
+    sc.node(name, "OmniLight3D", parent, props)
+
+
+def crate(sc: Scene, m: Mats, parent: str, name: str, pos, size: float = 0.7, yaw: float = 0.0,
+          collide: bool = True) -> None:
+    sc.box(parent, name, (pos[0], pos[1] + size / 2, pos[2]), (size, size, size), m.boards, collide=collide, yaw=yaw)
+
+
+def barrel(sc: Scene, m: Mats, parent: str, name: str, pos, r: float = 0.32, h: float = 0.85,
+           collide: bool = True) -> None:
+    sc.cyl(parent, name, (pos[0], h / 2, pos[2]), r, h, m.boards, collide=collide, segments=10)
+    for i, y in enumerate((0.15, h - 0.15)):
+        sc.cyl(parent, f"{name}Hoop{i + 1}", (pos[0], y, pos[2]), r + 0.015, 0.05, m.iron, segments=10)
+
+
+def sack(sc: Scene, m: Mats, parent: str, name: str, pos, yaw: float = 0.0, lying: bool = False) -> None:
+    if lying:
+        sc.box(parent, name, (pos[0], 0.17 + pos[1], pos[2]), (0.75, 0.34, 0.45), m.sack, yaw=yaw)
+    else:
+        sc.box(parent, name, (pos[0], 0.35 + pos[1], pos[2]), (0.45, 0.7, 0.38), m.sack, yaw=yaw)
+        sc.box(parent, name + "Neck", (pos[0], 0.76 + pos[1], pos[2]), (0.2, 0.14, 0.18), m.sack, yaw=yaw)
+
+
+def lantern(sc: Scene, m: Mats, parent: str, name: str, pos, energy: float = 1.0, rng: float = 5.0,
+            hanging: float = 0.0) -> None:
+    x, y, z = pos
+    if hanging > 0.0:
+        sc.box(parent, name + "Chain", (x, y + hanging / 2 + 0.18, z), (0.02, hanging, 0.02), m.iron)
+    sc.box(parent, name + "Cage", (x, y, z), (0.2, 0.28, 0.2), m.iron)
+    sc.box(parent, name + "Flame", (x, y, z), (0.12, 0.16, 0.12), m.wax)
+    light(sc, parent, name + "Light", (x, y - 0.1, z), energy=energy, rng=rng, shadows=True)
+
+
+def candles(sc: Scene, m: Mats, parent: str, name: str, pos, count: int = 3, energy: float = 0.6) -> None:
+    x, y, z = pos
+    for i in range(count):
+        dx = (i - (count - 1) / 2) * 0.16
+        h = 0.12 + 0.06 * ((i * 7) % 3)
+        sc.cyl(parent, f"{name}{i + 1}", (x + dx, y + h / 2, z + 0.03 * ((i % 2) * 2 - 1)), 0.03, h, m.wax)
+    light(sc, parent, name + "Light", (x, y + 0.4, z), energy=energy, rng=3.5)
+
+
+def window(sc: Scene, m: Mats, parent: str, name: str, pos, size, mat: str, axis: str = "z") -> None:
+    """A shuttered window set into a wall facing along `axis` (z: wall runs along x)."""
+    w, h = size
+    if axis == "z":
+        sc.box(parent, name + "Frame", pos, (w + 0.2, h + 0.2, 0.1), m.beam)
+        sc.box(parent, name + "Pane", (pos[0], pos[1], pos[2]), (w, h, 0.14), mat)
+        for side in (-1, 1):
+            sc.box(parent, f"{name}Shutter{'L' if side < 0 else 'R'}",
+                   (pos[0] + side * (w / 2 + 0.28), pos[1], pos[2]), (0.5, h + 0.1, 0.08), m.boards)
+    else:
+        sc.box(parent, name + "Frame", pos, (0.1, h + 0.2, w + 0.2), m.beam)
+        sc.box(parent, name + "Pane", pos, (0.14, h, w), mat)
+        for side in (-1, 1):
+            sc.box(parent, f"{name}Shutter{'L' if side < 0 else 'R'}",
+                   (pos[0], pos[1], pos[2] + side * (w / 2 + 0.28)), (0.08, h + 0.1, 0.5), m.boards)
+
+
+def room_shell(sc: Scene, parent: str, w: float, d: float, floor_mat: str, walls: dict, *,
+               gap: float = 1.9, thickness: float = 0.5) -> None:
+    """Floor plus four walls. `walls` maps side (N/S/W/E) to (material, height, has_door):
+    a door side gets a gap of +-`gap` at its centre and a header block over the doorway."""
+    sc.box(parent, "Floor", (0, -0.2, 0), (w, 0.4, d), floor_mat, collide=True)
+    hw, hd = w / 2, d / 2
+    for side, (mat, h, has_door) in walls.items():
+        along = w if side in "NS" else d
+        fixed = -hd - thickness / 2 if side == "N" else hd + thickness / 2 if side == "S" else \
+            -hw - thickness / 2 if side == "W" else hw + thickness / 2
+        segments = [(-along / 2 - thickness, along / 2 + thickness)]
+        if has_door:
+            segments = [(-along / 2 - thickness, -gap), (gap, along / 2 + thickness)]
+        for i, (a, b) in enumerate(segments):
+            mid, length = (a + b) / 2, b - a
+            name = f"Wall{side}{i + 1}"
+            if side in "NS":
+                sc.box(parent, name, (mid, h / 2, fixed), (length, h, thickness), mat, collide=True)
+            else:
+                sc.box(parent, name, (fixed, h / 2, mid), (thickness, h, length), mat, collide=True)
+        if has_door and h > 3.0:
+            header_h = h - 2.9
+            if side in "NS":
+                sc.box(parent, f"Wall{side}Header", (0, 2.9 + header_h / 2, fixed), (gap * 2, header_h, thickness), mat)
+            else:
+                sc.box(parent, f"Wall{side}Header", (fixed, 2.9 + header_h / 2, 0), (thickness, header_h, gap * 2), mat)
+
+
+def rafters(sc: Scene, m: Mats, parent: str, w: float, d: float, y: float, step: float, along: str = "x") -> None:
+    count = int((d if along == "x" else w) / step)
+    for i in range(count + 1):
+        offset = -(d if along == "x" else w) / 2 + i * step
+        if along == "x":
+            sc.box(parent, f"Rafter{i + 1}", (0, y, offset), (w, 0.22, 0.22), m.beam)
+        else:
+            sc.box(parent, f"Rafter{i + 1}", (offset, y, 0), (0.22, 0.22, d), m.beam)
+
+
+def hub_scaffold(sc: Scene, root: str, area_id: str, *, ambient, ambient_energy: float, fog_color,
+                 fog_density: float, sun_energy: float, sun_yaw: float = -140.0, sun_pitch: float = -30.0) -> None:
+    explore_root(sc, root, area_id)
+    environment(sc, ambient=ambient, ambient_energy=ambient_energy, fog_color=fog_color, fog_density=fog_density)
+    sun(sc, yaw=sun_yaw, pitch=sun_pitch, energy=sun_energy, col=(0.7, 0.76, 0.9))
+    sc.node("Room", "Node3D", ".")
+    sc.node("Props", "Node3D", "Room")
+
+
+def hub_roots(sc: Scene) -> None:
+    for name in ("Enemies", "Pickups", "Interactables", "Doors", "Actors"):
+        sc.node(name, "Node3D", ".")
+
+
+# --- Chapter 1 hub ---------------------------------------------------------------------
+
+def build_village_square() -> Scene:
+    """Village Square: the hub at grey dawn. Chapel north, weaver west, granary east, cellar south."""
+    random.seed(31)
+    sc = Scene("VillageSquare", "uid://redelka_village_square")
+    hub_scaffold(sc, "VillageSquare", "village_square", ambient=(0.42, 0.46, 0.56), ambient_energy=0.55,
+                 fog_color=(0.2, 0.22, 0.26), fog_density=0.028, sun_energy=0.4)
+    m = Mats(sc)
+    R, P = "Room", "Room/Props"
+    room_shell(sc, R, 24, 24, m.cobble, {"N": (m.rubble, 7.0, True), "S": (m.rubble, 2.4, True),
+                                         "W": (m.plaster, 4.4, True), "E": (m.boards, 5.6, True)})
+    # North: the chapel front, gable and bell cote over the door.
+    for i, (y, w) in enumerate(((7.6, 12.0), (8.6, 8.0), (9.6, 4.0))):
+        sc.box(P, f"ChapelGable{i + 1}", (0, y - 0.5, -12.4), (w, 1.0, 0.7), m.rubble)
+    sc.box(P, "BellCote", (0, 10.6, -12.4), (1.6, 1.4, 0.9), m.rubble)
+    sc.box(P, "BellCoteRoof", (0, 11.45, -12.4), (2.0, 0.3, 1.2), m.shingle)
+    sc.box(P, "ChapelRoseWindow", (0, 5.4, -11.72), (1.2, 1.2, 0.06), m.window_cold)
+    for x in (-6.5, 6.5):
+        sc.box(P, f"ChapelButtress{'W' if x < 0 else 'E'}", (x, 2.5, -11.3), (0.9, 5.0, 0.9), m.rubble_dark)
+    lantern(sc, m, P, "ChapelLamp", (2.4, 2.6, -11.55), energy=0.9, rng=6.0)
+    # West: the weaver's cottage and its neighbours, timber-framed under thatch.
+    sc.box(P, "WestRoof", (-12.9, 4.95, 0), (2.4, 0.4, 24.5), m.thatch, roll=-28.0)
+    for z in (-10.5, -6.5, -2.4, 2.4, 6.5, 10.5):
+        sc.box(P, f"WestPost{int(z * 10)}", (-11.68, 2.2, z), (0.16, 4.4, 0.24), m.beam)
+    for y in (0.6, 3.0):
+        sc.box(P, f"WestRail{int(y * 10)}", (-11.68, y, -7.2), (0.16, 0.2, 9.6), m.beam)
+        sc.box(P, f"WestRailS{int(y * 10)}", (-11.68, y, 7.2), (0.16, 0.2, 9.6), m.beam)
+    window(sc, m, P, "WestWindowN", (-11.66, 1.8, -8.5), (1.0, 0.9), m.window_dark, axis="x")
+    window(sc, m, P, "WestWindowS", (-11.66, 1.8, 8.5), (1.0, 0.9), m.window_warm, axis="x")
+    light(sc, P, "WestWindowGlow", (-10.6, 1.8, 8.5), energy=0.8, rng=4.0)
+    sc.box(P, "WeaverSign", (-11.5, 3.3, -2.6), (0.08, 0.5, 0.9), m.boards)
+    # East: the granary's barn front, a hoist beam and the dark loft door.
+    sc.box(P, "GranaryLoftDoor", (11.72, 4.4, 0), (0.06, 1.4, 1.6), m.void)
+    sc.box(P, "GranaryHoist", (11.0, 5.3, 0), (1.6, 0.2, 0.2), m.beam)
+    sc.box(P, "GranaryHoistRope", (10.3, 4.3, 0), (0.03, 2.0, 0.03), m.sack)
+    sc.box(P, "GranaryRoof", (12.6, 6.0, 0), (2.0, 0.4, 24.5), m.shingle, roll=24.0)
+    for z in (-8.0, -4.0, 4.0, 8.0):
+        sc.box(P, f"EastBrace{int(z)}", (11.68, 2.8, z), (0.14, 5.6, 0.22), m.beam)
+    # South: a low field wall and the squat stone cellar house round its door.
+    sc.box(P, "CellarHouse", (0, 1.7, 12.9), (6.2, 3.4, 1.4), m.rubble_dark)
+    sc.box(P, "CellarHouseRoof", (0, 3.55, 12.9), (6.8, 0.3, 2.0), m.shingle)
+    sc.box(P, "CellarHeader", (0, 2.95, 12.25), (3.8, 0.4, 0.2), m.beam)
+    # In the square: the well, a market stall, a cart, barrels and the wayside post.
+    sc.cyl(P, "WellWall", (6.0, 0.45, -6.0), 0.9, 0.9, m.rubble, collide=True, segments=12)
+    sc.cyl(P, "WellWater", (6.0, 0.86, -6.0), 0.7, 0.02, m.void, segments=12)
+    for dx in (-0.85, 0.85):
+        sc.box(P, f"WellPost{'W' if dx < 0 else 'E'}", (6.0 + dx, 1.3, -6.0), (0.14, 1.8, 0.14), m.beam)
+    sc.box(P, "WellRoofA", (6.0, 2.35, -6.35), (2.2, 0.08, 0.9), m.shingle, pitch=-32.0)
+    sc.box(P, "WellRoofB", (6.0, 2.35, -5.65), (2.2, 0.08, 0.9), m.shingle, pitch=32.0)
+    sc.cyl(P, "WellWinch", (6.0, 1.9, -6.0), 0.1, 1.6, m.beam, roll=90.0)
+    for x, z in ((-9.2, 4.6), (-5.8, 4.6), (-9.2, 7.4), (-5.8, 7.4)):
+        sc.box(P, f"StallPost{int(x * 10)}{int(z * 10)}", (x, 1.15, z), (0.12, 2.3, 0.12), m.beam)
+    sc.box(P, "StallAwning", (-7.5, 2.35, 6.0), (4.0, 0.06, 3.4), m.canvas, pitch=8.0)
+    sc.box(P, "StallTable", (-7.5, 0.8, 5.2), (3.2, 0.1, 1.0), m.timber, collide=True)
+    for i, x in enumerate((-8.6, -7.6, -6.7)):
+        sack(sc, m, P, f"StallSack{i + 1}", (x, 0.85, 5.2), yaw=12.0 * i, lying=True)
+    sc.box(P, "CartBed", (8.6, 0.75, 7.6), (1.4, 0.35, 2.4), m.boards, collide=True, yaw=-12.0)
+    for i, (dx, dz) in enumerate(((0.75, 0.6), (-0.75, 0.6))):
+        sc.cyl(P, f"CartWheel{i + 1}", (8.6 + dx, 0.45, 7.6 + dz), 0.45, 0.08, m.timber, roll=90.0, yaw=-12.0)
+    sc.box(P, "CartShaft", (8.2, 0.55, 9.4), (0.08, 0.08, 1.8), m.beam, yaw=-12.0, pitch=10.0)
+    for i, (x, z) in enumerate(((-10.6, -10.4), (-9.8, -10.8), (10.5, 3.6), (10.7, -3.8), (-3.6, -10.7))):
+        barrel(sc, m, P, f"Barrel{i + 1}", (x, 0, z))
+    for i, (x, z, yaw) in enumerate(((-10.6, 10.4, 8.0), (-9.8, 10.6, -14.0), (9.2, -10.6, 20.0))):
+        crate(sc, m, P, f"Crate{i + 1}", (x, 0, z), yaw=yaw)
+    crate(sc, m, P, "CrateTop", (-10.3, 0.7, 10.5), size=0.55, yaw=30.0, collide=False)
+    sc.box(P, "WaysidePost", (-9.0, 1.4, -8.0), (0.24, 2.8, 0.24), m.bark, collide=True)
+    sc.box(P, "WaysideArm", (-9.0, 2.35, -8.0), (1.2, 0.14, 0.14), m.bark)
+    for i, dx in enumerate((-0.45, 0.0, 0.45)):
+        sc.box(P, f"WaysideBundle{i + 1}", (-9.0 + dx, 2.0, -8.0), (0.14, 0.42, 0.14), m.straw)
+    candles(sc, m, P, "WaysideCandles", (-9.0, 0.0, -7.6), count=3, energy=0.5)
+    sc.cyl(P, "DeadTree", (9.4, 2.6, -9.4), 0.32, 5.2, m.bark, top=0.18, collide=True, segments=8)
+    for i, (y, yaw, roll) in enumerate(((3.6, 30.0, 50.0), (4.4, 160.0, 45.0), (2.9, 260.0, 60.0))):
+        sc.box(P, f"DeadTreeBranch{i + 1}", (9.4, y, -9.4), (0.12, 2.0, 0.12), m.bark, yaw=yaw, roll=roll)
+    hub_roots(sc)
+    camera_rig(sc, "ZoneSouth")
+    camera_zone(sc, "ZoneSouth", (0, 0, 7.5), (24, 4, 9), (5.0, 6.5, 6.0), (-1.0, 0.5, -8.0))
+    camera_zone(sc, "ZoneMid", (0, 0, -1.0), (24, 4, 8), (-9.0, 7.5, 4.0), (3.0, 0.5, -3.0))
+    camera_zone(sc, "ZoneNorth", (0, 0, -8.5), (24, 4, 7), (6.0, 5.0, 9.0), (-2.0, 2.0, -4.0))
+    door(sc, "DoorNorthChapel", (0, 1.2, -12), (0, 1, -11.25), target="old_chapel", spawn=(0, 0, 7), rot_y=0.0,
+         label="Old Chapel", mat=m.boards)
+    door(sc, "DoorWestCottage", (-12, 1.2, 0), (-11.25, 1, 0), target="weavers_cottage", spawn=(7, 0, 0),
+         rot_y=-math.pi / 2.0, label="Weaver's Cottage", mat=m.boards)
+    door(sc, "DoorEastGranary", (12, 1.2, 0), (11.25, 1, 0), target="granary", spawn=(-7, 0, 0),
+         rot_y=math.pi / 2.0, label="Granary", mat=m.boards)
+    door(sc, "DoorSouthCellar", (0, 1.2, 12), (0, 1, 11.25), target="root_cellar", spawn=(0, 0, 5), rot_y=0.0,
+         label="Root Cellar", mat=m.boards, required_item="cellar_key")
+    explore_ui(sc)
+    return sc
+
+
+def build_old_chapel() -> Scene:
+    """Old Chapel: a cold nave, pews in the south half, the altar and the Warden's ground to the north."""
+    sc = Scene("OldChapel", "uid://redelka_old_chapel")
+    hub_scaffold(sc, "OldChapel", "old_chapel", ambient=(0.32, 0.36, 0.46), ambient_energy=0.42,
+                 fog_color=(0.12, 0.13, 0.16), fog_density=0.04, sun_energy=0.18)
+    m = Mats(sc)
+    R, P = "Room", "Room/Props"
+    room_shell(sc, R, 16, 20, m.flag, {"N": (m.rubble, 6.5, False), "S": (m.rubble, 6.5, True),
+                                       "W": (m.rubble, 6.5, False), "E": (m.rubble, 6.5, False)})
+    rafters(sc, m, P, 16.5, 20, 6.2, 2.5)
+    for x in (-6.3, 6.3):
+        for z in (-6.0, -2.0, 2.0, 6.0):
+            sc.box(P, f"Pillar{'W' if x < 0 else 'E'}{int(z)}", (x, 3.25, z), (0.7, 6.5, 0.7), m.rubble_dark,
+                   collide=True)
+    # Pews: two blocks south of the crossing, centre aisle clear.
+    for row, z in enumerate((1.6, 3.4, 5.2, 7.0)):
+        for side in (-1, 1):
+            if side == -1 and row == 2:
+                continue  # one pew is overturned below
+            x = side * 3.1
+            name = f"Pew{'W' if side < 0 else 'E'}{row + 1}"
+            sc.box(P, name + "Seat", (x, 0.45, z), (3.2, 0.1, 0.5), m.timber, collide=True)
+            sc.box(P, name + "Back", (x, 0.85, z + 0.24), (3.2, 0.7, 0.08), m.timber)
+            for lx in (-1.45, 1.45):
+                sc.box(P, f"{name}Leg{'L' if lx < 0 else 'R'}", (x + lx, 0.22, z), (0.08, 0.44, 0.46), m.beam)
+    sc.box(P, "PewFallenSeat", (-3.4, 0.12, 5.4), (3.2, 0.1, 0.5), m.timber, yaw=14.0, roll=6.0)
+    sc.box(P, "PewFallenBack", (-3.3, 0.3, 5.75), (3.2, 0.7, 0.08), m.timber, yaw=14.0, pitch=-75.0)
+    # Chancel: a step, the altar, its cloth and candles, the east window above.
+    sc.box(P, "ChancelStep", (0, 0.1, -8.4), (8.0, 0.2, 3.2), m.flag, collide=True)
+    sc.box(P, "Altar", (0, 0.7, -9.0), (3.0, 1.0, 1.1), m.rubble, collide=True)
+    sc.box(P, "AltarCloth", (0, 0.95, -8.43), (2.4, 0.9, 0.04), m.canvas)
+    candles(sc, m, P, "AltarCandlesW", (-1.0, 1.2, -9.0), count=3, energy=0.7)
+    candles(sc, m, P, "AltarCandlesE", (1.0, 1.2, -9.0), count=2, energy=0.5)
+    sc.box(P, "EastWindow", (0, 4.0, -9.72), (1.4, 3.0, 0.06), m.window_cold)
+    sc.box(P, "EastWindowMullion", (0, 4.0, -9.68), (0.1, 3.0, 0.08), m.rubble_dark)
+    light(sc, P, "EastWindowLight", (0, 4.0, -8.6), col=(0.55, 0.62, 0.78), energy=0.7, rng=7.0)
+    for x, z in ((-7.72, -3.0), (-7.72, 3.0), (7.72, -3.0), (7.72, 3.0)):
+        sc.box(P, f"SideWindow{int(x)}{int(z)}", (x, 3.8, z), (0.06, 2.2, 0.7), m.window_cold)
+        light(sc, P, f"SideWindowLight{int(x)}{int(z)}", (x * 0.85, 3.6, z), col=(0.5, 0.58, 0.74), energy=0.35,
+              rng=4.5)
+    # Signs of the Warden: chains on the floor, a toppled candle stand, scraped flags.
+    for i, (x, z, yaw) in enumerate(((-1.4, -2.6, 20.0), (1.2, -1.4, -35.0), (0.3, -3.4, 75.0))):
+        sc.box(P, f"Chain{i + 1}", (x, 0.03, z), (1.2, 0.05, 0.08), m.iron, yaw=yaw)
+    sc.box(P, "FallenStand", (-4.6, 0.08, -6.2), (0.12, 0.12, 1.6), m.iron, yaw=30.0)
+    hub_roots(sc)
+    camera_rig(sc, "ZoneSouth")
+    camera_zone(sc, "ZoneSouth", (0, 0, 5), (16, 4, 10), (5.0, 4.8, 4.0), (-2.0, 1.0, -9.0))
+    camera_zone(sc, "ZoneNorth", (0, 0, -5), (16, 4, 10), (-5.5, 5.0, 9.0), (2.0, 1.0, -4.0))
+    door(sc, "DoorToSquare", (0, 1.2, 10), (0, 1, 9.25), target="village_square", spawn=(0, 0, -10),
+         rot_y=math.pi, label="Village Square", mat=m.boards)
+    checkpoint(sc, (0, 0, -5))
+    trigger(sc, "WardenWarningTrigger", (0, 0.6, 6.5), 1.6, cutscene="mira_chapel_warning",
+            requires="chapel_warning_seen",
+            extra={"require_story_flag_value": "false", "story_flag_set": '"chapel_warning_seen"',
+                   "requires_enemy_alive": '"chapel_warden"', "trigger_id": '"warden_warning"'})
+    explore_ui(sc)
+    return sc
+
+
+def build_weavers_cottage() -> Scene:
+    """Weaver's Cottage: a low timber room, a cold hearth, the loom, and a wardrobe that should stay shut."""
+    sc = Scene("WeaversCottage", "uid://redelka_weavers_cottage")
+    hub_scaffold(sc, "WeaversCottage", "weavers_cottage", ambient=(0.4, 0.4, 0.48), ambient_energy=0.58,
+                 fog_color=(0.1, 0.1, 0.12), fog_density=0.035, sun_energy=0.12)
+    m = Mats(sc)
+    R, P = "Room", "Room/Props"
+    room_shell(sc, R, 16, 14, m.timber, {"N": (m.plaster, 3.6, False), "S": (m.plaster, 3.6, False),
+                                         "W": (m.plaster, 3.6, False), "E": (m.plaster, 3.6, True)})
+    rafters(sc, m, P, 16.5, 14, 3.45, 2.0)
+    for x in (-5.0, -1.0, 3.0):
+        for z, name in ((-6.9, "N"), (6.9, "S")):
+            sc.box(P, f"Post{name}{int(x)}", (x, 1.8, z), (0.22, 3.6, 0.14), m.beam)
+    # Hearth on the west wall: rubble chimney, embers barely alive.
+    sc.box(P, "Chimney", (-7.45, 1.8, 0), (1.0, 3.6, 2.2), m.rubble_dark, collide=True)
+    sc.box(P, "HearthMouth", (-6.93, 0.55, 0), (0.06, 0.9, 1.1), m.void)
+    sc.box(P, "Embers", (-6.75, 0.08, 0), (0.5, 0.08, 0.9), m.ember)
+    light(sc, P, "EmberGlow", (-6.4, 0.5, 0), col=(0.9, 0.35, 0.15), energy=0.6, rng=3.5)
+    sc.box(P, "HearthStone", (-6.6, 0.04, 0), (1.0, 0.08, 2.2), m.flag)
+    # The loom, threads still strung, and a spinning wheel.
+    for dz in (-0.9, 0.9):
+        sc.box(P, f"LoomPost{'N' if dz < 0 else 'S'}", (-4.0, 0.9, 3.2 + dz), (0.12, 1.8, 0.12), m.beam, collide=True)
+    for y in (0.35, 1.75):
+        sc.box(P, f"LoomBeam{int(y * 10)}", (-4.0, y, 3.2), (0.12, 0.12, 1.9), m.beam)
+    for i in range(9):
+        sc.box(P, f"LoomThread{i + 1}", (-4.0, 1.05, 2.45 + i * 0.19), (0.015, 1.4, 0.015), m.sack)
+    sc.box(P, "LoomCloth", (-3.95, 0.6, 3.2), (0.03, 0.5, 1.6), m.canvas)
+    sc.box(P, "LoomBench", (-3.2, 0.3, 3.2), (0.4, 0.08, 1.2), m.timber)
+    sc.cyl(P, "SpinningWheel", (-1.4, 0.75, 5.2), 0.42, 0.06, m.timber, roll=90.0, segments=12)
+    sc.box(P, "SpinningStand", (-1.4, 0.3, 5.2), (0.12, 0.6, 0.7), m.beam)
+    # North wall: bed, shelves; east of the door: the table where the work was left.
+    sc.box(P, "BedFrame", (2.2, 0.3, -5.8), (2.2, 0.4, 1.2), m.timber, collide=True)
+    sc.box(P, "BedStraw", (2.2, 0.56, -5.8), (2.0, 0.14, 1.0), m.sack)
+    sc.box(P, "BedHead", (1.15, 0.7, -5.8), (0.1, 0.9, 1.2), m.timber)
+    for i, y in enumerate((1.3, 2.0)):
+        sc.box(P, f"Shelf{i + 1}", (5.8, y, -6.6), (2.6, 0.06, 0.4), m.timber)
+    for i, x in enumerate((4.9, 5.4, 6.1, 6.6)):
+        sc.cyl(P, f"Jar{i + 1}", (x, 1.45 + (i % 2) * 0.7, -6.6), 0.1, 0.24, m.glass)
+    sc.box(P, "Table", (5.2, 0.78, 3.6), (1.8, 0.08, 1.0), m.timber, collide=True)
+    for dx in (-0.8, 0.8):
+        for dz in (-0.4, 0.4):
+            sc.box(P, f"TableLeg{int(dx * 10)}{int(dz * 10)}", (5.2 + dx, 0.38, 3.6 + dz), (0.08, 0.76, 0.08), m.beam)
+    for i, (dx, col) in enumerate(((-0.4, (0.6, 0.3, 0.28)), (0.1, (0.35, 0.4, 0.55)), (0.5, (0.7, 0.66, 0.55)))):
+        sc.cyl(P, f"Skein{i + 1}", (5.2 + dx, 0.9, 3.5), 0.12, 0.16, sc.tex("sackcloth", col, 0.3), roll=90.0)
+    lantern(sc, m, P, "TableLamp", (4.6, 1.0, 3.9), energy=0.7, rng=4.5)
+    # Hanging skeins from the rafters, a rug, and an empty cradle by the cold hearth.
+    for i, (x, z, col) in enumerate(((-2.0, -2.0, (0.55, 0.28, 0.26)), (-0.5, -2.0, (0.32, 0.36, 0.5)),
+                                     (1.0, -2.0, (0.6, 0.56, 0.45)), (2.5, -2.0, (0.45, 0.5, 0.36)))):
+        sc.box(P, f"HangingSkein{i + 1}", (x, 2.85, z), (0.18, 1.0, 0.1), sc.tex("sackcloth", col, 0.3))
+    sc.box(P, "Rug", (0.5, 0.01, 0.5), (3.4, 0.02, 2.4), sc.tex("sackcloth", (0.6, 0.38, 0.32), 0.6))
+    sc.box(P, "CradleBed", (-5.6, 0.32, -2.0), (0.9, 0.3, 0.5), m.timber)
+    for dx in (-0.35, 0.35):
+        sc.box(P, f"CradleRocker{'W' if dx < 0 else 'E'}", (-5.6 + dx, 0.08, -2.0), (0.08, 0.16, 0.7), m.beam)
+    window(sc, m, P, "WindowSouth", (-2.5, 1.7, 6.75), (1.0, 0.8), m.window_cold)
+    light(sc, P, "WindowSouthLight", (-2.5, 1.7, 5.9), col=(0.5, 0.58, 0.74), energy=0.6, rng=5.0)
+    window(sc, m, P, "WindowNorth", (-2.0, 1.7, -6.75), (1.0, 0.8), m.window_cold)
+    light(sc, P, "WindowNorthLight", (-2.0, 1.7, -5.9), col=(0.5, 0.58, 0.74), energy=0.5, rng=5.0)
+    hub_roots(sc)
+    script = sc.ext_res("Script", "res://scripts/explore/explore_closet.gd")
+    sc.node("BedroomCloset", "Area3D", "Interactables", {
+        "transform": transform((-4, 0, -4)), "script": f'ExtResource("{script}")', "closet_id": '"cottage_closet"',
+        "area_id": '"weavers_cottage"', "ambush_enemy_id": '"cottage_closet_ambush"',
+        "encounter_id": '"cottage_closet_ambush"', "pickup_id": '"cottage_closet_key"', "key_item_id": '"cellar_key"'})
+    camera_rig(sc, "ZoneEast")
+    camera_zone(sc, "ZoneEast", (4, 0, 0), (8, 4, 14), (2.5, 3.2, 5.5), (-5.0, 0.6, -4.0))
+    camera_zone(sc, "ZoneWest", (-4, 0, 0), (8, 4, 14), (4.0, 3.3, 5.5), (-1.0, 0.6, -5.0))
+    door(sc, "DoorToSquare", (8, 1.2, 0), (7.25, 1, 0), target="village_square", spawn=(-10, 0, 0),
+         rot_y=math.pi / 2.0, label="Village Square", mat=m.boards)
+    explore_ui(sc)
+    return sc
+
+
+def build_granary() -> Scene:
+    """Granary: a tall plank barn, sacks and bales along the walls, a loft over the east side."""
+    sc = Scene("Granary", "uid://redelka_granary")
+    hub_scaffold(sc, "Granary", "granary", ambient=(0.4, 0.4, 0.46), ambient_energy=0.58,
+                 fog_color=(0.11, 0.1, 0.09), fog_density=0.035, sun_energy=0.14)
+    m = Mats(sc)
+    R, P = "Room", "Room/Props"
+    room_shell(sc, R, 18, 16, m.timber, {"N": (m.boards, 6.0, False), "S": (m.boards, 6.0, False),
+                                         "W": (m.boards, 6.0, True), "E": (m.boards, 6.0, False)})
+    rafters(sc, m, P, 18.5, 16, 5.8, 2.6, along="z")
+    for i, (x, z, w, d) in enumerate(((-3.0, -6.5, 3.0, 2.0), (-6.5, 5.0, 3.2, 2.6), (1.5, 6.6, 2.4, 1.4))):
+        sc.box(P, f"StrawPatch{i + 1}", (x, 0.01, z), (w, 0.02, d), m.straw)
+    # The loft: a platform on posts over the east side, a ladder up.
+    sc.box(P, "LoftFloor", (7.2, 3.0, 0), (3.6, 0.2, 16), m.timber)
+    sc.box(P, "LoftRail", (5.45, 3.55, 0), (0.1, 0.1, 16), m.beam)
+    for z in (-6.0, -2.0, 2.0, 6.0):
+        sc.box(P, f"LoftPost{int(z)}", (5.5, 1.45, z), (0.22, 2.9, 0.22), m.beam, collide=True)
+        sc.box(P, f"LoftRailPost{int(z)}", (5.45, 3.3, z), (0.1, 0.5, 0.1), m.beam)
+    for i, z in enumerate((-6.5, -5.4, 5.0, 6.2)):
+        sc.box(P, f"LoftBale{i + 1}", (7.6, 3.45, z), (1.2, 0.7, 0.9), m.straw)
+    for dz in (-0.25, 0.25):
+        sc.box(P, f"LadderRail{'N' if dz < 0 else 'S'}", (5.1, 1.5, 7.0 + dz), (0.08, 3.1, 0.08), m.beam, pitch=0.0,
+               roll=-8.0)
+    for i in range(7):
+        sc.box(P, f"LadderRung{i + 1}", (5.1 - i * 0.06, 0.3 + i * 0.42, 7.0), (0.06, 0.06, 0.5), m.beam)
+    # Sacks along the north wall, bales by the south-west corner.
+    for i, x in enumerate((-7.6, -7.0, -6.3, -5.5, -4.6, -3.8, 0.0, 0.8)):
+        sack(sc, m, P, f"Sack{i + 1}", (x, 0, -7.3 + (i % 2) * 0.2), yaw=(i * 23) % 40 - 20)
+    for i, x in enumerate((-7.2, -6.0, -4.4)):
+        sack(sc, m, P, f"SackLying{i + 1}", (x, 0.0, -6.5), yaw=80.0 + i * 10, lying=True)
+    for i, (x, y, z) in enumerate(((-7.6, 0, 6.7), (-6.4, 0, 6.7), (-7.6, 0, 5.6), (-7.0, 0.7, 6.7))):
+        sc.box(P, f"Bale{i + 1}", (x, y + 0.35, z), (1.1, 0.7, 0.9), m.straw, collide=y == 0)
+    # A handcart, barrels, the grain scale and a sack hanging from the beam.
+    sc.box(P, "CartBed", (-5.2, 0.6, -2.8), (1.0, 0.3, 1.8), m.boards, collide=True, yaw=25.0)
+    sc.cyl(P, "CartWheel", (-4.6, 0.38, -2.5), 0.38, 0.08, m.timber, roll=90.0, yaw=25.0)
+    for i, (x, z) in enumerate(((1.6, -7.3), (2.4, -7.2), (8.3, -7.3))):
+        barrel(sc, m, P, f"Barrel{i + 1}", (x, 0, z))
+    sc.box(P, "ScaleBeam", (2.0, 2.4, 4.6), (1.4, 0.08, 0.08), m.iron)
+    sc.box(P, "ScaleChain", (2.0, 4.1, 4.6), (0.03, 3.4, 0.03), m.iron)
+    sack(sc, m, P, "HangingSack", (0.0, 3.0, -1.0))
+    sc.box(P, "HangingSackRope", (0.0, 4.6, -1.0), (0.03, 2.4, 0.03), m.sack)
+    lantern(sc, m, P, "DoorLamp", (-8.2, 2.6, 2.6), energy=0.8, rng=6.0, hanging=0.4)
+    lantern(sc, m, P, "SackLamp", (-3.0, 2.8, -5.6), energy=0.7, rng=6.0, hanging=1.2)
+    for i, z in enumerate((-4.5, 3.5)):
+        sc.box(P, f"BoardGap{i + 1}", (8.72, 2.2, z), (0.06, 2.6, 0.08), m.window_cold)
+        light(sc, P, f"BoardGapLight{i + 1}", (7.9, 2.0, z), col=(0.5, 0.58, 0.74), energy=0.35, rng=4.0)
+    hub_roots(sc)
+    camera_rig(sc, "ZoneSouth")
+    camera_zone(sc, "ZoneSouth", (0, 0, 4), (18, 4, 8), (-5.0, 4.2, 3.5), (4.0, 0.6, -6.0))
+    camera_zone(sc, "ZoneNorth", (0, 0, -4), (18, 4, 8), (3.5, 4.2, 3.2), (-4.0, 0.6, -4.0))
+    door(sc, "DoorToSquare", (-9, 1.2, 0), (-8.25, 1, 0), target="village_square", spawn=(10, 0, 0),
+         rot_y=-math.pi / 2.0, label="Village Square", mat=m.boards)
+    explore_ui(sc)
+    return sc
+
+
+def build_root_cellar() -> Scene:
+    """Root Cellar: low beams, damp earth, shelves of jars and roots, one lamp over the save point."""
+    sc = Scene("RootCellar", "uid://redelka_root_cellar")
+    hub_scaffold(sc, "RootCellar", "root_cellar", ambient=(0.3, 0.3, 0.34), ambient_energy=0.38,
+                 fog_color=(0.07, 0.065, 0.06), fog_density=0.05, sun_energy=0.0)
+    m = Mats(sc)
+    R, P = "Room", "Room/Props"
+    room_shell(sc, R, 14, 14, m.earth, {"N": (m.rubble_dark, 3.0, True), "S": (m.brick, 3.0, False),
+                                        "W": (m.rubble_dark, 3.0, False), "E": (m.rubble_dark, 3.0, False)})
+    rafters(sc, m, P, 14.5, 14, 2.85, 1.8)
+    for x in (-3.5, 3.5):
+        for z in (-3.5, 3.5):
+            sc.box(P, f"Prop{'W' if x < 0 else 'E'}{'N' if z < 0 else 'S'}", (x, 1.4, z), (0.24, 2.8, 0.24),
+                   m.beam, collide=True)
+    # Shelves along the side walls: jars, roots, a broken crock.
+    for side, x in (("W", -6.55), ("E", 6.55)):
+        for i, y in enumerate((0.7, 1.4, 2.1)):
+            sc.box(P, f"Shelf{side}{i + 1}", (x, y, 0.5), (0.6, 0.06, 6.0), m.timber)
+            for j in range(6):
+                z = -2.0 + j * 0.95 + (i * 0.3)
+                if (i + j) % 3 == 0:
+                    sc.cyl(P, f"Jar{side}{i}{j}", (x, y + 0.16, z), 0.1, 0.26, m.glass)
+                else:
+                    sc.box(P, f"Roots{side}{i}{j}", (x, y + 0.08, z), (0.4, 0.14, 0.4), m.dirt)
+        for z in (-2.4, 3.4):
+            sc.box(P, f"ShelfPost{side}{int(z * 10)}", (x, 1.1, z), (0.08, 2.2, 0.08), m.beam)
+    for i, (x, z) in enumerate(((-4.8, 5.6), (-3.2, 5.8), (4.6, 5.6))):
+        sc.box(P, f"Bin{i + 1}", (x, 0.35, z), (1.2, 0.7, 0.9), m.boards, collide=True)
+        sc.box(P, f"BinPotatoes{i + 1}", (x, 0.68, z), (1.05, 0.08, 0.75), m.dirt)
+    for i, (x, z) in enumerate(((-6.1, -6.1), (6.1, -6.1), (6.1, 6.2))):
+        barrel(sc, m, P, f"Barrel{i + 1}", (x, 0, z))
+    sc.cyl(P, "CrockBroken", (2.2, 0.12, 4.4), 0.22, 0.24, m.glass, top=0.16)
+    sc.box(P, "Drain", (0, 0.005, -0.8), (0.5, 0.01, 0.5), m.iron)
+    lantern(sc, m, P, "CellarLamp", (0.8, 2.3, 0.6), energy=0.9, rng=6.0, hanging=0.3)
+    hub_roots(sc)
+    camera_rig(sc, "ZoneSouth")
+    camera_zone(sc, "ZoneSouth", (0, 0, 3), (14, 4, 8), (3.5, 2.6, 3.5), (-1.5, 0.6, -6.0))
+    camera_zone(sc, "ZoneNorth", (0, 0, -4), (14, 4, 6), (-4.0, 2.6, 3.5), (3.0, 0.6, -3.0))
+    door(sc, "DoorToSquare", (0, 1.2, -7), (0, 1, -6.25), target="village_square", spawn=(0, 0, 10),
+         rot_y=math.pi, label="Village Square", mat=m.boards)
+    checkpoint(sc, (0, 0, 0))
+    explore_ui(sc)
+    return sc
+
+
 BUILDERS = {
     "mira_intake_alcove": build_mira_intake_alcove,
     "mira_chapel_lane": build_mira_chapel_lane,
     "mira_woods_edge": build_mira_woods_edge,
     "menu_backdrop": build_menu_backdrop,
+    "village_square": build_village_square,
+    "old_chapel": build_old_chapel,
+    "weavers_cottage": build_weavers_cottage,
+    "granary": build_granary,
+    "root_cellar": build_root_cellar,
 }
 # Scenes that are not explore areas and live elsewhere.
 OUT_PATHS = {

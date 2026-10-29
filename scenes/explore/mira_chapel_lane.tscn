@@ -1,13 +1,21 @@
-[gd_scene load_steps=92 format=3 uid="uid://redelka_mira_chapel_lane"]
+[gd_scene load_steps=99 format=3 uid="uid://redelka_mira_chapel_lane"]
 
 [ext_resource type="Script" path="res://scripts/explore/explore_controller.gd" id="1_explore_controller"]
-[ext_resource type="Script" path="res://scripts/explore/camera_rig.gd" id="2_camera_rig"]
-[ext_resource type="Script" path="res://scripts/explore/camera_zone.gd" id="3_camera_zone"]
-[ext_resource type="Script" path="res://scripts/explore/explore_door.gd" id="4_explore_door"]
-[ext_resource type="Script" path="res://scripts/narrative/actor_node.gd" id="5_actor_node"]
-[ext_resource type="Script" path="res://scripts/narrative/cutscene_player.gd" id="6_cutscene_player"]
-[ext_resource type="Script" path="res://scripts/narrative/narrative_trigger.gd" id="7_narrative_trigger"]
-[ext_resource type="Script" path="res://scripts/explore/explore_examinable.gd" id="8_explore_examinable"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/cobble.png" id="2_cobble"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/plaster.png" id="3_plaster"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/rubble.png" id="4_rubble"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/shingle.png" id="5_shingle"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/timber.png" id="6_timber"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/boards.png" id="7_boards"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/flagstone.png" id="8_flagstone"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/grass.png" id="9_grass"]
+[ext_resource type="Script" path="res://scripts/explore/camera_rig.gd" id="10_camera_rig"]
+[ext_resource type="Script" path="res://scripts/explore/camera_zone.gd" id="11_camera_zone"]
+[ext_resource type="Script" path="res://scripts/explore/explore_door.gd" id="12_explore_door"]
+[ext_resource type="Script" path="res://scripts/narrative/actor_node.gd" id="13_actor_node"]
+[ext_resource type="Script" path="res://scripts/narrative/cutscene_player.gd" id="14_cutscene_player"]
+[ext_resource type="Script" path="res://scripts/narrative/narrative_trigger.gd" id="15_narrative_trigger"]
+[ext_resource type="Script" path="res://scripts/explore/explore_examinable.gd" id="16_explore_examinable"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -23,44 +31,94 @@ fog_density = 0.06
 fog_sky_affect = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
-albedo_color = Color(0.24, 0.23, 0.22, 1)
+albedo_color = Color(0.78, 0.78, 0.8, 1)
+albedo_texture = ExtResource("2_cobble")
 roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
-albedo_color = Color(0.27, 0.25, 0.22, 1)
+albedo_color = Color(0.75, 0.73, 0.7, 1)
+albedo_texture = ExtResource("3_plaster")
 roughness = 0.95
+uv1_scale = Vector3(0.277778, 0.277778, 0.277778)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4"]
-albedo_color = Color(0.2, 0.19, 0.17, 1)
+albedo_color = Color(0.6, 0.6, 0.6, 1)
+albedo_texture = ExtResource("4_rubble")
 roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
-albedo_color = Color(0.14, 0.13, 0.13, 1)
+albedo_color = Color(0.8, 0.8, 0.84, 1)
+albedo_texture = ExtResource("5_shingle")
 roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
-albedo_color = Color(0.27, 0.19, 0.13, 1)
+albedo_color = Color(0.8, 0.76, 0.72, 1)
+albedo_texture = ExtResource("6_timber")
 roughness = 0.95
+uv1_scale = Vector3(0.833333, 0.833333, 0.833333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7"]
-albedo_color = Color(0.17, 0.12, 0.09, 1)
+albedo_color = Color(0.62, 0.58, 0.55, 1)
+albedo_texture = ExtResource("7_boards")
 roughness = 0.95
+uv1_scale = Vector3(0.833333, 0.833333, 0.833333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
-albedo_color = Color(0.25, 0.25, 0.24, 1)
+albedo_color = Color(0.72, 0.72, 0.72, 1)
+albedo_texture = ExtResource("4_rubble")
 roughness = 0.95
+uv1_scale = Vector3(0.769231, 0.769231, 0.769231)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_9"]
-albedo_color = Color(0.33, 0.33, 0.32, 1)
+albedo_color = Color(0.85, 0.85, 0.85, 1)
+albedo_texture = ExtResource("8_flagstone")
 roughness = 0.95
+uv1_scale = Vector3(1.25, 1.25, 1.25)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_10"]
-albedo_color = Color(0.22, 0.22, 0.22, 1)
+albedo_color = Color(0.55, 0.55, 0.57, 1)
+albedo_texture = ExtResource("8_flagstone")
 roughness = 0.95
+uv1_scale = Vector3(1.25, 1.25, 1.25)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_11"]
-albedo_color = Color(0.2, 0.19, 0.22, 1)
+albedo_color = Color(0.55, 0.54, 0.6, 1)
+albedo_texture = ExtResource("4_rubble")
 roughness = 0.95
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_12"]
 albedo_color = Color(0.5, 0.55, 0.62, 1)
@@ -90,8 +148,13 @@ albedo_color = Color(0.85, 0.84, 0.8, 1)
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_18"]
-albedo_color = Color(0.5, 0.54, 0.6, 1)
-roughness = 0.9
+albedo_color = Color(1.2, 1.25, 1.35, 1)
+albedo_texture = ExtResource("2_cobble")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_19"]
 albedo_color = Color(0.14, 0.14, 0.15, 1)
@@ -106,8 +169,13 @@ albedo_color = Color(0.7, 0.66, 0.55, 1)
 roughness = 0.95
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_22"]
-albedo_color = Color(0.15, 0.13, 0.11, 1)
+albedo_color = Color(0.6, 0.6, 0.58, 1)
+albedo_texture = ExtResource("9_grass")
 roughness = 0.95
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_23"]
 size = Vector3(6, 0.4, 28)
@@ -301,41 +369,38 @@ size = Vector3(0.07, 0.01, 0.15)
 [sub_resource type="BoxMesh" id="BoxMesh_72"]
 size = Vector3(0.12, 0.01, 0.33)
 
-[sub_resource type="BoxMesh" id="BoxMesh_73"]
-size = Vector3(0.2, 1.5, 0.2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_74"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_73"]
 size = Vector3(6, 4, 9.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_75"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_74"]
 size = Vector3(6, 4, 7)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_76"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_75"]
 size = Vector3(6, 4, 11)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_77"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_76"]
 size = Vector3(0.35, 2.4, 3.2)
 
-[sub_resource type="BoxMesh" id="BoxMesh_78"]
+[sub_resource type="BoxMesh" id="BoxMesh_77"]
 size = Vector3(0.35, 2.4, 3.2)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_79"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_78"]
 size = Vector3(1.6, 2.5, 3.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_80"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_79"]
 albedo_color = Color(0.9, 0.7, 0.4, 1)
 roughness = 0.95
 emission_enabled = true
 emission = Color(1, 0.7, 0.4, 1)
 emission_energy_multiplier = 1.2
 
-[sub_resource type="BoxMesh" id="BoxMesh_81"]
+[sub_resource type="BoxMesh" id="BoxMesh_80"]
 size = Vector3(0.03, 0.8, 0.06)
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_82"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_81"]
 radius = 1.4
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_83"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_82"]
 radius = 1.6
 
 [node name="MiraChapelLane" type="Node3D"]
@@ -775,16 +840,6 @@ transform = Transform3D(0.99863, 0, -0.052336, 0, 1, 0, 0.052336, 0, 0.99863, 0.
 mesh = SubResource("BoxMesh_72")
 surface_material_override/0 = SubResource("StandardMaterial3D_20")
 
-[node name="GatePostW" type="MeshInstance3D" parent="Room/Props"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7, 0.75, -13.3)
-mesh = SubResource("BoxMesh_73")
-surface_material_override/0 = SubResource("StandardMaterial3D_7")
-
-[node name="GatePostE" type="MeshInstance3D" parent="Room/Props"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7, 0.75, -13.3)
-mesh = SubResource("BoxMesh_73")
-surface_material_override/0 = SubResource("StandardMaterial3D_7")
-
 [node name="Enemies" type="Node3D" parent="."]
 
 [node name="Pickups" type="Node3D" parent="."]
@@ -796,7 +851,7 @@ surface_material_override/0 = SubResource("StandardMaterial3D_7")
 [node name="Actors" type="Node3D" parent="."]
 
 [node name="CameraRig" type="Node3D" parent="."]
-script = ExtResource("2_camera_rig")
+script = ExtResource("10_camera_rig")
 camera_path = NodePath("Camera")
 default_zone_path = NodePath("../CameraZones/ZoneSouth")
 
@@ -808,155 +863,157 @@ fov = 60
 
 [node name="ZoneSouth" type="Area3D" parent="CameraZones"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.75)
-script = ExtResource("3_camera_zone")
+script = ExtResource("11_camera_zone")
 camera_position = Vector3(1, 3.6, 4.2)
 look_target_offset = Vector3(0, 0.6, -7)
 track_strength = 0.35
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneSouth"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
-shape = SubResource("BoxShape3D_74")
+shape = SubResource("BoxShape3D_73")
 
 [node name="ZoneMid" type="Area3D" parent="CameraZones"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
-script = ExtResource("3_camera_zone")
+script = ExtResource("11_camera_zone")
 camera_position = Vector3(2, 2.7, 4.6)
 look_target_offset = Vector3(-2.6, 0.9, -1.5)
 track_strength = 0.45
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneMid"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
-shape = SubResource("BoxShape3D_75")
+shape = SubResource("BoxShape3D_74")
 
 [node name="ZoneNorth" type="Area3D" parent="CameraZones"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8.5)
-script = ExtResource("3_camera_zone")
+script = ExtResource("11_camera_zone")
 camera_position = Vector3(0.8, 2, 8)
 look_target_offset = Vector3(0, 1, -5)
 track_strength = 0.35
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneNorth"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
-shape = SubResource("BoxShape3D_76")
+shape = SubResource("BoxShape3D_75")
 
 [node name="DoorSouthDoorway" type="Node3D" parent="Doors"]
-script = ExtResource("4_explore_door")
+script = ExtResource("12_explore_door")
 target_area_id = "mira_intake_alcove"
 target_spawn = Vector3(-5.2, 0, 1)
 target_rotation_y = 1.570796
 door_label = "the doorway"
+door_style = "passage"
 
 [node name="Panel" type="StaticBody3D" parent="Doors/DoorSouthDoorway"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 13.4)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorSouthDoorway/Panel"]
-shape = SubResource("BoxShape3D_77")
+shape = SubResource("BoxShape3D_76")
 
 [node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorSouthDoorway/Panel"]
-mesh = SubResource("BoxMesh_78")
+mesh = SubResource("BoxMesh_77")
 surface_material_override/0 = SubResource("StandardMaterial3D_7")
 
 [node name="Trigger" type="Area3D" parent="Doors/DoorSouthDoorway"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 12.6)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorSouthDoorway/Trigger"]
-shape = SubResource("BoxShape3D_79")
+shape = SubResource("BoxShape3D_78")
 
 [node name="DoorNorthPines" type="Node3D" parent="Doors"]
-script = ExtResource("4_explore_door")
+script = ExtResource("12_explore_door")
 target_area_id = "mira_woods_edge"
 target_spawn = Vector3(0, 0, 6)
 target_rotation_y = 3.141593
 door_label = "the pines"
+door_style = "gate"
 
 [node name="Panel" type="StaticBody3D" parent="Doors/DoorNorthPines"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -13.4)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorNorthPines/Panel"]
-shape = SubResource("BoxShape3D_77")
+shape = SubResource("BoxShape3D_76")
 
 [node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorNorthPines/Panel"]
-mesh = SubResource("BoxMesh_78")
+mesh = SubResource("BoxMesh_77")
 surface_material_override/0 = SubResource("StandardMaterial3D_6")
 
 [node name="Trigger" type="Area3D" parent="Doors/DoorNorthPines"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -12.6)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorNorthPines/Trigger"]
-shape = SubResource("BoxShape3D_79")
+shape = SubResource("BoxShape3D_78")
 
 [node name="LaneShutterGap" type="Node3D" parent="Actors"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.9, -5.08)
-script = ExtResource("5_actor_node")
+script = ExtResource("13_actor_node")
 actor_id = "lane_shutter_gap"
 start_hidden = true
 
 [node name="Light" type="MeshInstance3D" parent="Actors/LaneShutterGap"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("BoxMesh_81")
-surface_material_override/0 = SubResource("StandardMaterial3D_80")
+mesh = SubResource("BoxMesh_80")
+surface_material_override/0 = SubResource("StandardMaterial3D_79")
 
 [node name="CutscenePlayer" type="Node" parent="."]
-script = ExtResource("6_cutscene_player")
+script = ExtResource("14_cutscene_player")
 cutscene_id = "mira_lane_enter"
 auto_play = true
 
 [node name="ShutterTrigger" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.6, -4.6)
-script = ExtResource("7_narrative_trigger")
+script = ExtResource("15_narrative_trigger")
 trigger_id = "shuttertrigger"
 cutscene_id = "mira_lane_shutter"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ShutterTrigger"]
-shape = SubResource("SphereShape3D_82")
+shape = SubResource("SphereShape3D_81")
 
 [node name="FootprintsTrigger" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -8)
-script = ExtResource("7_narrative_trigger")
+script = ExtResource("15_narrative_trigger")
 trigger_id = "footprintstrigger"
 cutscene_id = "mira_lane_footprints"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="FootprintsTrigger"]
-shape = SubResource("SphereShape3D_83")
+shape = SubResource("SphereShape3D_82")
 
 [node name="Notice" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.8, 11)
-script = ExtResource("8_explore_examinable")
+script = ExtResource("16_explore_examinable")
 label = "the notice"
 lines = PackedStringArray("\"Gone since the turning of the month. Any word, to the chapel.\"", "Somebody tore the name off.")
 radius = 1
 
 [node name="Well" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.8, 6.8)
-script = ExtResource("8_explore_examinable")
+script = ExtResource("16_explore_examinable")
 label = "the well"
 lines = PackedStringArray("Rope's cut. Clean, not frayed.")
 radius = 1
 
 [node name="MilkJugSpot" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.6, 9.3)
-script = ExtResource("8_explore_examinable")
+script = ExtResource("16_explore_examinable")
 label = "the milk jug"
 lines = PackedStringArray("Yesterday's milk. Nobody took it in.")
 radius = 0.8
 
 [node name="DoorMarkSpot" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.8, 2)
-script = ExtResource("8_explore_examinable")
+script = ExtResource("16_explore_examinable")
 label = "the door"
 lines = PackedStringArray("Scratched in. Fresh. Not a child's.")
 radius = 1
 
 [node name="Lychgate" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.8, 1.1)
-script = ExtResource("8_explore_examinable")
+script = ExtResource("16_explore_examinable")
 label = "the gatepost"
 lines = PackedStringArray("Bread and salt. Fresh. Someone's paying the dead to look away.")
 radius = 0.9
 
 [node name="ChapelWindowSpot" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.8, -1)
-script = ExtResource("8_explore_examinable")
+script = ExtResource("16_explore_examinable")
 label = "the chapel window"
 lines = PackedStringArray("Candles burned to nothing. Who prays all night?")
 radius = 0.9

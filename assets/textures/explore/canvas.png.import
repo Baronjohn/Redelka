@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://utirc50ik0jh"
-path="res://.godot/imported/wood_grain.png-76e09e2bfa604893032787e2926ad533.ctex"
+uid="uid://dg0bll8vbw4aj"
+path="res://.godot/imported/canvas.png-b9a4d8d3cc0fb000dd5fbe6c88211aa9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/explore/wood_grain.png"
-dest_files=["res://.godot/imported/wood_grain.png-76e09e2bfa604893032787e2926ad533.ctex"]
+source_file="res://assets/textures/explore/canvas.png"
+dest_files=["res://.godot/imported/canvas.png-b9a4d8d3cc0fb000dd5fbe6c88211aa9.ctex"]
 
 [params]
 

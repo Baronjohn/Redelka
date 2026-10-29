@@ -223,7 +223,7 @@ sequenceDiagram
 
 ### Phase 2 exploration scope (minimal)
 
-- **Chapter 1 — The Hollowed Village:** 5-room hub (`village_square`, `old_chapel`, `weavers_cottage`, `granary`, `root_cellar`) with map tab layout, locked cellar door, closet ambush key loop, mini-boss (`pale_warden`), and save checkpoints in chapel/cellar. Encounters are tuned for Mira alone; see [combat.md — Solo balance](combat.md#solo-balance-chapter-1)
+- **Chapter 1 — The Hollowed Village:** 5-room hub (`village_square`, `old_chapel`, `weavers_cottage`, `granary`, `root_cellar`) with map tab layout, locked cellar door, closet ambush key loop, mini-boss (`pale_warden`), and save checkpoints in chapel/cellar. Encounters are tuned for Mira alone; see [combat.md — Solo balance](combat.md#solo-balance-chapter-1). **Oct 2026:** all five rooms rebuilt with props, textures, practical lighting and lower fixed cameras (`tools/generate_scenes.py`); doors, spawns, enemies, pickups, the closet and checkpoints are unchanged
 - Legacy **test rooms** (`test_room`, `adjacent_room`) kept for automated smoke tests
 - Each room uses **2–3 camera zones**; doors connect hub-and-spoke with tuned spawn positions
 

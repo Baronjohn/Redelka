@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c7sc8n47mh55f"
-path="res://.godot/imported/stone.png-d50975e82b8fd572801a4d14e02639aa.ctex"
+uid="uid://dv7e04qexmm7m"
+path="res://.godot/imported/thatch.png-d7c6c4b0b9409dafb44b45f8258cbc71.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/explore/stone.png"
-dest_files=["res://.godot/imported/stone.png-d50975e82b8fd572801a4d14e02639aa.ctex"]
+source_file="res://assets/textures/explore/thatch.png"
+dest_files=["res://.godot/imported/thatch.png-d7c6c4b0b9409dafb44b45f8258cbc71.ctex"]
 
 [params]
 

@@ -1,12 +1,24 @@
 class_name BattleMaterials
 extends RefCounted
 
-const FLOOR_TEXTURE_PATH: String = "res://assets/textures/battle/floor.png"
+const EnvironmentMaterialsScript = preload("res://scripts/assets/environment_materials.gd")
 const TILE_TEXTURE_PATH: String = "res://assets/textures/battle/grid_tile.png"
 
-const FLOOR_UV: Vector3 = Vector3(8.0, 1.0, 8.0)
-const TILE_FLOOR_UV: Vector3 = Vector3(1.0, 1.0, 1.0)
-const FLOOR_TINT: Color = Color(0.52, 0.44, 0.36)
+## Battles are fought on the ground of the area they started in.
+const AREA_GROUND: Dictionary = {
+	"village_square": "cobble",
+	"old_chapel": "flagstone",
+	"weavers_cottage": "timber",
+	"granary": "timber",
+	"root_cellar": "earth",
+	"mira_intake_alcove": "cobble",
+	"mira_chapel_lane": "cobble",
+	"mira_woods_edge": "needles",
+}
+const DEFAULT_GROUND: String = "flagstone"
+const GROUND_PLANE_SIZE: float = 40.0
+const TILE_TINT: Color = Color(0.72, 0.71, 0.7)
+const GROUND_TINT: Color = Color(0.36, 0.36, 0.38)
 
 const TILE_DEFAULT_TINT: Color = Color(0.72, 0.76, 0.7, 0.12)
 const TILE_MOVE_TINT: Color = Color(0.95, 0.88, 0.55, 0.48)
@@ -14,26 +26,32 @@ const TILE_MOVE_HOVER_TINT: Color = Color(1.0, 0.96, 0.68, 0.72)
 const TILE_TARGET_TINT: Color = Color(0.95, 0.42, 0.42, 0.52)
 const TILE_TARGET_HOVER_TINT: Color = Color(1.0, 0.58, 0.58, 0.78)
 
-static var _floor_material: StandardMaterial3D = null
 static var _tile_template: StandardMaterial3D = null
 
 
-static func apply_battleground_floor(floor: MeshInstance3D) -> void:
-	if floor == null:
+static func get_ground_texture_name() -> String:
+	var area_id := ""
+	if GameState != null:
+		area_id = GameState.return_area_id
+	return str(AREA_GROUND.get(area_id, DEFAULT_GROUND))
+
+
+## A darker sheet of the same ground under the grid, reaching off into the fog.
+static func add_ground_plane(battleground: Node3D) -> void:
+	if battleground == null or battleground.has_node("GroundPlane"):
 		return
-	floor.material_override = get_floor_material()
-
-
-static func get_floor_material() -> StandardMaterial3D:
-	if _floor_material == null:
-		_floor_material = _build_floor_material()
-	return _floor_material
+	var plane := MeshInstance3D.new()
+	plane.name = "GroundPlane"
+	var mesh := PlaneMesh.new()
+	mesh.size = Vector2(GROUND_PLANE_SIZE, GROUND_PLANE_SIZE)
+	plane.mesh = mesh
+	plane.position = Vector3(0.0, -0.08, 0.0)
+	plane.material_override = EnvironmentMaterialsScript.world_material(get_ground_texture_name(), GROUND_TINT, 1.4)
+	battleground.add_child(plane)
 
 
 static func get_tile_floor_material() -> StandardMaterial3D:
-	var material := get_floor_material().duplicate() as StandardMaterial3D
-	material.uv1_scale = TILE_FLOOR_UV
-	return material
+	return EnvironmentMaterialsScript.world_material(get_ground_texture_name(), TILE_TINT, CombatConstants.TILE_SIZE)
 
 
 static func get_tile_default_tint() -> Color:
@@ -65,21 +83,7 @@ static func create_tile_material(tint: Color) -> StandardMaterial3D:
 
 static func export_texture_assets() -> void:
 	DirAccess.make_dir_recursive_absolute("res://assets/textures/battle")
-	_generate_battle_floor_image().save_png(FLOOR_TEXTURE_PATH)
 	_generate_battle_tile_image().save_png(TILE_TEXTURE_PATH)
-
-
-static func _build_floor_material() -> StandardMaterial3D:
-	var texture := _load_or_generate_floor_texture()
-	var material := StandardMaterial3D.new()
-	material.albedo_texture = texture
-	material.albedo_color = FLOOR_TINT
-	material.uv1_scale = FLOOR_UV
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	material.roughness = 0.96
-	material.metallic = 0.0
-	material.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
-	return material
 
 
 static func _get_tile_template() -> StandardMaterial3D:
@@ -102,36 +106,10 @@ static func _build_tile_template() -> StandardMaterial3D:
 	return material
 
 
-static func _load_or_generate_floor_texture() -> Texture2D:
-	if ResourceLoader.exists(FLOOR_TEXTURE_PATH):
-		return load(FLOOR_TEXTURE_PATH) as Texture2D
-	return ImageTexture.create_from_image(_generate_battle_floor_image())
-
-
 static func _load_or_generate_tile_texture() -> Texture2D:
 	if ResourceLoader.exists(TILE_TEXTURE_PATH):
 		return load(TILE_TEXTURE_PATH) as Texture2D
 	return ImageTexture.create_from_image(_generate_battle_tile_image())
-
-
-static func _generate_battle_floor_image() -> Image:
-	var size := 64
-	var image := Image.create(size, size, false, Image.FORMAT_RGB8)
-	var gap := Color(0.1, 0.08, 0.07)
-	var plank_a := Color(0.34, 0.26, 0.18)
-	var plank_b := Color(0.28, 0.21, 0.15)
-	var plank_c := Color(0.22, 0.17, 0.12)
-	image.fill(gap)
-	var plank_height := 8
-	for row: int in range(size / plank_height):
-		var palette: Array[Color] = [plank_a, plank_b, plank_c]
-		var base := palette[row % palette.size()]
-		for py: int in range(plank_height):
-			for px: int in range(size):
-				var grain := sin(float(px) * 0.85 + float(row) * 0.35) * 0.03
-				var stain := 0.0 if _hash01(px + row, py) > 0.88 else -0.08
-				image.set_pixel(px, row * plank_height + py, base.lightened(grain + stain))
-	return image
 
 
 static func _generate_battle_tile_image() -> Image:
@@ -146,26 +124,3 @@ static func _generate_battle_tile_image() -> Image:
 		image.set_pixel(0, i, edge)
 		image.set_pixel(size - 1, i, edge)
 	return image
-
-
-static func _fill_rect(
-	image: Image,
-	x: int,
-	y: int,
-	width: int,
-	height: int,
-	color: Color,
-) -> void:
-	var size := image.get_width()
-	for py: int in range(height):
-		for px: int in range(width):
-			var px_clamped := x + px
-			var py_clamped := y + py
-			if px_clamped < 0 or py_clamped < 0 or px_clamped >= size or py_clamped >= size:
-				continue
-			image.set_pixel(px_clamped, py_clamped, color)
-
-
-static func _hash01(x: int, y: int) -> float:
-	var value := (x * 374761393 + y * 668265263) & 0x7fffffff
-	return float(value % 1000) / 1000.0

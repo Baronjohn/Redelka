@@ -8,6 +8,8 @@
 - Evoke PS1-era horror: low-poly readability, strong silhouettes, moody lighting — but with **modern rendering** (better lighting, effects, resolution, animation).
 - Not photoreal; **stylized gothic / folk horror** palette and materials.
 
+**Implemented (Oct 2026):** one environment look across every scene. A shared set of 128 px tiling textures in a muted night palette (`tools/generate_textures.py`) is mapped in world space with nearest filtering, so every prop keeps the same chunky texel size. Rooms are lit by fog and a few warm practical lights (lamps, candles, a lit window, embers) against cold daylight from windows and doorways. Doors, save points (a candle-lit lectern), pickups and the closet are dressed from the same materials in every scene. **Every item has its own 3D model** lying where it was found, with a faint glint so it reads in the dark: a corked potion, a bone-and-twig charm, an ink-ribbon spool, a bundle of arrows, an iron key, the carved bird, armour on a wooden stand, an iron helm, rings and charms on a scrap of cloth, and each weapon. The closet's key lies on its shelf once the ambush is beaten. Battles are fought on the ground texture of the area they started in.
+
 **TBD:**
 
 - Target resolution and aspect ratio

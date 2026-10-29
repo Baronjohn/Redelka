@@ -17,6 +17,7 @@ func _initialize() -> void:
 	errors.append_array(await _test_choice_flags_and_chaining())
 	errors.append_array(await _test_examinable_gating())
 	errors.append_array(_test_ui_theme())
+	errors.append_array(_test_item_models())
 	errors.append_array(await _test_dialog_releases_control())
 	errors.append_array(await _test_goto_area_releases_control())
 	errors.append_array(await _test_goto_area_hands_off_to_autoplay())
@@ -539,4 +540,27 @@ func _test_ui_theme() -> PackedStringArray:
 			errors.append("UI theme is missing the %s variation; rebuild it with scripts/tools/build_ui_theme.gd." % variation)
 	if theme.default_font == null:
 		errors.append("UI theme should set a default font.")
+	return errors
+
+
+## Every item can lie in the world, so each needs its own model (not the generic bundle).
+func _test_item_models() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var models := load("res://scripts/assets/item_models.gd") as GDScript
+	var ids: Array[String] = []
+	for item_id: String in DataLoader.load_items().keys():
+		ids.append(item_id)
+	for item_id: String in DataLoader.load_equipment().keys():
+		ids.append(item_id)
+	for item_id: String in DataLoader.load_weapons().keys():
+		ids.append(item_id)
+	for item_id: String in ids:
+		if not bool(models.call("has_dedicated_model", item_id)):
+			errors.append("Item %s has no dedicated 3D model in ItemModels." % item_id)
+			continue
+		var model := models.call("build", item_id) as Node3D
+		var meshes := model.find_children("*", "MeshInstance3D", true, false)
+		if meshes.size() < 2:
+			errors.append("Item %s's model should be built from several parts." % item_id)
+		model.free()
 	return errors

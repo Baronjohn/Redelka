@@ -1,164 +1,949 @@
-[gd_scene load_steps=17 format=3 uid="uid://redelka_weavers_cottage"]
+[gd_scene load_steps=103 format=3 uid="uid://redelka_weavers_cottage"]
 
-[ext_resource type="Script" path="res://scripts/explore/explore_controller.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/explore/camera_rig.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/explore/camera_zone.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/explore/explore_door.gd" id="4"]
-[ext_resource type="Script" path="res://scripts/explore/explore_closet.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/explore/explore_controller.gd" id="1_explore_controller"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/cobble.png" id="2_cobble"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/flagstone.png" id="3_flagstone"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/plaster.png" id="4_plaster"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/timber.png" id="5_timber"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/boards.png" id="6_boards"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/rubble.png" id="7_rubble"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/brick.png" id="8_brick"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/earth.png" id="9_earth"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/dirt.png" id="10_dirt"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/straw.png" id="11_straw"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/sackcloth.png" id="12_sackcloth"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/thatch.png" id="13_thatch"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/shingle.png" id="14_shingle"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/iron.png" id="15_iron"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/canvas.png" id="16_canvas"]
+[ext_resource type="Texture2D" path="res://assets/textures/explore/bark.png" id="17_bark"]
+[ext_resource type="Script" path="res://scripts/explore/explore_closet.gd" id="18_explore_closet"]
+[ext_resource type="Script" path="res://scripts/explore/camera_rig.gd" id="19_camera_rig"]
+[ext_resource type="Script" path="res://scripts/explore/camera_zone.gd" id="20_camera_zone"]
+[ext_resource type="Script" path="res://scripts/explore/explore_door.gd" id="21_explore_door"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.32, 0.26, 0.2, 1)
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 1
+background_color = Color(0.04, 0.045, 0.055, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.4, 0.4, 0.48, 1)
+ambient_light_energy = 0.58
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.1, 0.1, 0.12, 1)
+fog_light_energy = 1
+fog_density = 0.035
+fog_sky_affect = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.24, 0.2, 0.16, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2"]
+albedo_color = Color(0.82, 0.82, 0.84, 1)
+albedo_texture = ExtResource("2_cobble")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
-albedo_color = Color(0.4, 0.3, 0.22, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+albedo_color = Color(0.8, 0.8, 0.82, 1)
+albedo_texture = ExtResource("3_flagstone")
+roughness = 0.95
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
-[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4"]
+albedo_color = Color(0.78, 0.76, 0.73, 1)
+albedo_texture = ExtResource("4_plaster")
+roughness = 0.95
+uv1_scale = Vector3(0.277778, 0.277778, 0.277778)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5"]
+albedo_color = Color(0.82, 0.78, 0.74, 1)
+albedo_texture = ExtResource("5_timber")
+roughness = 0.95
+uv1_scale = Vector3(0.833333, 0.833333, 0.833333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+albedo_color = Color(0.55, 0.5, 0.46, 1)
+albedo_texture = ExtResource("5_timber")
+roughness = 0.95
+uv1_scale = Vector3(1, 1, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7"]
+albedo_color = Color(0.8, 0.76, 0.72, 1)
+albedo_texture = ExtResource("6_boards")
+roughness = 0.95
+uv1_scale = Vector3(0.833333, 0.833333, 0.833333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+albedo_color = Color(0.7, 0.7, 0.72, 1)
+albedo_texture = ExtResource("7_rubble")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_9"]
+albedo_color = Color(0.48, 0.48, 0.52, 1)
+albedo_texture = ExtResource("7_rubble")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_10"]
+albedo_color = Color(0.7, 0.66, 0.66, 1)
+albedo_texture = ExtResource("8_brick")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_11"]
+albedo_color = Color(1, 1, 1, 1)
+albedo_texture = ExtResource("9_earth")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_12"]
+albedo_color = Color(0.85, 0.83, 0.8, 1)
+albedo_texture = ExtResource("10_dirt")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13"]
+albedo_color = Color(0.85, 0.82, 0.75, 1)
+albedo_texture = ExtResource("11_straw")
+roughness = 0.95
+uv1_scale = Vector3(1, 1, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_14"]
+albedo_color = Color(0.95, 0.92, 0.86, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(1.428571, 1.428571, 1.428571)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_15"]
+albedo_color = Color(0.8, 0.76, 0.7, 1)
+albedo_texture = ExtResource("13_thatch")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_16"]
+albedo_color = Color(0.82, 0.82, 0.86, 1)
+albedo_texture = ExtResource("14_shingle")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_17"]
+albedo_color = Color(0.9, 0.9, 0.92, 1)
+albedo_texture = ExtResource("15_iron")
+roughness = 0.95
+uv1_scale = Vector3(1.666667, 1.666667, 1.666667)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_18"]
+albedo_color = Color(0.8, 0.78, 0.76, 1)
+albedo_texture = ExtResource("16_canvas")
+roughness = 0.95
+uv1_scale = Vector3(0.625, 0.625, 0.625)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_19"]
+albedo_color = Color(0.6, 0.56, 0.52, 1)
+albedo_texture = ExtResource("17_bark")
+roughness = 0.95
+uv1_scale = Vector3(1, 1, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_20"]
+albedo_color = Color(0.01, 0.012, 0.016, 1)
+roughness = 0.95
+shading_mode = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_21"]
+albedo_color = Color(0.82, 0.78, 0.68, 1)
+roughness = 0.95
+emission_enabled = true
+emission = Color(0.89, 0.63, 0.35, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_22"]
+albedo_color = Color(0.3, 0.08, 0.04, 1)
+roughness = 0.95
+emission_enabled = true
+emission = Color(0.9, 0.3, 0.1, 1)
+emission_energy_multiplier = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_23"]
+albedo_color = Color(0.45, 0.3, 0.15, 1)
+roughness = 0.95
+emission_enabled = true
+emission = Color(0.95, 0.6, 0.28, 1)
+emission_energy_multiplier = 0.55
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_24"]
+albedo_color = Color(0.4, 0.45, 0.52, 1)
+roughness = 0.95
+emission_enabled = true
+emission = Color(0.45, 0.52, 0.64, 1)
+emission_energy_multiplier = 0.45
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_25"]
+albedo_color = Color(0.03, 0.035, 0.045, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_26"]
+albedo_color = Color(0.32, 0.36, 0.32, 1)
+roughness = 0.3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_27"]
 size = Vector3(16, 0.4, 14)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+[sub_resource type="BoxMesh" id="BoxMesh_28"]
 size = Vector3(16, 0.4, 14)
 
-[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
-size = Vector3(16, 3, 0.5)
+[sub_resource type="BoxShape3D" id="BoxShape3D_29"]
+size = Vector3(17, 3.6, 0.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
-size = Vector3(16, 3, 0.5)
+[sub_resource type="BoxMesh" id="BoxMesh_30"]
+size = Vector3(17, 3.6, 0.5)
 
-[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
-size = Vector3(0.5, 3, 14)
+[sub_resource type="BoxShape3D" id="BoxShape3D_31"]
+size = Vector3(0.5, 3.6, 15)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
-size = Vector3(0.5, 3, 14)
+[sub_resource type="BoxMesh" id="BoxMesh_32"]
+size = Vector3(0.5, 3.6, 15)
 
-[sub_resource type="BoxMesh" id="BoxMesh_wall_ew_segment"]
-size = Vector3(0.5, 3, 4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_33"]
+size = Vector3(0.5, 3.6, 5.6)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew_segment"]
-size = Vector3(0.5, 3, 4)
+[sub_resource type="BoxMesh" id="BoxMesh_34"]
+size = Vector3(0.5, 3.6, 5.6)
 
-[sub_resource type="BoxMesh" id="BoxMesh_door_frame"]
+[sub_resource type="BoxMesh" id="BoxMesh_35"]
+size = Vector3(0.5, 0.7, 3.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_36"]
+size = Vector3(16.5, 0.22, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_37"]
+size = Vector3(0.22, 3.6, 0.14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_38"]
+size = Vector3(1, 3.6, 2.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_39"]
+size = Vector3(1, 3.6, 2.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_40"]
+size = Vector3(0.06, 0.9, 1.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_41"]
+size = Vector3(0.5, 0.08, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_42"]
+size = Vector3(1, 0.08, 2.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_43"]
+size = Vector3(0.12, 1.8, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_44"]
+size = Vector3(0.12, 1.8, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_45"]
+size = Vector3(0.12, 0.12, 1.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_46"]
+size = Vector3(0.015, 1.4, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_47"]
+size = Vector3(0.03, 0.5, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_48"]
+size = Vector3(0.4, 0.08, 1.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_49"]
+top_radius = 0.42
+bottom_radius = 0.42
+height = 0.06
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_50"]
+size = Vector3(0.12, 0.6, 0.7)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_51"]
+size = Vector3(2.2, 0.4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_52"]
+size = Vector3(2.2, 0.4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_53"]
+size = Vector3(2, 0.14, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_54"]
+size = Vector3(0.1, 0.9, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_55"]
+size = Vector3(2.6, 0.06, 0.4)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_56"]
+top_radius = 0.1
+bottom_radius = 0.1
+height = 0.24
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_57"]
+size = Vector3(1.8, 0.08, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_58"]
+size = Vector3(1.8, 0.08, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_59"]
+size = Vector3(0.08, 0.76, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_60"]
+albedo_color = Color(0.6, 0.3, 0.28, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_61"]
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.16
+radial_segments = 10
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_62"]
+albedo_color = Color(0.35, 0.4, 0.55, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_63"]
+albedo_color = Color(0.7, 0.66, 0.55, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_64"]
+size = Vector3(0.2, 0.28, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_65"]
+size = Vector3(0.12, 0.16, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_66"]
+albedo_color = Color(0.55, 0.28, 0.26, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_67"]
+size = Vector3(0.18, 1, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_68"]
+albedo_color = Color(0.32, 0.36, 0.5, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_69"]
+albedo_color = Color(0.6, 0.56, 0.45, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_70"]
+albedo_color = Color(0.45, 0.5, 0.36, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(3.333333, 3.333333, 3.333333)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_71"]
+albedo_color = Color(0.6, 0.38, 0.32, 1)
+albedo_texture = ExtResource("12_sackcloth")
+roughness = 0.95
+uv1_scale = Vector3(1.666667, 1.666667, 1.666667)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_72"]
+size = Vector3(3.4, 0.02, 2.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_73"]
+size = Vector3(0.9, 0.3, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_74"]
+size = Vector3(0.08, 0.16, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_75"]
+size = Vector3(1.2, 1, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_76"]
+size = Vector3(1, 0.8, 0.14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_77"]
+size = Vector3(0.5, 0.9, 0.08)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_78"]
+size = Vector3(8, 4, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_79"]
 size = Vector3(0.35, 2.4, 3.2)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_door_panel"]
+[sub_resource type="BoxMesh" id="BoxMesh_80"]
 size = Vector3(0.35, 2.4, 3.2)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_door_trigger"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_81"]
 size = Vector3(1.6, 2.5, 3.5)
 
-[sub_resource type="Environment" id="Environment_explore"]
-background_mode = 1
-background_color = Color(0, 0, 0, 1)
-ambient_light_source = 2
-ambient_light_color = Color(0.52, 0.45, 0.38, 1)
-ambient_light_energy = 0.75
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_zone"]
-size = Vector3(8, 3, 8)
-
 [node name="WeaversCottage" type="Node3D"]
-script = ExtResource("1")
+script = ExtResource("1_explore_controller")
 area_id = "weavers_cottage"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_explore")
+environment = SubResource("Environment_1")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 4, 10, 6)
+transform = Transform3D(-0.766044, 0.321394, -0.55667, 0, 0.866025, 0.5, 0.642788, 0.383022, -0.663414, 0, 10, 0)
+light_color = Color(0.7, 0.76, 0.9, 1)
+light_energy = 0.12
 shadow_enabled = true
 
 [node name="Room" type="Node3D" parent="."]
 
+[node name="Props" type="Node3D" parent="Room"]
+
 [node name="Floor" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Floor"]
-shape = SubResource("BoxShape3D_floor")
+shape = SubResource("BoxShape3D_27")
 
 [node name="FloorMesh" type="MeshInstance3D" parent="Room/Floor"]
-mesh = SubResource("BoxMesh_floor")
-surface_material_override/0 = SubResource("StandardMaterial3D_floor")
+mesh = SubResource("BoxMesh_28")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
 
-[node name="WallNorth" type="StaticBody3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -7)
+[node name="WallN1" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -7.25)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallNorth"]
-shape = SubResource("BoxShape3D_wall_ns")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallN1"]
+shape = SubResource("BoxShape3D_29")
 
-[node name="WallMesh" type="MeshInstance3D" parent="Room/WallNorth"]
-mesh = SubResource("BoxMesh_wall_ns")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallN1"]
+mesh = SubResource("BoxMesh_30")
+surface_material_override/0 = SubResource("StandardMaterial3D_4")
 
-[node name="WallSouth" type="StaticBody3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 7)
+[node name="WallS1" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 7.25)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallSouth"]
-shape = SubResource("BoxShape3D_wall_ns")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallS1"]
+shape = SubResource("BoxShape3D_29")
 
-[node name="WallMesh" type="MeshInstance3D" parent="Room/WallSouth"]
-mesh = SubResource("BoxMesh_wall_ns")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallS1"]
+mesh = SubResource("BoxMesh_30")
+surface_material_override/0 = SubResource("StandardMaterial3D_4")
 
-[node name="WallWest" type="StaticBody3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.5, 0)
+[node name="WallW1" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.25, 1.8, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallWest"]
-shape = SubResource("BoxShape3D_wall_ew")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallW1"]
+shape = SubResource("BoxShape3D_31")
 
-[node name="WallMesh" type="MeshInstance3D" parent="Room/WallWest"]
-mesh = SubResource("BoxMesh_wall_ew")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallW1"]
+mesh = SubResource("BoxMesh_32")
+surface_material_override/0 = SubResource("StandardMaterial3D_4")
 
-[node name="WallEastNorth" type="StaticBody3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, -5)
+[node name="WallE1" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 1.8, -4.7)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallEastNorth"]
-shape = SubResource("BoxShape3D_wall_ew_segment")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallE1"]
+shape = SubResource("BoxShape3D_33")
 
-[node name="WallMesh" type="MeshInstance3D" parent="Room/WallEastNorth"]
-mesh = SubResource("BoxMesh_wall_ew_segment")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallE1"]
+mesh = SubResource("BoxMesh_34")
+surface_material_override/0 = SubResource("StandardMaterial3D_4")
 
-[node name="WallEastSouth" type="StaticBody3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.5, 5)
+[node name="WallE2" type="StaticBody3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 1.8, 4.7)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallEastSouth"]
-shape = SubResource("BoxShape3D_wall_ew_segment")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/WallE2"]
+shape = SubResource("BoxShape3D_33")
 
-[node name="WallMesh" type="MeshInstance3D" parent="Room/WallEastSouth"]
-mesh = SubResource("BoxMesh_wall_ew_segment")
-surface_material_override/0 = SubResource("StandardMaterial3D_wall")
+[node name="WallMesh" type="MeshInstance3D" parent="Room/WallE2"]
+mesh = SubResource("BoxMesh_34")
+surface_material_override/0 = SubResource("StandardMaterial3D_4")
 
-[node name="CameraRig" type="Node3D" parent="."]
-script = ExtResource("2")
-camera_path = NodePath("Camera3D")
-default_zone_path = NodePath("../CameraZones/ZoneMain")
+[node name="WallEHeader" type="MeshInstance3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, 3.25, 0)
+mesh = SubResource("BoxMesh_35")
+surface_material_override/0 = SubResource("StandardMaterial3D_4")
 
-[node name="Camera3D" type="Camera3D" parent="CameraRig"]
-fov = 62.0
+[node name="Rafter1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, -7)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
 
-[node name="CameraZones" type="Node3D" parent="."]
+[node name="Rafter2" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, -5)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
 
-[node name="ZoneMain" type="Area3D" parent="CameraZones"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-script = ExtResource("3")
-camera_position = Vector3(-10, 12, 10)
-look_target_offset = Vector3(4, 1, 0)
+[node name="Rafter3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, -3)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneMain"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-shape = SubResource("BoxShape3D_zone")
+[node name="Rafter4" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, -1)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
 
-[node name="ZoneNorth" type="Area3D" parent="CameraZones"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, -3)
-script = ExtResource("3")
-camera_position = Vector3(-8, 11, 8)
-look_target_offset = Vector3(2, 1, 3)
+[node name="Rafter5" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, 1)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneNorth"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 2)
-shape = SubResource("BoxShape3D_zone")
+[node name="Rafter6" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, 3)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="Rafter7" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, 5)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="Rafter8" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, 7)
+mesh = SubResource("BoxMesh_36")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="PostN-5" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.8, -6.9)
+mesh = SubResource("BoxMesh_37")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="PostS-5" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.8, 6.9)
+mesh = SubResource("BoxMesh_37")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="PostN-1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.8, -6.9)
+mesh = SubResource("BoxMesh_37")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="PostS-1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 1.8, 6.9)
+mesh = SubResource("BoxMesh_37")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="PostN3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.8, -6.9)
+mesh = SubResource("BoxMesh_37")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="PostS3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.8, 6.9)
+mesh = SubResource("BoxMesh_37")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="Chimney" type="StaticBody3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.45, 1.8, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Props/Chimney"]
+shape = SubResource("BoxShape3D_38")
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Props/Chimney"]
+mesh = SubResource("BoxMesh_39")
+surface_material_override/0 = SubResource("StandardMaterial3D_9")
+
+[node name="HearthMouth" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.93, 0.55, 0)
+mesh = SubResource("BoxMesh_40")
+surface_material_override/0 = SubResource("StandardMaterial3D_20")
+
+[node name="Embers" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.75, 0.08, 0)
+mesh = SubResource("BoxMesh_41")
+surface_material_override/0 = SubResource("StandardMaterial3D_22")
+
+[node name="EmberGlow" type="OmniLight3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.4, 0.5, 0)
+light_color = Color(0.9, 0.35, 0.15, 1)
+light_energy = 0.6
+omni_range = 3.5
+
+[node name="HearthStone" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.6, 0.04, 0)
+mesh = SubResource("BoxMesh_42")
+surface_material_override/0 = SubResource("StandardMaterial3D_3")
+
+[node name="LoomPostN" type="StaticBody3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, 2.3)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Props/LoomPostN"]
+shape = SubResource("BoxShape3D_43")
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Props/LoomPostN"]
+mesh = SubResource("BoxMesh_44")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="LoomPostS" type="StaticBody3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.9, 4.1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Props/LoomPostS"]
+shape = SubResource("BoxShape3D_43")
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Props/LoomPostS"]
+mesh = SubResource("BoxMesh_44")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="LoomBeam3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.35, 3.2)
+mesh = SubResource("BoxMesh_45")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="LoomBeam17" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.75, 3.2)
+mesh = SubResource("BoxMesh_45")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="LoomThread1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 2.45)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread2" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 2.64)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 2.83)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread4" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 3.02)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread5" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 3.21)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread6" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 3.4)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread7" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 3.59)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread8" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 3.78)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomThread9" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.05, 3.97)
+mesh = SubResource("BoxMesh_46")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="LoomCloth" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.95, 0.6, 3.2)
+mesh = SubResource("BoxMesh_47")
+surface_material_override/0 = SubResource("StandardMaterial3D_18")
+
+[node name="LoomBench" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 0.3, 3.2)
+mesh = SubResource("BoxMesh_48")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="SpinningWheel" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -1.4, 0.75, 5.2)
+mesh = SubResource("CylinderMesh_49")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="SpinningStand" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4, 0.3, 5.2)
+mesh = SubResource("BoxMesh_50")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="BedFrame" type="StaticBody3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0.3, -5.8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Props/BedFrame"]
+shape = SubResource("BoxShape3D_51")
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Props/BedFrame"]
+mesh = SubResource("BoxMesh_52")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="BedStraw" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0.56, -5.8)
+mesh = SubResource("BoxMesh_53")
+surface_material_override/0 = SubResource("StandardMaterial3D_14")
+
+[node name="BedHead" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.15, 0.7, -5.8)
+mesh = SubResource("BoxMesh_54")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="Shelf1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8, 1.3, -6.6)
+mesh = SubResource("BoxMesh_55")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="Shelf2" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8, 2, -6.6)
+mesh = SubResource("BoxMesh_55")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="Jar1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.9, 1.45, -6.6)
+mesh = SubResource("CylinderMesh_56")
+surface_material_override/0 = SubResource("StandardMaterial3D_26")
+
+[node name="Jar2" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.4, 2.15, -6.6)
+mesh = SubResource("CylinderMesh_56")
+surface_material_override/0 = SubResource("StandardMaterial3D_26")
+
+[node name="Jar3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.1, 1.45, -6.6)
+mesh = SubResource("CylinderMesh_56")
+surface_material_override/0 = SubResource("StandardMaterial3D_26")
+
+[node name="Jar4" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.6, 2.15, -6.6)
+mesh = SubResource("CylinderMesh_56")
+surface_material_override/0 = SubResource("StandardMaterial3D_26")
+
+[node name="Table" type="StaticBody3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 0.78, 3.6)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Room/Props/Table"]
+shape = SubResource("BoxShape3D_57")
+
+[node name="Mesh" type="MeshInstance3D" parent="Room/Props/Table"]
+mesh = SubResource("BoxMesh_58")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="TableLeg-8-4" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0.38, 3.2)
+mesh = SubResource("BoxMesh_59")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="TableLeg-84" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.4, 0.38, 4)
+mesh = SubResource("BoxMesh_59")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="TableLeg8-4" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.38, 3.2)
+mesh = SubResource("BoxMesh_59")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="TableLeg84" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.38, 4)
+mesh = SubResource("BoxMesh_59")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="Skein1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 4.8, 0.9, 3.5)
+mesh = SubResource("CylinderMesh_61")
+surface_material_override/0 = SubResource("StandardMaterial3D_60")
+
+[node name="Skein2" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 5.3, 0.9, 3.5)
+mesh = SubResource("CylinderMesh_61")
+surface_material_override/0 = SubResource("StandardMaterial3D_62")
+
+[node name="Skein3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 5.7, 0.9, 3.5)
+mesh = SubResource("CylinderMesh_61")
+surface_material_override/0 = SubResource("StandardMaterial3D_63")
+
+[node name="TableLampCage" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 1, 3.9)
+mesh = SubResource("BoxMesh_64")
+surface_material_override/0 = SubResource("StandardMaterial3D_17")
+
+[node name="TableLampFlame" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 1, 3.9)
+mesh = SubResource("BoxMesh_65")
+surface_material_override/0 = SubResource("StandardMaterial3D_21")
+
+[node name="TableLampLight" type="OmniLight3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 0.9, 3.9)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 0.7
+omni_range = 4.5
+shadow_enabled = true
+
+[node name="HangingSkein1" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 2.85, -2)
+mesh = SubResource("BoxMesh_67")
+surface_material_override/0 = SubResource("StandardMaterial3D_66")
+
+[node name="HangingSkein2" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 2.85, -2)
+mesh = SubResource("BoxMesh_67")
+surface_material_override/0 = SubResource("StandardMaterial3D_68")
+
+[node name="HangingSkein3" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 2.85, -2)
+mesh = SubResource("BoxMesh_67")
+surface_material_override/0 = SubResource("StandardMaterial3D_69")
+
+[node name="HangingSkein4" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.85, -2)
+mesh = SubResource("BoxMesh_67")
+surface_material_override/0 = SubResource("StandardMaterial3D_70")
+
+[node name="Rug" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.01, 0.5)
+mesh = SubResource("BoxMesh_72")
+surface_material_override/0 = SubResource("StandardMaterial3D_71")
+
+[node name="CradleBed" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 0.32, -2)
+mesh = SubResource("BoxMesh_73")
+surface_material_override/0 = SubResource("StandardMaterial3D_5")
+
+[node name="CradleRockerW" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.95, 0.08, -2)
+mesh = SubResource("BoxMesh_74")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="CradleRockerE" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.25, 0.08, -2)
+mesh = SubResource("BoxMesh_74")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="WindowSouthFrame" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.7, 6.75)
+mesh = SubResource("BoxMesh_75")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="WindowSouthPane" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.7, 6.75)
+mesh = SubResource("BoxMesh_76")
+surface_material_override/0 = SubResource("StandardMaterial3D_24")
+
+[node name="WindowSouthShutterL" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.28, 1.7, 6.75)
+mesh = SubResource("BoxMesh_77")
+surface_material_override/0 = SubResource("StandardMaterial3D_7")
+
+[node name="WindowSouthShutterR" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.72, 1.7, 6.75)
+mesh = SubResource("BoxMesh_77")
+surface_material_override/0 = SubResource("StandardMaterial3D_7")
+
+[node name="WindowSouthLight" type="OmniLight3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 1.7, 5.9)
+light_color = Color(0.5, 0.58, 0.74, 1)
+light_energy = 0.6
+omni_range = 5
+
+[node name="WindowNorthFrame" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.7, -6.75)
+mesh = SubResource("BoxMesh_75")
+surface_material_override/0 = SubResource("StandardMaterial3D_6")
+
+[node name="WindowNorthPane" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.7, -6.75)
+mesh = SubResource("BoxMesh_76")
+surface_material_override/0 = SubResource("StandardMaterial3D_24")
+
+[node name="WindowNorthShutterL" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.78, 1.7, -6.75)
+mesh = SubResource("BoxMesh_77")
+surface_material_override/0 = SubResource("StandardMaterial3D_7")
+
+[node name="WindowNorthShutterR" type="MeshInstance3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.22, 1.7, -6.75)
+mesh = SubResource("BoxMesh_77")
+surface_material_override/0 = SubResource("StandardMaterial3D_7")
+
+[node name="WindowNorthLight" type="OmniLight3D" parent="Room/Props"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1.7, -5.9)
+light_color = Color(0.5, 0.58, 0.74, 1)
+light_energy = 0.5
+omni_range = 5
 
 [node name="Enemies" type="Node3D" parent="."]
 
@@ -166,9 +951,13 @@ shape = SubResource("BoxShape3D_zone")
 
 [node name="Interactables" type="Node3D" parent="."]
 
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="Actors" type="Node3D" parent="."]
+
 [node name="BedroomCloset" type="Area3D" parent="Interactables"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -4)
-script = ExtResource("5")
+script = ExtResource("18_explore_closet")
 closet_id = "cottage_closet"
 area_id = "weavers_cottage"
 ambush_enemy_id = "cottage_closet_ambush"
@@ -176,30 +965,61 @@ encounter_id = "cottage_closet_ambush"
 pickup_id = "cottage_closet_key"
 key_item_id = "cellar_key"
 
-[node name="Doors" type="Node3D" parent="."]
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("19_camera_rig")
+camera_path = NodePath("Camera")
+default_zone_path = NodePath("../CameraZones/ZoneEast")
+
+[node name="Camera" type="Camera3D" parent="CameraRig"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 8)
+fov = 60
+
+[node name="CameraZones" type="Node3D" parent="."]
+
+[node name="ZoneEast" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+script = ExtResource("20_camera_zone")
+camera_position = Vector3(2.5, 3.2, 5.5)
+look_target_offset = Vector3(-5, 0.6, -4)
+track_strength = 0.35
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_78")
+
+[node name="ZoneWest" type="Area3D" parent="CameraZones"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 0)
+script = ExtResource("20_camera_zone")
+camera_position = Vector3(4, 3.3, 5.5)
+look_target_offset = Vector3(-1, 0.6, -5)
+track_strength = 0.35
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CameraZones/ZoneWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_78")
 
 [node name="DoorToSquare" type="Node3D" parent="Doors"]
-script = ExtResource("4")
+script = ExtResource("21_explore_door")
 target_area_id = "village_square"
 target_spawn = Vector3(-10, 0, 0)
-target_rotation_y = 1.5707964
+target_rotation_y = 1.570796
 door_label = "Village Square"
 
 [node name="Panel" type="StaticBody3D" parent="Doors/DoorToSquare"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.2, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorToSquare/Panel"]
-shape = SubResource("BoxShape3D_door_panel")
+shape = SubResource("BoxShape3D_79")
 
 [node name="DoorMesh" type="MeshInstance3D" parent="Doors/DoorToSquare/Panel"]
-mesh = SubResource("BoxMesh_door_frame")
-surface_material_override/0 = SubResource("StandardMaterial3D_door")
+mesh = SubResource("BoxMesh_80")
+surface_material_override/0 = SubResource("StandardMaterial3D_7")
 
 [node name="Trigger" type="Area3D" parent="Doors/DoorToSquare"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, 1, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doors/DoorToSquare/Trigger"]
-shape = SubResource("BoxShape3D_door_trigger")
+shape = SubResource("BoxShape3D_81")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -216,14 +1036,14 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = 20.0
 offset_top = 16.0
-offset_right = 500.0
+offset_right = 700.0
 offset_bottom = 44.0
 text = "WASD to move"
 
 [node name="MessageLabel" type="Label" parent="UI/ExploreUI"]
 layout_mode = 0
 offset_left = 20.0
-offset_top = 52.0
-offset_right = 900.0
-offset_bottom = 80.0
-text = "The weaver's cottage smells of damp wool and ash."
+offset_top = 48.0
+offset_right = 800.0
+offset_bottom = 76.0
+text = ""

@@ -88,6 +88,29 @@ class Scene:
             props["shading_mode"] = "0"
         return self.sub("StandardMaterial3D", props)
 
+    def tex(self, texture: str, tint=(1.0, 1.0, 1.0), tile: float = 2.0, *, emission=None,
+            energy: float = 1.0) -> str:
+        """World-mapped (triplanar) material from assets/textures/explore/<texture>.png.
+
+        One texture tile covers `tile` metres on any surface, matching EnvironmentMaterials.world_material.
+        """
+        tex_id = self.ext_res("Texture2D", f"res://assets/textures/explore/{texture}.png")
+        scale = 1.0 / tile
+        props = {
+            "albedo_color": color(tint),
+            "albedo_texture": f'ExtResource("{tex_id}")',
+            "roughness": "0.95",
+            "uv1_scale": vec3((scale, scale, scale)),
+            "uv1_triplanar": "true",
+            "uv1_world_triplanar": "true",
+            "texture_filter": "0",
+        }
+        if emission is not None:
+            props["emission_enabled"] = "true"
+            props["emission"] = color(emission)
+            props["emission_energy_multiplier"] = fmt(energy)
+        return self.sub("StandardMaterial3D", props)
+
     def box_mesh(self, size) -> str:
         return self.sub("BoxMesh", {"size": vec3(size)})
 
@@ -239,10 +262,15 @@ def camera_zone(sc: Scene, name: str, pos, size, cam_offset, look_offset, track:
 
 
 def door(sc: Scene, name: str, panel_pos, trigger_pos, *, target: str, spawn, rot_y: float, label: str,
-         mat: str, flag: str = "", flag_prompt: str = "") -> None:
+         mat: str, flag: str = "", flag_prompt: str = "", style: str = "door", required_item: str = "") -> None:
+    """An ExploreDoor. The panel's slab is replaced at runtime by a dressed doorway (`style`)."""
     script = sc.ext_res("Script", "res://scripts/explore/explore_door.gd")
     props = {"script": f'ExtResource("{script}")', "target_area_id": s(target), "target_spawn": vec3(spawn),
              "target_rotation_y": fmt(rot_y), "door_label": s(label)}
+    if style != "door":
+        props["door_style"] = s(style)
+    if required_item:
+        props["required_item_id"] = s(required_item)
     if flag:
         props["required_story_flag"] = s(flag)
     if flag_prompt:
@@ -289,7 +317,7 @@ def examinable(sc: Scene, name: str, pos, label: str, *, lines: list[str] | None
 
 
 def trigger(sc: Scene, name: str, pos, radius: float, *, cutscene: str = "", dialog: str = "",
-            requires: str = "") -> None:
+            requires: str = "", extra: dict | None = None) -> None:
     script = sc.ext_res("Script", "res://scripts/narrative/narrative_trigger.gd")
     props = {"transform": transform(pos), "script": f'ExtResource("{script}")', "trigger_id": s(name.lower())}
     if cutscene:
@@ -298,8 +326,17 @@ def trigger(sc: Scene, name: str, pos, radius: float, *, cutscene: str = "", dia
         props["dialog_id"] = s(dialog)
     if requires:
         props["story_flag_required"] = s(requires)
+    props.update(extra or {})
     path = sc.node(name, "Area3D", ".", props)
     sc.node("CollisionShape3D", "CollisionShape3D", path, {"shape": f'SubResource("{sc.sphere_shape(radius)}")'})
+
+
+def checkpoint(sc: Scene, pos) -> None:
+    """Save point (ExploreCheckpointNode, dressed at runtime as a candle-lit lectern)."""
+    script = sc.ext_res("Script", "res://scripts/explore/explore_checkpoint_node.gd")
+    path = sc.node("Checkpoint", "Area3D", ".", {"transform": transform((pos[0], 1.0, pos[2])),
+                                                "script": f'ExtResource("{script}")'})
+    sc.node("CollisionShape3D", "CollisionShape3D", path, {"shape": f'SubResource("{sc.box_shape((3, 2.5, 3))}")'})
 
 
 def cutscene_player(sc: Scene, cutscene: str) -> None:

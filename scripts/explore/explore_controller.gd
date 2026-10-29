@@ -210,10 +210,6 @@ func _apply_environment_textures() -> void:
 	var room := get_node_or_null("Room") as Node3D
 	if room != null:
 		EnvironmentMaterialsScript.apply_explore_room(room, area_id)
-	if doors_root != null:
-		EnvironmentMaterialsScript.apply_explore_doors(doors_root, area_id)
-	if _checkpoint != null:
-		EnvironmentMaterialsScript.apply_explore_checkpoint(_checkpoint, area_id)
 
 
 func _on_pickup_collected(message: String) -> void:

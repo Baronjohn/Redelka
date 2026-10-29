@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://redelka_item_preview"]
+
+[ext_resource type="Script" path="res://scripts/tools/item_preview.gd" id="1"]
+
+[node name="ItemPreview" type="Node3D"]
+script = ExtResource("1")
