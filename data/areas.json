@@ -1,5 +1,33 @@
 [
   {
+	"id": "mira_intake_alcove",
+	"name": "Abandoned Doorway",
+	"scene_path": "res://scenes/explore/mira_intake_alcove.tscn",
+	"map_visible": false,
+	"default_spawn": [-1.0, 0.0, 0.0],
+	"checkpoint_spawn": [-1.0, 0.0, 0.0],
+	"default_encounter_id": "test_4v3",
+	"map_position": [400, 220],
+	"map_size": [120, 100],
+	"map_connections": ["village_square"],
+	"enemies": [],
+	"pickups": []
+  },
+  {
+	"id": "mira_woods_edge",
+	"name": "Woods Edge",
+	"scene_path": "res://scenes/explore/mira_woods_edge.tscn",
+	"map_visible": false,
+	"default_spawn": [0.0, 0.0, 6.0],
+	"checkpoint_spawn": [0.0, 0.0, 6.0],
+	"default_encounter_id": "test_4v3",
+	"map_position": [400, 380],
+	"map_size": [120, 80],
+	"map_connections": ["mira_intake_alcove"],
+	"enemies": [],
+	"pickups": []
+  },
+  {
 	"id": "test_room",
 	"name": "Test Room",
 	"scene_path": "res://scenes/explore/test_room.tscn",

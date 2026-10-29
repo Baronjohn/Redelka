@@ -31,6 +31,7 @@ func _initialize() -> void:
 	errors.append_array(_test_unarmed_combat())
 	errors.append_array(_test_mastery_and_spell_tiers())
 	errors.append_array(_test_chapter_data())
+	errors.append_array(await _test_battle_reload_keeps_item_usage())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -675,6 +676,26 @@ func _test_save_load() -> PackedStringArray:
 		errors.append("Hard save should succeed with Memory Tape.")
 	if int(gs.get("inventory").get("memory_tape", 0)) != 0:
 		errors.append("Hard save should consume Memory Tape.")
+	var hard_state: Dictionary = (SaveManager.read_slot(9).get("state", {}) as Dictionary)
+	if int((hard_state.get("inventory", {}) as Dictionary).get("memory_tape", 0)) != 0:
+		errors.append("Hard save file should not still contain the Memory Tape it consumed.")
+	gs.get("inventory")["memory_tape"] = 2
+	gs.call("save_to_slot", 9, Vector3(1, 0, 1), 0.0)
+	hard_state = (SaveManager.read_slot(9).get("state", {}) as Dictionary)
+	if int((hard_state.get("inventory", {}) as Dictionary).get("memory_tape", 0)) != 1:
+		errors.append("Hard save file should record the Memory Tape count after spending one.")
+
+	for slot: int in [7, 8, 9]:
+		if FileAccess.file_exists(SaveManager.slot_path(slot) + ".tmp"):
+			errors.append("Save writes should not leave a .tmp file behind (slot %d)." % slot)
+
+	var bad_position: Dictionary = gs.call("build_save_data", Vector3(1, 0, 1), 0.0)
+	(bad_position["state"] as Dictionary)["current_area_id"] = "test_room"
+	(bad_position["state"] as Dictionary)["return_position"] = [1]
+	if not bool(gs.call("apply_save_dict", bad_position)):
+		errors.append("A save with a malformed return_position should still load.")
+	elif gs.get("return_position") != DataLoader.load_area("test_room").default_spawn:
+		errors.append("A malformed return_position should fall back to the area default spawn.")
 
 	gs.call("reset_party_to_default")
 	return errors
@@ -975,12 +996,56 @@ func _test_chapter_data() -> PackedStringArray:
 		errors.append("Chapel encounter should include pale_warden.")
 
 	gs.call("start_new_game", GameState.Difficulty.NORMAL)
-	if str(gs.get("current_area_id")) != "village_square":
-		errors.append("New game should start in village_square.")
+	if str(gs.get("current_area_id")) != GameState.INTRO_AREA_ID:
+		errors.append("New game should start in %s." % GameState.INTRO_AREA_ID)
+	if bool(gs.get("chapter1_intro_seen")):
+		errors.append("New game should reset chapter1_intro_seen.")
+	if not gs.call("has_area", GameState.INTRO_AREA_ID):
+		errors.append("Introduction area must be registered in data/areas.json.")
 
 	var square := DataLoader.load_area("village_square")
 	if square.map_connections.size() < 4:
 		errors.append("Village square hub should connect to four rooms.")
 
+	var alcove := DataLoader.load_area(GameState.INTRO_AREA_ID)
+	if alcove.id != GameState.INTRO_AREA_ID:
+		errors.append("Intro alcove area should be loadable.")
+	if alcove.scene_path != "res://scenes/explore/mira_intake_alcove.tscn":
+		errors.append("Intro alcove should reference the intake scene.")
+
+	gs.call("reset_party_to_default")
+	return errors
+
+
+func _test_battle_reload_keeps_item_usage() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("reset_party_to_default")
+	gs.call("set_standalone_battle")
+	var battle := (load("res://scenes/battle/battle.tscn") as PackedScene).instantiate()
+	get_root().add_child(battle)
+	for _i: int in range(3):
+		await process_frame
+	var controller: Node = battle.get_node("BattleController")
+	var archer: CombatUnit = null
+	for unit: CombatUnit in (controller.get("_units") as Dictionary).values():
+		if unit.is_ally and unit.source_id == "ally_3":
+			archer = unit
+	if archer == null:
+		errors.append("Battle should spawn ally_3 with the short bow.")
+	else:
+		gs.call("_set_loaded_ammo", "ally_3", "short_bow", 0)
+		var potions_before := int((controller.get("_inventory") as Dictionary).get("heal_potion", 0))
+		var arrows_before := int((controller.get("_inventory") as Dictionary).get("arrow", 0))
+		await controller.call("_perform_item", archer, archer, "heal_potion")
+		archer.has_acted = false
+		await controller.call("_perform_ammo_reload", archer, "arrow")
+		var inventory_after: Dictionary = controller.get("_inventory")
+		if int(inventory_after.get("heal_potion", 0)) != potions_before - 1:
+			errors.append("Reloading in battle should not restore consumables used earlier in the battle.")
+		if int(inventory_after.get("arrow", 0)) >= arrows_before:
+			errors.append("Reloading in battle should spend arrows from the battle inventory.")
+	battle.queue_free()
+	await process_frame
 	gs.call("reset_party_to_default")
 	return errors

@@ -49,15 +49,21 @@ func go_to_main_menu() -> void:
 
 
 func go_to_explore() -> void:
-	var area_id := GameState.return_area_id
-	if pending_door_spawn_has_area():
-		area_id = str(GameState.pending_door_spawn["area_id"])
+	var area_id := get_explore_target_area_id()
 	var area := DataLoader.load_area(area_id)
 	var scene := load(area.scene_path) as PackedScene
 	if scene == null:
 		push_error("Explore scene missing for area: %s" % area_id)
 		return
 	await change_scene(scene)
+
+
+func get_explore_target_area_id() -> String:
+	if pending_door_spawn_has_area():
+		return str(GameState.pending_door_spawn["area_id"])
+	if not GameState.chapter1_intro_seen and GameState.has_area(GameState.INTRO_AREA_ID):
+		return GameState.INTRO_AREA_ID
+	return GameState.return_area_id
 
 
 func pending_door_spawn_has_area() -> bool:

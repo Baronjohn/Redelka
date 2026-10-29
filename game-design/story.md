@@ -121,17 +121,26 @@ The story follows their investigation from the first empty sleeping spot to the 
 
 **Decided (this chapter is the first to be built):**
 
-A short introduction to the world and the four characters. The game opens with Mira, alone, at her usual sleeping spot in the village — an abandoned doorway, a corner of a roofed market, somewhere she and the other orphan knew.
+A short introduction to the world and Mira. The game opens with Mira, alone, at her usual sleeping spot in the village — an abandoned doorway, a corner of a roofed market, somewhere she and the other orphan knew.
 
 - **Mira is alone.** The player learns her through small environmental storytelling (her few possessions, her routine, the streets she knows).
-- Short scenes introduce **Owen, Bran, and Elara separately**, before the party forms. Each is shown briefly, in their own element: Owen returning from a hunt, Bran on duty at the village prison, Elara alone in her family's library reading forbidden texts.
-- **The inciting incident:** Mira searches for the missing orphan and finds her usual sleeping spot empty. Signs of a quiet struggle. A neighbor saw "a tall man" leading her toward the woods the night before.
+- Mira talks with the **other orphans** she shares the doorway with (Tom, Elsa), and with a **neighbor** (Mr. Holt). Flavor choices in dialog; no outcomes yet.
+- Short scenes that introduce **Owen, Bran, and Elara separately** are **deferred** to a later sub-chapter ("The Four") so this build can focus on Mira-only material (see `presentation.md` — Narrative delivery for the runtime that supports both).
+- **The inciting incident:** Mira searches for the missing orphan (working name: **Lily**) and finds her usual sleeping spot empty. Signs of a quiet struggle. The neighbor saw "a tall man" leading her toward the woods the night before.
 - Mira follows the trail to the edge of the woods. Something is wrong there — the trees are quiet in the wrong way, the air is wrong.
 - The chapter ends on a **hook, not a boss fight**. Mira returns to the village and the search begins.
+
+**Build status (Aug 2026):** Mira-only vertical slice shipped. Runtime: `NarrativeDirector` autoload + `CutscenePlayer` + `NarrativeActor` + `NarrativeTrigger` + `DialogUI`. Content: `data/cutscenes.json` (4 cutscenes: title, dawn, finds-empty-spot, woods hook), `data/dialogs.json` (orphan morning chat + neighbor testimony tree), `data/actors.json` (Mira + 2 orphans + neighbor + internal). Scenes: `mira_intake_alcove.tscn` (new game start), `mira_woods_edge.tscn` (hook). GameState additions: `protagonist_character_id`, `story_flags`, `chapter1_intro_seen`, `busy_narrative`. Save/load round-trips.
 
 ### Chapters 2 through N
 
 **TBD:** Full chapter list, one-line pitches, and chapter-by-chapter beats. The doc will be expanded as each chapter is designed.
+
+| # | Working title | Working pitch | TBD |
+|---|---------------|---------------|-----|
+| 1 | The Missing | Mira searches for a vanished orphan; Owen/Bran/Elara intro scenes deferred to "The Four" sub-chapter. | Detailed above. |
+| 1.5 | The Four (placeholder) | Owen returning from a hunt; Bran on duty at the village prison; Elara alone in her family's library reading forbidden texts. Party begins to form. | Per-scene beats. |
+| 2–N | TBD | TBD | Per-chapter pitch, key NPCs, encounter placement, ending hook. |
 
 The expected beats, in order (placeholders):
 
@@ -141,6 +150,10 @@ The expected beats, in order (placeholders):
 | 2–N | TBD | TBD | Per-chapter pitch, key NPCs, encounter placement, ending hook. |
 
 The Arch Demon is **not present** until the final chapter; the cult's leadership is exposed in the second-to-last chapter.
+
+### Chapter 1.5 — The Four (placeholder)
+
+**TBD:** Per-protagonist vignette scenes that introduce Owen, Bran, and Elara separately — these are the "before the party forms" beats originally listed under Chapter 1. Deferred so Chapter 1 can ship as a Mira-only vertical slice. Same `NarrativeDirector` runtime applies; scenes are authored as `data/cutscenes.json` entries + `data/actors.json` rows.
 
 ### Rest points and safe rooms
 
@@ -186,13 +199,13 @@ The Arch Demon is **not present** until the final chapter; the cult's leadership
 | Mira as POV, story starts with her alone | **Decided** |
 | Magic = fragments of the forbidden rite | **Decided** |
 | Tone: classic survival horror + folk horror | **Decided** |
-| Chapter 1: "The Missing" | **Decided** (above) |
+| Chapter 1: "The Missing" — Mira-only intro | **Decided** + **shipped** (Aug 2026 build) |
+| Owen/Bran/Elara intro vignettes | **Deferred** to Chapter 1.5 placeholder |
 | Escalation: quiet dread → apocalyptic crescendo | **Decided** |
 | Chapters 2–N | **TBD** |
 | Cult / rite / Arch Demon names | **TBD** (placeholders in use) |
 | Full cast list beyond the four starters | **TBD** |
 | Per-character skills and full skill mechanics | **TBD** (cross-doc) |
-| Chapter 1's *exact* last beat after the woods | **TBD** |
 | Ending structure | **TBD** |
 | Which dialogue choices carry weight | **TBD** |
 | Banter triggers per rest point | **TBD** |

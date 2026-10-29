@@ -46,11 +46,24 @@ static func build_meta(state: Dictionary) -> Dictionary:
 
 static func write_save(path: String, save_data: Dictionary) -> bool:
 	ensure_save_dir()
-	var file := FileAccess.open(path, FileAccess.WRITE)
+	# Write to a temp file and rename over the target so a crash mid-write keeps the old save.
+	var tmp_path := path + ".tmp"
+	var file := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if file == null:
-		push_error("Failed to open save file: %s" % path)
+		push_error("Failed to open save file: %s" % tmp_path)
 		return false
 	file.store_string(JSON.stringify(save_data, "\t"))
+	var write_error := file.get_error()
+	file.close()
+	if write_error != OK:
+		push_error("Failed to write save file: %s (error %d)" % [tmp_path, write_error])
+		DirAccess.remove_absolute(tmp_path)
+		return false
+	var rename_error := DirAccess.rename_absolute(tmp_path, path)
+	if rename_error != OK:
+		push_error("Failed to replace save file: %s (error %d)" % [path, rename_error])
+		DirAccess.remove_absolute(tmp_path)
+		return false
 	return true
 
 

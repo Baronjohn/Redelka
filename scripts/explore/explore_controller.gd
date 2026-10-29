@@ -45,14 +45,23 @@ func _ready() -> void:
 	camera_rig.set_track_target(_player)
 	if _checkpoint != null:
 		_checkpoint.save_requested.connect(_open_save_panel)
+	if NarrativeDirector != null:
+		NarrativeDirector.cutscene_ended.connect(_on_narrative_cutscene_ended)
 	GameState.mark_area_visited(area_id)
 	_try_autosave_after_spawn()
 	_show_message("%s — touch enemies to fight. I for menu. E or click to interact." % _area.display_name)
 	set_process_unhandled_input(true)
 
 
+func _on_narrative_cutscene_ended(_cutscene_id: String, _completed: bool) -> void:
+	if _player == null or camera_rig == null:
+		return
+	camera_rig.set_track_target(_player)
+	camera_rig.snap_to_target()
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if _menu != null or _busy:
+	if _menu != null or _busy or GameState.busy_narrative:
 		return
 	if event.is_action_pressed("open_menu"):
 		_open_menu()
@@ -90,11 +99,27 @@ func _spawn_player() -> void:
 	_player = PROTAGONIST_SCENE.instantiate() as ExplorePlayer
 	_player.add_to_group("explore_player")
 	_player.camera_rig_path = camera_rig.get_path()
+	_player.protagonist_model = _load_protagonist_model()
 	add_child(_player)
 	var spawn: Dictionary = GameState.get_explore_spawn(_area)
 	_player.set_spawn(spawn["position"] as Vector3, float(spawn["rotation_y"]))
 	_player.movement_enabled = true
 	_nudge_player_from_enemies()
+
+
+func _load_protagonist_model() -> PackedScene:
+	var characters := DataLoader.load_characters()
+	var protagonist_id := GameState.protagonist_character_id
+	if not characters.has(protagonist_id):
+		protagonist_id = GameState.DEFAULT_PROTAGONIST_ID
+	if characters.has(protagonist_id):
+		var path: String = (characters[protagonist_id] as CharacterData).model_path
+		if not path.is_empty() and ResourceLoader.exists(path):
+			return load(path) as PackedScene
+	var fallback: String = (characters[GameState.DEFAULT_PROTAGONIST_ID] as CharacterData).model_path
+	if not fallback.is_empty() and ResourceLoader.exists(fallback):
+		return load(fallback) as PackedScene
+	return null
 
 
 func _spawn_enemies() -> void:
@@ -189,8 +214,11 @@ func _on_pickup_collected(message: String) -> void:
 
 
 func _process(_delta: float) -> void:
+	if _player != null:
+		_player.movement_enabled = not GameState.busy_narrative
 	_update_active_pickup()
 	_update_active_interactable()
+	_tick_narrative_triggers()
 	if _active_door != null and _active_door.call("can_use"):
 		prompt_label.text = "Press E or click to enter %s" % str(_active_door.get("door_label"))
 	elif _active_door != null and _active_door.has_method("is_locked") and bool(_active_door.call("is_locked")):
@@ -372,3 +400,30 @@ func _close_save_panel() -> void:
 
 func _show_message(text: String) -> void:
 	message_label.text = text
+
+
+func _tick_narrative_triggers() -> void:
+	if _player == null:
+		return
+	if GameState.busy_narrative:
+		return
+	if not is_instance_valid(_player):
+		return
+	for trigger: Node in get_tree().get_nodes_in_group("narrative_triggers"):
+		if trigger == null or not is_instance_valid(trigger):
+			continue
+		if not (trigger is NarrativeTrigger):
+			continue
+		var t: NarrativeTrigger = trigger
+		if t.trigger_radius > 0.0:
+			if t.global_position.distance_to(_player.global_position) <= t.trigger_radius:
+				t.try_fire()
+			continue
+		if t is Area3D:
+			var area := t as Area3D
+			if not area.monitoring:
+				continue
+			for body: Node in area.get_overlapping_bodies():
+				if body == _player:
+					t.try_fire()
+					break

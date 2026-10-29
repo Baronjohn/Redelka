@@ -856,6 +856,9 @@ func _perform_ammo_reload(actor: CombatUnit, item_id: String) -> void:
 	var item: ItemData = _items[item_id]
 	if item.item_type != "ammo":
 		return
+	# Reloading draws ammo from GameState.inventory; push this battle's item usage there first
+	# so copying it back below doesn't restore consumables already used in this battle.
+	GameState.inventory = _inventory.duplicate()
 	if not GameState.can_reload_with_ammo(actor.source_id, item_id):
 		log_message.emit("Cannot reload with this ammo.")
 		return

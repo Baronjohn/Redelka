@@ -9,7 +9,8 @@
 	"tracks": {
 	  "main_menu": "res://assets/audio/bgm/main_menu.ogg",
 	  "overworld": "res://assets/audio/bgm/overworld.ogg",
-	  "battle": "res://assets/audio/bgm/battle.ogg"
+	  "battle": "res://assets/audio/bgm/battle.ogg",
+	  "intro": "res://assets/audio/bgm/overworld.ogg"
 	}
   },
   "sfx": {

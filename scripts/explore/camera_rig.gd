@@ -29,6 +29,10 @@ func set_track_target(target: Node3D) -> void:
 	_snap_camera_to_target()
 
 
+func snap_to_target() -> void:
+	_snap_camera_to_target()
+
+
 func set_active_zone(zone: Node3D) -> void:
 	if zone == null or zone == _active_zone:
 		return

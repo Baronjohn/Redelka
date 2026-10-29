@@ -1,0 +1,54 @@
+{
+  "orphan_morning_chat": {
+    "lines": [
+      {"speaker": "orphan_tom", "text": "Mira. Mira. Day's scrap."},
+      {"speaker": "orphan_elsa", "text": "Save the quiet voice, Tom. She's not deaf."},
+      {"speaker": "orphan_tom", "text": "Fine. Mira — get up. Cold bread's still warm if we run."},
+      {"speaker": "mira", "text": "Five more minutes. The awning's not even warm yet."},
+      {"speaker": "orphan_elsa", "text": "Then five more. We'll keep your share."}
+    ],
+    "choices": [
+      {"after_line": 4, "options": [
+        {"id": "morning_get_up", "label": "\"All right. I'm up.\"", "next": "orphan_morning_done"},
+        {"id": "morning_stay", "label": "\"Keep it. I'll find my own.\"", "next": "orphan_morning_done"}
+      ]}
+    ],
+    "next_default": "orphan_morning_done"
+  },
+  "orphan_morning_done": {
+    "lines": [
+      {"speaker": "orphan_elsa", "text": "There's the Mira we know."}
+    ]
+  },
+  "neighbor_testimony": {
+    "lines": [
+      {"speaker": "neighbor_holt", "text": "Late last night. I couldn't sleep. The dogs wouldn't settle."},
+      {"speaker": "neighbor_holt", "text": "A tall man, not from the village. Walked like he'd walked that path before."},
+      {"speaker": "neighbor_holt", "text": "Your girl walked beside him. Quiet. Like she'd been told to."},
+      {"speaker": "mira", "text": "Toward the woods?"},
+      {"speaker": "neighbor_holt", "text": "Past the chapel. Into the trees. I didn't follow."}
+    ],
+    "choices": [
+      {"after_line": 4, "options": [
+        {"id": "neighbor_blame", "label": "\"Why didn't you wake me?\"", "next": "neighbor_blame_response"},
+        {"id": "neighbor_direction", "label": "\"Which way, exactly?\"", "next": "neighbor_direction_response"}
+      ]}
+    ],
+    "next_default": "neighbor_blame_response"
+  },
+  "neighbor_blame_response": {
+    "lines": [
+      {"speaker": "neighbor_holt", "text": "You sleep like the dead, child. I called out. Twice."},
+      {"speaker": "neighbor_holt", "text": "By the time I had my boots on, they were gone into the trees."},
+      {"speaker": "mira", "text": "Which way, exactly?"},
+      {"speaker": "neighbor_holt", "text": "Past the chapel. North, where the pines crowd close."}
+    ]
+  },
+  "neighbor_direction_response": {
+    "lines": [
+      {"speaker": "neighbor_holt", "text": "Past the chapel. North, where the pines crowd close."},
+      {"speaker": "mira", "text": "And you didn't follow."},
+      {"speaker": "neighbor_holt", "text": "I was alone. It was dark. Forgive an old man his caution."}
+    ]
+  }
+}

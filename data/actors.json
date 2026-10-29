@@ -1,0 +1,31 @@
+{
+  "mira": {
+    "name": "Mira",
+    "portrait": "res://assets/portraits/mira.png",
+    "color": [0.85, 0.55, 0.5, 1.0],
+    "model": "res://scenes/characters/mira.tscn"
+  },
+  "orphan_tom": {
+    "name": "Tom",
+    "portrait": "",
+    "color": [0.7, 0.75, 0.85, 1.0],
+    "model": "res://scenes/characters/mira.tscn"
+  },
+  "orphan_elsa": {
+    "name": "Elsa",
+    "portrait": "",
+    "color": [0.85, 0.7, 0.7, 1.0],
+    "model": "res://scenes/characters/mira.tscn"
+  },
+  "neighbor_holt": {
+    "name": "Mr. Holt",
+    "portrait": "",
+    "color": [0.8, 0.75, 0.65, 1.0],
+    "model": "res://scenes/characters/bran.tscn"
+  },
+  "internal": {
+    "name": "Mira",
+    "portrait": "",
+    "color": [0.75, 0.7, 0.65, 1.0]
+  }
+}

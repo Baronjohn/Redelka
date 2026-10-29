@@ -48,6 +48,8 @@ func play_for_scene_path(scene_path: String) -> void:
 		play_track("main_menu")
 	elif scene_path.contains("battle"):
 		play_track("battle")
+	elif scene_path.contains("intro") or scene_path.contains("mira_intake_alcove") or scene_path.contains("mira_woods_edge"):
+		play_track("intro")
 	else:
 		play_track("overworld")
 

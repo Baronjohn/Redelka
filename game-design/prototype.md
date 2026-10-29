@@ -8,8 +8,9 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 |-------|------|----------------|
 | **Phase 1 (v0)** | Prove tactical combat loop | **3D battle view** on a **6×6** playtest grid; no playable exploration module |
 | **Phase 2** | Explore → fight → return | **3D exploration** (fixed/tracking cameras) linked to Phase 1 combat |
+| **Phase 2.5** | Narrative layer | Reusable cutscene + dialog runtime + Chapter 1 Mira-only intro |
 
-**Decided:** **Combat-first.** Exploration is documented now but built after the combat greybox is fun.
+**Decided:** **Combat-first.** Exploration is documented now but built after the combat greybox is fun. **Phase 2.5 (Aug 2026):** Narrative runtime shipped alongside Chapter 1 intro vertical slice.
 
 ---
 
@@ -228,28 +229,64 @@ sequenceDiagram
 
 ---
 
+## Phase 2.5 — Narrative layer
+
+**Status (Aug 2026):** **Functional at core.** Mira-only Chapter 1 intro plays end-to-end from new game to free explore in `village_square`. Reusable runtime covers cutscenes, dialogs, choice trees, and `goto_area` transitions.
+
+| Topic | Choice |
+|---|---|
+| **Runtime** | `NarrativeDirector` autoload; `CutscenePlayer`, `NarrativeActor`, `NarrativeTrigger` scripts |
+| **Content** | `data/cutscenes.json`, `data/dialogs.json`, `data/actors.json` |
+| **UI** | `scenes/narrative/dialog_ui.tscn` (portrait + name + line + choice box) |
+| **Protagonist** | Mira (default `ally_2`); explore avatar swaps via `protagonist_character_id` |
+| **State** | `GameState.story_flags` + `chapter1_intro_seen`; persisted in save/load |
+| **Scenes** | `scenes/explore/mira_intake_alcove.tscn` (intro start), `scenes/explore/mira_woods_edge.tscn` (hook) |
+| **Audio cue** | `intro` track in `data/audio.json` (re-uses overworld cue pending dedicated dawn BGM) |
+| **Tests** | `scripts/test/narrative_smoke_test.gd` (data, speaker meta, story flags, save/load roundtrip, routing) |
+
+### Mira-only Chapter 1 flow
+
+1. **New game** → `SceneTransition.go_to_explore()` routes to `mira_intake_alcove` (gated by `chapter1_intro_seen`).
+2. **Title cards** play as cutscenes (`title_redelka` → `title_chapter`) with fade.
+3. **`mira_dawn` cutscene** auto-plays: camera reframes, internal lines, ends with `hand_control_back`. Sets `story_flag intro_dawn_seen`.
+4. **Free explore** in the alcove. Player talks with Tom and Elsa (`orphan_morning_chat` dialog with two flavor choices), then walks to Lily's blanket.
+5. **`BlanketLilyTrigger`** (Area3D, requires `intro_dawn_seen`) fires **`mira_finds_empty_spot`**: camera reframes, internal line, ends with `hand_control_back`. Sets `intro_empty_spot_seen`.
+6. Player walks to Mr. Holt's doorway. **`NeighborHoltTrigger`** (requires `intro_empty_spot_seen`) plays **`neighbor_testimony`** with two flavor choices; each choice chains to a follow-up dialog.
+7. **AlcoveIntroDirector** listens to `dialog_ended("neighbor_testimony", _)` and auto-plays **`mira_to_woods`**: fade to black, `goto_area mira_woods_edge`.
+8. **mira_woods_edge** loads; **`mira_woods_hook`** auto-plays: tall silhouette reveals, internal lines, fade, `goto_area village_square`. Sets `chapter1_intro_seen = true`.
+9. **Free explore** in `village_square`. Subsequent saves load directly here.
+
+### Deferred (chapter 1.5 +)
+
+- Owen / Bran / Elara intro vignettes (placeholder row in `story.md`).
+- VO: text-only; choice of `voice_strain` per line (TBD).
+- Banter triggers per rest point (cross-doc).
+- "Skip intro" menu option (depends on chapter select TBD).
+
+---
+
 ## Implementation guidance
 
 **Decided for prototype code:**
 
 | Topic | Choice |
-|-------|--------|
-| **Game data** | **JSON** loaded at runtime (characters, spells, weapons, enemies, encounters) |
+|---|--------|
+| **Game data** | **JSON** loaded at runtime (characters, spells, weapons, enemies, encounters, **cutscenes, dialogs, actors**) |
 | **Battle logic** | 6×6 logical grid in v0; 3D scene for tile + unit presentation |
-| **Scene split** | Separate combat scene (Phase 1); exploration scene added Phase 2 |
-| **Autoloads** | Recommend `GameState`, `BattleManager` (names **TBD** in code) |
+| **Scene split** | Separate combat scene (Phase 1); exploration scene added Phase 2; narrative scene + dialog UI added Phase 2.5 |
+| **Autoloads** | `GameState`, **`NarrativeDirector`**, `SceneTransition`, `MusicManager`, `SfxManager`, `AudioSettings`, `Settings`, `DebugSettings` |
 
-**Implemented (Phase 1 build):**
+**Implemented (Phase 1 + 2 + 2.5 builds):**
 
 | Topic | Choice |
-|-------|--------|
-| **Entry scene** | `scenes/main.tscn` → `scenes/explore/village_square.tscn`; battle via `scenes/battle/battle.tscn` |
-| **Autoload** | `GameState` (session bridge), `SceneTransition` (fade transitions) |
+|---|--------|
+| **Entry scene** | `scenes/main.tscn` → `scenes/menu/main_menu.tscn`; explore via `SceneTransition.go_to_explore()` |
+| **Autoload** | `GameState`, `SceneTransition`, `NarrativeDirector` (Phase 2.5) |
 | **Data layout** | `data/*.json` loaded by `DataLoader` into typed RefCounted classes |
 | **Input** | Mouse-first — click menu buttons; raycast tile/unit selection on battleground |
 | **Battle end** | Result panel (Victory / Defeat / Escaped) + **Restart Battle** reloads scene |
 | **Enemy AI** | Move toward nearest living ally (respects frontline); attack when in weapon range |
-| **Tests** | Headless smoke tests (`scripts/test/combat_smoke_test.gd`) |
+| **Tests** | Headless smoke tests (`scripts/test/combat_smoke_test.gd`, `scripts/test/narrative_smoke_test.gd`) |
 
 **TBD:** JSON schema files, whether to add CSV export later for designers.
 

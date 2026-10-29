@@ -14,13 +14,24 @@ enum Difficulty { EASY = 0, NORMAL = 1, HARD = 2 }
 
 const DEFAULT_ENCOUNTER_ID: String = "test_4v3"
 const NEW_GAME_AREA_ID: String = "village_square"
+const INTRO_AREA_ID: String = "mira_intake_alcove"
 const SAVE_RESOURCE_ITEM_ID: String = "memory_tape"
+const DEFAULT_PROTAGONIST_ID: String = "ally_2"
 
 var battle_source: BattleSource = BattleSource.STANDALONE
 var current_encounter_id: String = DEFAULT_ENCOUNTER_ID
 var current_area_id: String = "test_room"
 var return_area_id: String = "test_room"
 var return_position: Vector3 = Vector3.ZERO
+var protagonist_character_id: String = DEFAULT_PROTAGONIST_ID
+var story_flags: Dictionary = {}
+## Backed by story_flags so cutscene `flag_set` steps and code share one source of truth.
+var chapter1_intro_seen: bool:
+	get:
+		return bool(story_flags.get("chapter1_intro_seen", false))
+	set(value):
+		story_flags["chapter1_intro_seen"] = value
+var busy_narrative: bool = false
 var return_rotation_y: float = 0.0
 var overworld_enemy_id: String = ""
 var defeated_enemy_ids: Array[String] = []
@@ -928,16 +939,29 @@ func resolve_battle(outcome: int) -> void:
 func start_new_game(new_difficulty: int) -> void:
 	reset_party_to_default()
 	difficulty = new_difficulty
-	current_area_id = NEW_GAME_AREA_ID
+	current_area_id = INTRO_AREA_ID
 	return_area_id = NEW_GAME_AREA_ID
-	var area := DataLoader.load_area(NEW_GAME_AREA_ID)
-	return_position = area.default_spawn
+	var intro_area := DataLoader.load_area(INTRO_AREA_ID)
+	return_position = intro_area.default_spawn
 	return_rotation_y = 0.0
 	pending_load_spawn = {}
 	pending_door_spawn = {}
 	_autosave_after_door_spawn = false
 	last_battle_outcome = BattleOutcomeCode.NONE
 	battle_source = BattleSource.EXPLORE
+
+
+func get_effective_current_area_id() -> String:
+	if not chapter1_intro_seen and has_area(INTRO_AREA_ID):
+		return INTRO_AREA_ID
+	return current_area_id
+
+
+func has_area(area_id: String) -> bool:
+	for entry: Variant in DataLoader.load_json_array("res://data/areas.json"):
+		if entry is Dictionary and str(entry.get("id", "")) == area_id:
+			return true
+	return false
 
 
 func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> Dictionary:
@@ -962,6 +986,9 @@ func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> D
 		"owned_equipment": owned_equipment.duplicate(),
 		"weapon_durability": _duplicate_nested_int_dict(weapon_durability),
 		"weapon_loaded_ammo": _duplicate_nested_int_dict(weapon_loaded_ammo),
+		"protagonist_character_id": protagonist_character_id,
+		"story_flags": story_flags.duplicate(),
+		"chapter1_intro_seen": chapter1_intro_seen,
 	}
 
 
@@ -980,8 +1007,7 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 	difficulty = int(state.get("difficulty", Difficulty.NORMAL))
 	current_area_id = str(state.get("current_area_id", NEW_GAME_AREA_ID))
 	return_area_id = str(state.get("return_area_id", current_area_id))
-	var pos_array: Array = state.get("return_position", [0, 0, 0]) as Array
-	return_position = Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
+	return_position = _parse_saved_position(state.get("return_position"), current_area_id)
 	return_rotation_y = float(state.get("return_rotation_y", 0.0))
 	defeated_enemy_ids.clear()
 	for enemy_id: Variant in state.get("defeated_enemy_ids", []) as Array:
@@ -1015,6 +1041,16 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 	owned_equipment = (state.get("owned_equipment", {}) as Dictionary).duplicate()
 	weapon_durability = _restore_nested_int_dict(state.get("weapon_durability", {}))
 	weapon_loaded_ammo = _restore_nested_int_dict(state.get("weapon_loaded_ammo", {}))
+	protagonist_character_id = str(state.get("protagonist_character_id", DEFAULT_PROTAGONIST_ID))
+	if protagonist_character_id.is_empty():
+		protagonist_character_id = DEFAULT_PROTAGONIST_ID
+	story_flags.clear()
+	var raw_flags := state.get("story_flags", {}) as Dictionary
+	for key: Variant in raw_flags.keys():
+		story_flags[str(key)] = bool(raw_flags[key])
+	# Older saves may hold the flag only in story_flags or only in this field.
+	chapter1_intro_seen = chapter1_intro_seen or bool(state.get("chapter1_intro_seen", false))
+	busy_narrative = false
 	pending_load_spawn = {
 		"area_id": current_area_id,
 		"position": return_position,
@@ -1034,18 +1070,33 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 	return true
 
 
+func _parse_saved_position(value: Variant, area_id: String) -> Vector3:
+	if value is Array and (value as Array).size() >= 3:
+		var pos_array := value as Array
+		return Vector3(float(pos_array[0]), float(pos_array[1]), float(pos_array[2]))
+	push_warning("Save has invalid return_position; using area default spawn.")
+	if has_area(area_id):
+		return DataLoader.load_area(area_id).default_spawn
+	return Vector3.ZERO
+
+
 func save_to_slot(slot: int, player_position: Vector3, player_rotation_y: float) -> bool:
 	last_save_error = ""
 	var block_reason := get_manual_save_block_reason()
 	if not block_reason.is_empty():
 		last_save_error = block_reason
 		return false
+	# Spend the save resource before snapshotting so the written file doesn't still hold it.
+	var consumes_resource := difficulty == Difficulty.HARD
+	var resource_count_before := int(inventory.get(SAVE_RESOURCE_ITEM_ID, 0))
+	if consumes_resource:
+		_consume_inventory_item(SAVE_RESOURCE_ITEM_ID)
 	var save_data := build_save_data(player_position, player_rotation_y)
 	if not SaveManager.write_slot(slot, save_data):
+		if consumes_resource:
+			inventory[SAVE_RESOURCE_ITEM_ID] = resource_count_before
 		last_save_error = "Failed to write save file."
 		return false
-	if difficulty == Difficulty.HARD:
-		_consume_inventory_item(SAVE_RESOURCE_ITEM_ID)
 	return true
 
 
@@ -1160,6 +1211,10 @@ func reset_party_to_default() -> void:
 	_draft_character_id = ""
 	_draft_allocated = StatBlock.new()
 	_draft_budget = 0
+	story_flags.clear()
+	chapter1_intro_seen = false
+	busy_narrative = false
+	protagonist_character_id = DEFAULT_PROTAGONIST_ID
 	inventory = get_setup_inventory()
 	reset_formation_to_default()
 	ensure_party_initialized(DEFAULT_ENCOUNTER_ID)

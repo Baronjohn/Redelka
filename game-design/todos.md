@@ -1,6 +1,6 @@
 # Next Tasks
 
-Prioritized work after Phase 2 core (exploration handoff, character menu, equipment, pickups, loot drops). See [prototype.md](prototype.md) for current build status.
+Prioritized work after Phase 2.5 (narrative runtime + Chapter 1 Mira-only intro). See [prototype.md](prototype.md) for current build status.
 
 ---
 
@@ -24,9 +24,9 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ## 2. Persistent save/load to disk — done
 
-**Status (Aug 2026):** JSON saves in `user://saves/` via `SaveManager`; main menu; shared save slot panel; difficulty chosen at New Game.
+**Status (Aug 2026):** JSON saves in `user://saves/` via `SaveManager`; main menu; shared save slot panel; difficulty chosen at New Game. Round-trip covers `protagonist_character_id`, `story_flags`, and `chapter1_intro_seen` added in Phase 2.5.
 
-- [x] Serialize full run state to `user://` (party, inventory, equipment, defeated enemies, collected pickups, visited areas, level/XP, difficulty)
+- [x] Serialize full run state to `user://` (party, inventory, equipment, defeated enemies, collected pickups, visited areas, level/XP, difficulty, **protagonist, story flags, intro seen**)
 - [x] Save slot paths (`slot_01`–`slot_99`) and autosave (`autosave.json`); load from main menu
 - [x] Manual save at checkpoint nodes (press **E** → save slot panel with overwrite confirm)
 - [x] Autosave on door transition (**Easy** only; overwrites single autosave slot)
@@ -59,7 +59,25 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ---
 
-## 4. Weapon durability & ammo
+## 4. Narrative runtime + Chapter 1 Mira-only intro — done
+
+**Status (Aug 2026):** Reusable cutscene/dialog runtime shipped; Mira-only vertical slice plays end-to-end from new game to free explore in `village_square`. Owen/Bran/Elara intro vignettes deferred to Chapter 1.5.
+
+- [x] `NarrativeDirector` autoload with cutscene step executor + dialog runner + busy flag
+- [x] `CutscenePlayer`, `NarrativeActor`, `NarrativeTrigger` scripts and `DialogUI` scene
+- [x] `data/cutscenes.json`, `data/dialogs.json`, `data/actors.json` content
+- [x] `mira_intake_alcove.tscn` + `mira_woods_edge.tscn` scenes
+- [x] Explore protagonist swapped to Mira via `GameState.protagonist_character_id`
+- [x] `GameState.story_flags` + `chapter1_intro_seen` + `busy_narrative`; serialized in save/load
+- [x] `SceneTransition.go_to_explore` routes new games to `INTRO_AREA_ID` until intro seen
+- [x] Smoke tests in `scripts/test/narrative_smoke_test.gd`
+- [x] Doc updates: [story.md](story.md), [presentation.md](presentation.md), [prototype.md](prototype.md)
+
+**References:** [story.md](story.md), [presentation.md](presentation.md#narrative-delivery--implementation)
+
+---
+
+## 5. Weapon durability & ammo
 
 **Why now:** Closes a documented resource-pressure mechanic that ties into the "enemy avoidance" horror pillar ([exploration.md](exploration.md)); currently weapons are permanent/infinite.
 
@@ -104,7 +122,9 @@ Prioritized work after Phase 2 core (exploration handoff, character menu, equipm
 
 ## Suggested order
 
-1. **Weapon durability & ammo** — adds scavenge/resource tension to combat and exploration avoidance
-2. **Weapon mastery & combos** — deepens physical combat identity per weapon class
-3. **Later:** sanity/fear on Hard, full difficulty-tier parity per [difficulty-saves.md](difficulty-saves.md)
-4. **Later:** additional authored chapters, ambush variety, puzzle pipeline
+1. **Owen / Bran / Elara intro vignettes (Chapter 1.5)** — finishes the "before the party forms" beats from [story.md](story.md#chapter-15--the-four-placeholder); uses the existing `NarrativeDirector` runtime.
+2. **Authored chapters 2–N** — expand exploration + combat encounters beyond Chapter 1 hub.
+3. **Sanity / fear on Hard** — close difficulty-tier parity gap per [difficulty-saves.md](difficulty-saves.md).
+4. **Banter triggers per rest point** — fill out `rest_point_dialog` per chapter.
+5. **Voice acting scope** — text-only v1; revisit when art + audio budget allows.
+6. **Ambush variety, puzzle pipeline** — additional scripted triggers, environmental puzzles.

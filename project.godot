@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameState="*res://scripts/autoload/game_state.gd"
+NarrativeDirector="*res://scripts/autoload/narrative_director.gd"
 SceneTransition="*res://scripts/autoload/scene_transition.gd"
 AudioSettings="*res://scripts/autoload/audio_settings.gd"
 Settings="*res://scripts/autoload/settings.gd"

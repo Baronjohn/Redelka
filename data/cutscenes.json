@@ -1,0 +1,79 @@
+{
+  "title_redelka": {
+    "steps": [
+      {"type": "music", "track": "intro"},
+      {"type": "fade", "to": "black", "duration": 0.8},
+      {"type": "wait", "seconds": 0.4},
+      {"type": "actor_say", "speaker": "internal", "text": "Redelka", "duration": 2.4},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "fade", "to": "clear", "duration": 0.8}
+    ]
+  },
+  "title_chapter": {
+    "steps": [
+      {"type": "fade", "to": "black", "duration": 0.6},
+      {"type": "wait", "seconds": 0.4},
+      {"type": "actor_say", "speaker": "internal", "text": "Chapter 1 — The Missing", "duration": 2.6},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "fade", "to": "clear", "duration": 0.6}
+    ]
+  },
+  "mira_dawn": {
+    "steps": [
+      {"type": "wait", "seconds": 0.3},
+      {"type": "camera_cut", "position": [3.5, 2.0, 5.0], "look_at": [-1.0, 0.8, -2.0]},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "actor_say", "speaker": "mira", "text": "Same doorway. Same awning. Same cold.", "duration": 2.6},
+      {"type": "camera_blend", "position": [0.5, 1.4, 3.6], "look_at": [-1.4, 0.3, -2.6], "duration": 1.4},
+      {"type": "wait", "seconds": 0.4},
+      {"type": "actor_say", "speaker": "mira", "text": "Lily's spot's cold.", "duration": 2.0},
+      {"type": "wait", "seconds": 0.5},
+      {"type": "flag_set", "key": "intro_dawn_seen", "value": true},
+      {"type": "hand_control_back"}
+    ]
+  },
+  "mira_finds_empty_spot": {
+    "steps": [
+      {"type": "camera_cut", "position": [-0.8, 1.3, 1.4], "look_at": [-1.6, 0.3, -2.4]},
+      {"type": "wait", "seconds": 0.5},
+      {"type": "actor_face", "id": "mira", "target_id": "blanket_lily"},
+      {"type": "wait", "seconds": 0.3},
+      {"type": "actor_say", "speaker": "mira", "text": "Her blanket's still here. She doesn't leave it.", "duration": 3.0},
+      {"type": "camera_blend", "position": [0.2, 1.6, 1.0], "look_at": [-2.5, 1.0, -4.5], "duration": 1.0},
+      {"type": "wait", "seconds": 0.4},
+      {"type": "actor_say", "speaker": "mira", "text": "Holt's still up.", "duration": 1.6},
+      {"type": "flag_set", "key": "intro_empty_spot_seen", "value": true},
+      {"type": "hand_control_back"}
+    ]
+  },
+  "mira_to_woods": {
+    "steps": [
+      {"type": "fade", "to": "black", "duration": 1.0},
+      {"type": "wait", "seconds": 0.4},
+      {"type": "goto_area", "area_id": "mira_woods_edge", "spawn": [0.0, 0.0, 6.0], "rotation_y": 0.0}
+    ]
+  },
+  "mira_woods_hook": {
+    "steps": [
+      {"type": "music", "track": "intro", "force": true},
+      {"type": "fade", "to": "black", "duration": 1.2},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "camera_cut", "position": [0.0, 1.6, 8.0], "look_at": [0.0, 1.4, -2.0]},
+      {"type": "actor_show", "id": "tall_man"},
+      {"type": "fade", "to": "clear", "duration": 1.2},
+      {"type": "wait", "seconds": 1.4},
+      {"type": "camera_blend", "position": [0.0, 1.6, 6.0], "look_at": [0.0, 1.5, -2.5], "duration": 1.6},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "actor_say", "speaker": "mira", "text": "He's not moving. He knows I'm here.", "duration": 3.0},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "actor_say", "speaker": "mira", "text": "...Lily.", "duration": 1.4},
+      {"type": "wait", "seconds": 1.0},
+      {"type": "fade", "to": "black", "duration": 1.0},
+      {"type": "actor_hide", "id": "tall_man"},
+      {"type": "wait", "seconds": 0.6},
+      {"type": "flag_set", "key": "intro_complete", "value": true},
+      {"type": "flag_set", "key": "chapter1_intro_seen", "value": true},
+      {"type": "goto_area", "area_id": "village_square", "spawn": [0.0, 0.0, 9.0], "rotation_y": 0.0}
+    ]
+  }
+}
