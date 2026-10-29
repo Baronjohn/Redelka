@@ -48,7 +48,12 @@ func play_for_scene_path(scene_path: String) -> void:
 		play_track("main_menu")
 	elif scene_path.contains("battle"):
 		play_track("battle")
-	elif scene_path.contains("intro") or scene_path.contains("mira_intake_alcove") or scene_path.contains("mira_woods_edge"):
+	elif scene_path.contains("mira_chapel_lane"):
+		play_track("intro_lane")
+	elif scene_path.contains("mira_woods_edge"):
+		# The woods hook cutscene owns the silence there; keep whatever is fading out.
+		pass
+	elif scene_path.contains("intro") or scene_path.contains("mira_intake_alcove"):
 		play_track("intro")
 	else:
 		play_track("overworld")

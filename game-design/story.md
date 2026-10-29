@@ -132,6 +132,8 @@ A short introduction to the world and Mira. The game opens with Mira, alone, at 
 
 **Build status (Aug 2026):** Mira-only vertical slice shipped. Runtime: `NarrativeDirector` autoload + `CutscenePlayer` + `NarrativeActor` + `NarrativeTrigger` + `DialogUI`. Content: `data/cutscenes.json` (4 cutscenes: title, dawn, finds-empty-spot, woods hook), `data/dialogs.json` (orphan morning chat + neighbor testimony tree), `data/actors.json` (Mira + 2 orphans + neighbor + internal). Scenes: `mira_intake_alcove.tscn` (new game start), `mira_woods_edge.tscn` (hook). GameState additions: `protagonist_character_id`, `story_flags`, `chapter1_intro_seen`, `busy_narrative`. Save/load round-trips.
 
+**Expansion (Oct 2026, shipped):** the full script, three-area layout and NPC designs for an 8–12 minute intro live in [chapter-1-intro.md](chapter-1-intro.md). **Decided:** Mira is the only party member until the others join in the course of the story.
+
 ### Chapters 2 through N
 
 **TBD:** Full chapter list, one-line pitches, and chapter-by-chapter beats. The doc will be expanded as each chapter is designed.

@@ -6,6 +6,7 @@ const ExplorePickupScript = preload("res://scripts/explore/explore_pickup.gd")
 const EnvironmentMaterialsScript = preload("res://scripts/assets/environment_materials.gd")
 const CHARACTER_MENU_SCENE: PackedScene = preload("res://scenes/menu/character_menu.tscn")
 const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
+const OBJECTIVE_FONT: FontFile = preload("res://assets/fonts/im_fell_english_italic.ttf")
 const ENEMY_CONTACT_CLEAR_DISTANCE: float = 2.5
 
 @export var area_id: String = "test_room"
@@ -27,6 +28,7 @@ var _active_pickup: Node = null
 var _active_interactable: Node = null
 var _pickups_root: Node3D
 var _interactables_root: Node3D
+var _objective_label: Label
 
 
 func _ready() -> void:
@@ -49,7 +51,11 @@ func _ready() -> void:
 		NarrativeDirector.cutscene_ended.connect(_on_narrative_cutscene_ended)
 	GameState.mark_area_visited(area_id)
 	_try_autosave_after_spawn()
-	_show_message("%s — touch enemies to fight. I for menu. E or click to interact." % _area.display_name)
+	_build_objective_label()
+	if _area.enemies.is_empty():
+		_show_message(_area.display_name)
+	else:
+		_show_message("%s — touch enemies to fight. I for menu. E or click to interact." % _area.display_name)
 	set_process_unhandled_input(true)
 
 
@@ -219,6 +225,7 @@ func _process(_delta: float) -> void:
 	_update_active_pickup()
 	_update_active_interactable()
 	_tick_narrative_triggers()
+	_update_objective_label()
 	if _active_door != null and _active_door.call("can_use"):
 		prompt_label.text = "Press E or click to enter %s" % str(_active_door.get("door_label"))
 	elif _active_door != null and _active_door.has_method("is_locked") and bool(_active_door.call("is_locked")):
@@ -400,6 +407,36 @@ func _close_save_panel() -> void:
 
 func _show_message(text: String) -> void:
 	message_label.text = text
+
+
+func _build_objective_label() -> void:
+	var explore_ui := message_label.get_parent() as Control
+	if explore_ui == null:
+		return
+	_objective_label = Label.new()
+	_objective_label.name = "ObjectiveLabel"
+	_objective_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_objective_label.offset_left = -560.0
+	_objective_label.offset_top = 16.0
+	_objective_label.offset_right = -24.0
+	_objective_label.offset_bottom = 48.0
+	_objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_objective_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_objective_label.add_theme_font_override("font", OBJECTIVE_FONT)
+	_objective_label.add_theme_font_size_override("font_size", 24)
+	_objective_label.add_theme_color_override("font_color", Color(0.86, 0.82, 0.74))
+	_objective_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_objective_label.add_theme_constant_override("outline_size", 6)
+	explore_ui.add_child(_objective_label)
+	_update_objective_label()
+
+
+func _update_objective_label() -> void:
+	if _objective_label == null:
+		return
+	var objective := GameState.current_objective
+	_objective_label.text = objective
+	_objective_label.visible = not objective.is_empty() and not GameState.busy_narrative
 
 
 func _tick_narrative_triggers() -> void:

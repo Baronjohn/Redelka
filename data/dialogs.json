@@ -1,54 +1,127 @@
 {
   "orphan_morning_chat": {
     "lines": [
-      {"speaker": "orphan_tom", "text": "Mira. Mira. Day's scrap."},
-      {"speaker": "orphan_elsa", "text": "Save the quiet voice, Tom. She's not deaf."},
-      {"speaker": "orphan_tom", "text": "Fine. Mira — get up. Cold bread's still warm if we run."},
-      {"speaker": "mira", "text": "Five more minutes. The awning's not even warm yet."},
-      {"speaker": "orphan_elsa", "text": "Then five more. We'll keep your share."}
+      {"speaker": "orphan_tom", "text": "Mira. Mira. Baker's back door's open."},
+      {"speaker": "orphan_elsa", "text": "He'll hear you in the next valley, Tom."},
+      {"speaker": "orphan_tom", "text": "Burnt ends. He throws them out at first light. If we're quick."},
+      {"speaker": "mira", "text": "You're always quick. That's why you're thin."},
+      {"speaker": "orphan_tom", "text": "Is Lily coming? She likes the crusts."}
     ],
     "choices": [
       {"after_line": 4, "options": [
-        {"id": "morning_get_up", "label": "\"All right. I'm up.\"", "next": "orphan_morning_done"},
-        {"id": "morning_stay", "label": "\"Keep it. I'll find my own.\"", "next": "orphan_morning_done"}
+        {"id": "up_already", "label": "\"She's up already.\"", "flag": "intro_morning_choice_up_already", "next": "orphan_morning_up_already"},
+        {"id": "ask_her", "label": "\"Ask her yourself.\"", "flag": "intro_morning_choice_ask_her", "next": "orphan_morning_ask_her"}
       ]}
+    ]
+  },
+  "orphan_morning_up_already": {
+    "lines": [
+      {"speaker": "orphan_tom", "text": "No she's not. I looked."}
     ],
-    "next_default": "orphan_morning_done"
+    "next": "orphan_morning_done"
+  },
+  "orphan_morning_ask_her": {
+    "lines": [
+      {"speaker": "orphan_tom", "text": "I did. She's not anywhere."}
+    ],
+    "next": "orphan_morning_done"
   },
   "orphan_morning_done": {
     "lines": [
-      {"speaker": "orphan_elsa", "text": "There's the Mira we know."}
+      {"speaker": "orphan_elsa", "text": "Her blanket's still down. Go and look."}
+    ]
+  },
+  "elsa_blame": {
+    "lines": [
+      {"speaker": "orphan_elsa", "text": "She doesn't go anywhere without you."},
+      {"speaker": "orphan_elsa", "text": "You were supposed to watch her. You said you would."}
+    ],
+    "choices": [
+      {"after_line": 1, "options": [
+        {"id": "accept", "label": "\"I know.\"", "flag": "intro_elsa_choice_accept", "next": "elsa_blame_accept"},
+        {"id": "deflect", "label": "\"I'm not her mother.\"", "flag": "intro_elsa_choice_deflect", "next": "elsa_blame_deflect"},
+        {"id": "lash", "label": "\"So were you.\"", "flag": "intro_elsa_choice_lash", "next": "elsa_blame_lash"}
+      ]}
+    ]
+  },
+  "elsa_blame_accept": {
+    "lines": [
+      {"speaker": "orphan_elsa", "text": "...Then go and find her."}
+    ],
+    "next": "elsa_blame_tail"
+  },
+  "elsa_blame_deflect": {
+    "lines": [
+      {"speaker": "orphan_elsa", "text": "No. You're all she had."}
+    ],
+    "next": "elsa_blame_tail"
+  },
+  "elsa_blame_lash": {
+    "lines": [
+      {"speaker": "orphan_elsa", "text": "..."},
+      {"speaker": "orphan_tom", "text": "Stop it. Both of you."}
+    ],
+    "next": "elsa_blame_tail"
+  },
+  "elsa_blame_tail": {
+    "lines": [
+      {"speaker": "orphan_tom", "text": "Mr. Holt's lamp was on all night. I saw it when I got up."},
+      {"speaker": "mira", "text": "Holt doesn't burn oil for nothing."}
     ]
   },
   "neighbor_testimony": {
     "lines": [
+      {"speaker": "neighbor_holt", "text": "Mira. You look like you've been looking."},
+      {"speaker": "mira", "text": "Lily. Small. Dark hair. You know her."},
+      {"speaker": "neighbor_holt", "text": "I know her."},
       {"speaker": "neighbor_holt", "text": "Late last night. I couldn't sleep. The dogs wouldn't settle."},
-      {"speaker": "neighbor_holt", "text": "A tall man, not from the village. Walked like he'd walked that path before."},
-      {"speaker": "neighbor_holt", "text": "Your girl walked beside him. Quiet. Like she'd been told to."},
-      {"speaker": "mira", "text": "Toward the woods?"},
-      {"speaker": "neighbor_holt", "text": "Past the chapel. Into the trees. I didn't follow."}
+      {"speaker": "neighbor_holt", "text": "A tall man. Not from here. He walked that lane like he'd walked it before."},
+      {"speaker": "neighbor_holt", "text": "Your girl went beside him. Boots on, shawl up. Quiet. Like she'd been told to."},
+      {"speaker": "mira", "text": "Where."},
+      {"speaker": "neighbor_holt", "text": "Down the chapel lane. Past the graves. Into the pines."}
     ],
     "choices": [
-      {"after_line": 4, "options": [
-        {"id": "neighbor_blame", "label": "\"Why didn't you wake me?\"", "next": "neighbor_blame_response"},
-        {"id": "neighbor_direction", "label": "\"Which way, exactly?\"", "next": "neighbor_direction_response"}
+      {"after_line": 7, "options": [
+        {"id": "blame", "label": "\"Why didn't you wake me?\"", "flag": "intro_holt_choice_blame", "next": "neighbor_blame_response"},
+        {"id": "direction", "label": "\"Which way, exactly?\"", "flag": "intro_holt_choice_direction", "next": "neighbor_direction_response"},
+        {"id": "who", "label": "\"Who was he?\"", "flag": "intro_holt_choice_who", "next": "neighbor_who_response"}
       ]}
-    ],
-    "next_default": "neighbor_blame_response"
+    ]
   },
   "neighbor_blame_response": {
     "lines": [
-      {"speaker": "neighbor_holt", "text": "You sleep like the dead, child. I called out. Twice."},
-      {"speaker": "neighbor_holt", "text": "By the time I had my boots on, they were gone into the trees."},
-      {"speaker": "mira", "text": "Which way, exactly?"},
-      {"speaker": "neighbor_holt", "text": "Past the chapel. North, where the pines crowd close."}
-    ]
+      {"speaker": "neighbor_holt", "text": "I called out. Twice. You sleep like the dead, child."},
+      {"speaker": "neighbor_holt", "text": "By the time I had my boots on, they were gone."}
+    ],
+    "next": "neighbor_testimony_tail"
   },
   "neighbor_direction_response": {
     "lines": [
-      {"speaker": "neighbor_holt", "text": "Past the chapel. North, where the pines crowd close."},
-      {"speaker": "mira", "text": "And you didn't follow."},
-      {"speaker": "neighbor_holt", "text": "I was alone. It was dark. Forgive an old man his caution."}
+      {"speaker": "neighbor_holt", "text": "Through the lychgate path. North, where the pines crowd close."},
+      {"speaker": "mira", "text": "You know that path well."},
+      {"speaker": "neighbor_holt", "text": "Sixty years here. I know all the paths."}
+    ],
+    "next": "neighbor_testimony_tail"
+  },
+  "neighbor_who_response": {
+    "lines": [
+      {"speaker": "neighbor_holt", "text": "Nobody I'd know."},
+      {"speaker": "neighbor_holt", "text": "Nobody you'd want to, either."}
+    ],
+    "next": "neighbor_testimony_tail"
+  },
+  "neighbor_testimony_tail": {
+    "lines": [
+      {"speaker": "neighbor_holt", "text": "Wait in your doorway. Children wander. She'll turn up."},
+      {"speaker": "mira", "text": "They don't turn up, Holt. Not lately."}
+    ]
+  },
+  "lane_shutter": {
+    "lines": [
+      {"speaker": "lane_voice", "text": "Go home, girl."},
+      {"speaker": "mira", "text": "A tall man came down here last night. With a little girl."},
+      {"speaker": "lane_voice", "text": "I sleep at night. Like decent folk."},
+      {"speaker": "lane_voice", "text": "You should try it."}
     ]
   }
 }

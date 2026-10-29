@@ -1,10 +1,7 @@
 {
-  "party": ["ally_1", "ally_2", "ally_3", "ally_4"],
+  "party": ["ally_2"],
   "owned_equipment": {
-	"iron_sword": 1,
-	"rusty_dagger": 1,
-	"short_bow": 1,
-	"wooden_staff": 1
+	"rusty_dagger": 1
   },
   "loadouts": {
 	"ally_1": {
@@ -36,9 +33,13 @@
 	  "accessory_2": ""
 	}
   },
+  "join_inventory": {
+	"ally_3": {
+	  "arrow": 6
+	}
+  },
   "inventory": {
 	"heal_potion": 2,
-	"revive_charm": 1,
-	"arrow": 6
+	"revive_charm": 1
   }
 }

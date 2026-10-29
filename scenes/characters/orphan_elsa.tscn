@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://redelka_npc_orphan_elsa"]
+
+[ext_resource type="Script" path="res://scripts/assets/characters/character_model.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/models/orphan_elsa.glb" id="2"]
+
+[node name="OrphanElsa" type="Node3D"]
+script = ExtResource("1")
+model_scene = ExtResource("2")

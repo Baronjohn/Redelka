@@ -77,6 +77,18 @@ Prioritized work after Phase 2.5 (narrative runtime + Chapter 1 Mira-only intro)
 
 ---
 
+## 4a. Chapter 1 intro expansion — done
+
+**Status (Oct 2026):** The intro is now an 8–12 minute prologue (doorway → Chapel Lane → Pine Edge). See [chapter-1-intro.md](chapter-1-intro.md).
+
+- [x] Full script: cutscenes, dialogs with flagged flavour choices, examine lines
+- [x] `ExploreExaminable`, on-screen objective, subtitles and gothic title cards, `play_cutscene` / `set_objective` / `give_item` / `party_join` steps
+- [x] New area `mira_chapel_lane`; alcove and woods rebuilt
+- [x] Dedicated intro music and SFX
+- [x] Party starts with Mira only; recruits join through `GameState.add_party_member()`
+- [ ] Rebalance the post-intro Chapter 1 hub for a solo Mira (or place recruitment before it). Its encounters were tuned for four allies, and the chapel's Pale Warden + Shade fight has no retreat.
+- [ ] Encounter `spell_unlocks` for characters not yet in the party are skipped. Decide whether to defer them until the character joins.
+
 ## 4b. Character and enemy models — done
 
 **Status (Oct 2026):** The procedural box/lathe models are replaced by Blender-generated, skinned low-poly models (“modern PS1”: ~1.7–2.9k tris, vertex colours + small pixel atlas).
@@ -86,7 +98,7 @@ Prioritized work after Phase 2.5 (narrative runtime + Chapter 1 Mira-only intro)
 - [x] `CharacterModel` wrapper used by battle `UnitView`, explore protagonist, overworld enemies and narrative actors
 - [x] Overworld enemies show their encounter's first enemy (previously every overworld enemy rendered as a Hollow)
 - [x] Smoke test checks every model scene loads with all clips and a plausible height
-- [ ] Dedicated models for the narrative NPCs (Tom, Elsa, Mr. Holt currently reuse Mira/Bran via `data/actors.json`)
+- [x] Dedicated models for the narrative NPCs: Tom, Elsa, Mr. Holt and the tall man (Oct 2026)
 
 ---
 

@@ -7,6 +7,7 @@ import math
 import random
 import struct
 import subprocess
+import sys
 import wave
 from pathlib import Path
 
@@ -211,7 +212,54 @@ def generate_closet_open() -> Path:
     return save("closet_open", 0.75, build)
 
 
+def generate_bell_toll() -> Path:
+    partials = [(0.5, 0.7), (1.0, 1.0), (1.183, 0.55), (1.506, 0.4), (2.0, 0.3), (2.514, 0.22), (3.011, 0.14)]
+
+    def build(samples: list[float], total: int, duration: float) -> None:
+        for index in range(total):
+            t = index / SAMPLE_RATE
+            value = 0.0
+            for ratio, weight in partials:
+                value += weight * sine(146.83 * ratio, t) * math.exp(-t * 0.5 * ratio)
+            strike = noise(0.2) * math.exp(-t * 60.0)
+            samples[index] = (value + strike) * min(1.0, t / 0.003)
+
+    return save("bell_toll", 6.0, build)
+
+
+def generate_shutter_slam() -> Path:
+    def build(samples: list[float], total: int, duration: float) -> None:
+        for index in range(total):
+            t = index / SAMPLE_RATE
+            hinge = noise(0.06) * envelope(t, 0.01, 0.05, 0.12, 0.6) * (0.5 + 0.5 * math.sin(t * 90.0))
+            impact = 0.0
+            if t > 0.12:
+                local = t - 0.12
+                impact = (sine(95.0, local, 0.5) + noise(0.45)) * math.exp(-local * 28.0)
+            rattle = 0.0
+            if 0.16 < t < 0.4:
+                rattle = noise(0.08) * math.exp(-(t - 0.16) * 14.0) * (0.5 + 0.5 * math.sin(t * 160.0))
+            samples[index] = hinge + impact + rattle
+
+    return save("shutter_slam", 0.6, build)
+
+
+def generate_branch_snap() -> Path:
+    def build(samples: list[float], total: int, duration: float) -> None:
+        for index in range(total):
+            t = index / SAMPLE_RATE
+            crack = noise(0.8) * math.exp(-t * 70.0)
+            body = sine(320.0 - 200.0 * min(t * 8.0, 1.0), t, 0.25) * math.exp(-t * 30.0)
+            tail = 0.0
+            if t > 0.05:
+                tail = noise(0.05) * math.exp(-(t - 0.05) * 9.0)
+            samples[index] = crack + body + tail
+
+    return save("branch_snap", 0.7, build)
+
+
 def main() -> None:
+    """Generate every effect, or only the ids passed on the command line."""
     random.seed(13)
     generators = {
         "walk_step": generate_walk_step,
@@ -223,9 +271,16 @@ def main() -> None:
         "pickup": generate_pickup,
         "door_open": generate_door_open,
         "closet_open": generate_closet_open,
+        "bell_toll": generate_bell_toll,
+        "shutter_slam": generate_shutter_slam,
+        "branch_snap": generate_branch_snap,
     }
-    for name, generator in generators.items():
-        path = generator()
+    selected = sys.argv[1:] or list(generators)
+    for name in selected:
+        if name not in generators:
+            raise SystemExit(f"Unknown effect {name!r}; choose from {', '.join(generators)}")
+    for name in selected:
+        path = generators[name]()
         print(f"Generated {name}: {path}")
 
 

@@ -9,6 +9,9 @@ signal door_exited(door: Node3D)
 @export var target_rotation_y: float = 0.0
 @export var door_label: String = "next room"
 @export var required_item_id: String = ""
+## Story flag that must be set before the door opens (narrative gating).
+@export var required_story_flag: String = ""
+@export var flag_locked_prompt: String = "Not yet."
 
 var _player_inside: bool = false
 
@@ -77,12 +80,18 @@ func can_use() -> bool:
 
 
 func is_locked() -> bool:
+	if not _player_inside:
+		return false
+	if not required_story_flag.is_empty() and not NarrativeDirector.get_flag(required_story_flag):
+		return true
 	if required_item_id.is_empty():
 		return false
-	return _player_inside and not GameState.has_item(required_item_id)
+	return not GameState.has_item(required_item_id)
 
 
 func get_lock_prompt() -> String:
+	if not required_story_flag.is_empty() and not NarrativeDirector.get_flag(required_story_flag):
+		return flag_locked_prompt
 	return "Locked — requires %s" % _get_required_item_name()
 
 

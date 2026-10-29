@@ -72,9 +72,13 @@ Honors the original’s restraint while allowing **modern dynamic mixing** and c
 | `NarrativeDialogChoiceBox` | (in scene tree) | Floating choice row above the dialog panel. |
 | Data files | `data/cutscenes.json`, `data/dialogs.json`, `data/actors.json` | All chapter content as data — no scene-side scripts for dialog or cutscenes. |
 
-**Cutscene step types:** `wait`, `camera_cut`, `camera_blend`, `actor_move`, `actor_face`, `actor_show`, `actor_hide`, `actor_reset`, `actor_say` (one-shot internal line), `play_dialog`, `flag_set`, `flag_branch`, `fade`, `hand_control_back`, `goto_area`, `sfx`, `music`.
+**Cutscene step types:** `wait`, `camera_cut`, `camera_blend`, `actor_move`, `actor_face`, `actor_show`, `actor_hide`, `actor_reset`, `actor_say` (one-shot line shown as a subtitle; speaker `internal` renders as Mira's thought in italics), `play_dialog`, `flag_set`, `flag_branch`, `fade`, `hand_control_back`, `goto_area`, `sfx`, `music` (`stop: true` fades out), `title_card` (gothic chapter card), `play_cutscene` (inlines another cutscene's steps), `set_objective`, `give_item`, `party_join`.
 
-**Dialog structure:** `lines` array of `{speaker, text}`. Optional `choices: [{after_line, options: [{id, label, next}]}]` for branches and follow-ups.
+**Dialog structure:** `lines` array of `{speaker, text}`. Optional `choices: [{after_line, options: [{id, label, flag, next}]}]`: the choice row appears after line `after_line`, and `flag` records the pick as a story flag. A dialog may continue into another with `next`.
+
+**Examine points:** `ExploreExaminable` (under an area's `Interactables`) shows internal lines on E, or starts a dialog or cutscene. It is gated by `story_flag_required` / `hide_when_flag`.
+
+**Title cards (Decided, Oct 2026):** gothic. UnifrakturMaguntia blackletter with an IM FELL English overline (both OFL, in `assets/fonts/`).
 
 **Explore suspension:** While a cutscene or dialog runs, `GameState.busy_narrative = true`. `ExploreController._process` flips `_player.movement_enabled = false`, and `_unhandled_input` ignores menu/mouse input. `ExploreController` listens to `cutscene_ended` to re-engage camera tracking and snap the camera to its authored anchor.
 
@@ -99,4 +103,4 @@ Honors the original’s restraint while allowing **modern dynamic mixing** and c
 
 - Colorblind-safe grid and UI highlights
 - Photo mode or replay theater
-- Credits and chapter title cards style
+- Credits style

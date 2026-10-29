@@ -32,6 +32,8 @@ var chapter1_intro_seen: bool:
 	set(value):
 		story_flags["chapter1_intro_seen"] = value
 var busy_narrative: bool = false
+## Short on-screen goal shown in explore (set by the `set_objective` cutscene step).
+var current_objective: String = ""
 var return_rotation_y: float = 0.0
 var overworld_enemy_id: String = ""
 var defeated_enemy_ids: Array[String] = []
@@ -72,22 +74,61 @@ func ensure_party_initialized(_encounter_id: String = DEFAULT_ENCOUNTER_ID) -> v
 		inventory = get_setup_inventory()
 	if party_formation.is_empty():
 		reset_formation_to_default()
-	var characters := _get_characters()
-	for character_id: String in get_party_character_ids():
-		if not characters.has(character_id):
-			continue
-		var character: CharacterData = characters[character_id]
-		var loadout: Dictionary = get_loadout(character_id)
-		var snapshot: PartyMemberSnapshot = PartyMemberSnapshot.new()
-		snapshot.character_id = character_id
-		var stats := PartyStatsHelper.get_effective_stats(character, loadout, snapshot)
-		snapshot.max_hp = CombatConstants.HP_BASE + stats.vit * CombatConstants.HP_PER_VIT
-		snapshot.current_hp = snapshot.max_hp
-		snapshot.max_mp = CombatConstants.MP_BASE + stats.res * CombatConstants.MP_PER_RES
-		snapshot.current_mp = snapshot.max_mp
-		_initialize_mastery_defaults(snapshot)
-		party_members.append(snapshot)
+	for character_id: String in get_starting_party_ids():
+		_append_member_snapshot(character_id)
 	ensure_formation_for_party()
+
+
+## Adds a recruit to the party with the loadout and items listed for them in
+## setup.json (`loadouts`, `join_inventory`). Returns false if already a member.
+func add_party_member(character_id: String) -> bool:
+	if is_party_member(character_id) or not _get_characters().has(character_id):
+		return false
+	var setup := DataLoader.load_new_game_setup()
+	var loadouts: Dictionary = setup.get("loadouts", {}) as Dictionary
+	if loadouts.has(character_id) and not equipped.has(character_id):
+		# The recruit brings their own gear, so it is equipped without drawing from owned stock.
+		equipped[character_id] = _normalize_loadout(loadouts[character_id] as Dictionary)
+		var weapon_id := str(get_loadout(character_id).get(EquipmentDataScript.SLOT_WEAPON, ""))
+		if not weapon_id.is_empty():
+			_ensure_weapon_state(character_id, weapon_id)
+	var join_inventory: Dictionary = (setup.get("join_inventory", {}) as Dictionary).get(
+		character_id, {}
+	) as Dictionary
+	for item_id: String in join_inventory.keys():
+		grant_item(item_id, int(join_inventory[item_id]))
+	_append_member_snapshot(character_id)
+	ensure_formation_for_party()
+	return true
+
+
+func is_party_member(character_id: String) -> bool:
+	return get_member_snapshot(character_id) != null
+
+
+func set_objective(text: String) -> void:
+	current_objective = text
+
+
+func grant_item(item_id: String, count: int = 1) -> void:
+	_grant_loot_item(item_id, maxi(count, 1))
+
+
+func _append_member_snapshot(character_id: String) -> void:
+	var characters := _get_characters()
+	if not characters.has(character_id):
+		return
+	var character: CharacterData = characters[character_id]
+	var loadout: Dictionary = get_loadout(character_id)
+	var snapshot: PartyMemberSnapshot = PartyMemberSnapshot.new()
+	snapshot.character_id = character_id
+	var stats := PartyStatsHelper.get_effective_stats(character, loadout, snapshot)
+	snapshot.max_hp = CombatConstants.HP_BASE + stats.vit * CombatConstants.HP_PER_VIT
+	snapshot.current_hp = snapshot.max_hp
+	snapshot.max_mp = CombatConstants.MP_BASE + stats.res * CombatConstants.MP_PER_RES
+	snapshot.current_mp = snapshot.max_mp
+	_initialize_mastery_defaults(snapshot)
+	party_members.append(snapshot)
 
 
 func _initialize_equipment_defaults() -> void:
@@ -96,7 +137,9 @@ func _initialize_equipment_defaults() -> void:
 	var setup := DataLoader.load_new_game_setup()
 	owned_equipment = (setup.get("owned_equipment", {}) as Dictionary).duplicate()
 	var loadouts: Dictionary = setup.get("loadouts", {}) as Dictionary
-	for character_id: String in loadouts.keys():
+	for character_id: String in get_starting_party_ids():
+		if not loadouts.has(character_id):
+			continue
 		equipped[character_id] = _normalize_loadout(loadouts[character_id] as Dictionary)
 		for slot_name: String in (equipped[character_id] as Dictionary).keys():
 			var item_id := str((equipped[character_id] as Dictionary).get(slot_name, ""))
@@ -989,6 +1032,7 @@ func to_save_state_dict(player_position: Vector3, player_rotation_y: float) -> D
 		"protagonist_character_id": protagonist_character_id,
 		"story_flags": story_flags.duplicate(),
 		"chapter1_intro_seen": chapter1_intro_seen,
+		"current_objective": current_objective,
 	}
 
 
@@ -1050,6 +1094,7 @@ func apply_save_dict(save_data: Dictionary) -> bool:
 		story_flags[str(key)] = bool(raw_flags[key])
 	# Older saves may hold the flag only in story_flags or only in this field.
 	chapter1_intro_seen = chapter1_intro_seen or bool(state.get("chapter1_intro_seen", false))
+	current_objective = str(state.get("current_objective", ""))
 	busy_narrative = false
 	pending_load_spawn = {
 		"area_id": current_area_id,
@@ -1214,6 +1259,7 @@ func reset_party_to_default() -> void:
 	story_flags.clear()
 	chapter1_intro_seen = false
 	busy_narrative = false
+	current_objective = ""
 	protagonist_character_id = DEFAULT_PROTAGONIST_ID
 	inventory = get_setup_inventory()
 	reset_formation_to_default()
@@ -1225,7 +1271,16 @@ func get_setup_inventory() -> Dictionary:
 	return (setup.get("inventory", {}) as Dictionary).duplicate()
 
 
+## Current roster, in join order.
 func get_party_character_ids() -> Array[String]:
+	var result: Array[String] = []
+	for member: Variant in party_members:
+		result.append((member as PartyMemberSnapshot).character_id)
+	return result
+
+
+## Who is in the party on a new game (setup.json `party`). Others join through the story.
+func get_starting_party_ids() -> Array[String]:
 	var setup := DataLoader.load_new_game_setup()
 	var result: Array[String] = []
 	for character_id: Variant in setup.get("party", []) as Array:
@@ -1244,7 +1299,12 @@ func reset_formation_to_default() -> void:
 func ensure_formation_for_party() -> void:
 	var defaults := get_default_formation()
 	var used_cells: Dictionary = {}
-	for character_id: String in get_party_character_ids():
+	var party_ids := get_party_character_ids()
+	# Battle spawns come from the formation, so it must only hold current members.
+	for character_id: String in party_formation.keys():
+		if not party_ids.has(character_id):
+			party_formation.erase(character_id)
+	for character_id: String in party_ids:
 		if party_formation.has(character_id):
 			var cell: Vector2i = party_formation[character_id]
 			var cell_key := "%d,%d" % [cell.x, cell.y]

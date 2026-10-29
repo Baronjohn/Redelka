@@ -10,6 +10,8 @@ var _lines: Array = []
 var _line_index: int = 0
 var _pending_choices: Array = []
 var _pending_choice_index: int = -1
+var _next_dialog_id: String = ""
+var _last_choice_id: String = ""
 var _portrait_default: Texture2D = null
 var _on_complete: Callable = Callable()
 var _is_advancing: bool = false
@@ -43,6 +45,8 @@ func start(dialog: Dictionary, on_complete: Callable) -> void:
 	_on_complete = on_complete
 	_pending_choices = []
 	_pending_choice_index = -1
+	_next_dialog_id = str(dialog.get("next", ""))
+	_last_choice_id = ""
 	_panel.visible = true
 	_choice_box.visible = false
 	_continue_label.visible = false
@@ -61,8 +65,18 @@ func stop() -> void:
 
 
 func _show_current_line() -> void:
+	# `after_line` is the index of the last line shown before the choice row appears.
+	if not _pending_choices.is_empty() and _line_index == _pending_choice_index + 1:
+		_choice_box.set_choices(_pending_choices)
+		_choice_box.visible = true
+		_panel.visible = false
+		_continue_label.visible = false
+		return
 	if _line_index >= _lines.size():
-		_finish_dialog("")
+		if not _next_dialog_id.is_empty():
+			_play_followup(_next_dialog_id, _last_choice_id)
+			return
+		_finish_dialog(_last_choice_id)
 		return
 	var line: Dictionary = _lines[_line_index] as Dictionary
 	var speaker_id := str(line.get("speaker", ""))
@@ -77,15 +91,11 @@ func _show_current_line() -> void:
 	var color := speaker_meta.get("color", Color(1, 1, 1, 1)) as Color
 	_name_label.text = display_name
 	_name_label.modulate = color
-	_line_label.text = str(line.get("text", ""))
+	var text := str(line.get("text", ""))
+	# Mira's thoughts read as italics, so they never look like spoken lines.
+	_line_label.text = "[i]%s[/i]" % text if speaker_id == "internal" else text
 	_line_label.visible_ratio = 0.0
 	_continue_label.visible = false
-	if _pending_choice_index == _line_index and not _pending_choices.is_empty():
-		_choice_box.set_choices(_pending_choices)
-		_choice_box.visible = true
-		_panel.visible = false
-		_continue_label.visible = false
-		return
 	_choice_box.visible = false
 	_panel.visible = true
 	_is_advancing = false
@@ -95,9 +105,14 @@ func _on_choice_made(choice: Dictionary) -> void:
 	_choice_box.visible = false
 	var choice_id := str(choice.get("id", ""))
 	var next_id := str(choice.get("next", ""))
+	_last_choice_id = choice_id
+	NarrativeDirector.apply_choice(choice)
+	_pending_choices = []
+	_pending_choice_index = -1
 	_panel.visible = true
 	if next_id.is_empty():
-		_finish_dialog(choice_id)
+		# No branch: carry on with the remaining lines, then the dialog's `next`.
+		_show_current_line()
 		return
 	_play_followup(next_id, choice_id)
 
@@ -114,6 +129,8 @@ func _play_followup(dialog_id: String, prev_choice_id: String) -> void:
 	_line_index = 0
 	_pending_choices = []
 	_pending_choice_index = -1
+	_next_dialog_id = str(raw.get("next", ""))
+	_last_choice_id = prev_choice_id
 	var groups := raw.get("choices", []) as Array
 	if not groups.is_empty():
 		for group: Dictionary in groups:

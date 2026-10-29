@@ -1,6 +1,8 @@
 extends Node
 
 const DialogUIScene: PackedScene = preload("res://scenes/narrative/dialog_ui.tscn")
+const NarrativeCaptionsScript = preload("res://scripts/narrative/narrative_captions.gd")
+const THEATER_LAYER: int = 75
 
 signal cutscene_started(cutscene_id: String)
 signal cutscene_ended(cutscene_id: String, completed: bool)
@@ -15,12 +17,17 @@ var _cutscene_script: Array = []
 var _cutscene_index: int = 0
 var _cutscene_context: Node = null
 var _cutscene_run_id: int = 0
-var _theater: Control = null
+var _theater: ColorRect = null
+var _theater_layer: CanvasLayer = null
 var _dialog_ui: NarrativeDialogUI = null
+var _captions: NarrativeCaptions = null
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_captions = NarrativeCaptionsScript.new() as NarrativeCaptions
+	_captions.name = "NarrativeCaptions"
+	add_child(_captions)
 
 
 func is_active() -> bool:
@@ -108,12 +115,11 @@ func end_current_cutscene(completed: bool = false) -> void:
 	if _theater != null:
 		_theater.hide()
 		_remove_theater()
+	if _captions != null:
+		_captions.clear_line()
 
 
 func play_dialog(dialog_id: String, context: Node) -> void:
-	if not _active:
-		_active = true
-		GameState.busy_narrative = true
 	var all_dialogs := DataLoader.load_json_object("res://data/dialogs.json")
 	if not all_dialogs.has(dialog_id):
 		push_error("NarrativeDirector: dialog not found: %s" % dialog_id)
@@ -122,7 +128,15 @@ func play_dialog(dialog_id: String, context: Node) -> void:
 		if context != null and context.has_method("_on_dialog_complete"):
 			context.call("_on_dialog_complete", "")
 		return
-	var raw := all_dialogs[dialog_id] as Dictionary
+	await play_dialog_data(dialog_id, all_dialogs[dialog_id] as Dictionary, context)
+
+
+## Plays a dialog built in code (for example an examinable's internal lines) instead of
+## one from dialogs.json. `raw` uses the same shape as a dialogs.json entry.
+func play_dialog_data(dialog_id: String, raw: Dictionary, context: Node) -> void:
+	if not _active:
+		_active = true
+		GameState.busy_narrative = true
 	var dialog := _resolve_dialog(raw)
 	dialog_started.emit(dialog_id)
 	_ensure_dialog_ui()
@@ -148,9 +162,18 @@ func _on_dialog_default_finished(_choice_id: String) -> void:
 	pass
 
 
+## Called by the dialog UI when the player picks an option. Options may carry a
+## `flag` key; it is recorded as a story flag so later chapters can read the choice.
+func apply_choice(choice: Dictionary) -> void:
+	var flag := str(choice.get("flag", ""))
+	if not flag.is_empty():
+		set_flag(flag, true)
+
+
 func _resolve_dialog(raw: Dictionary) -> Dictionary:
 	var resolved := {
 		"lines": (raw.get("lines", []) as Array).duplicate(),
+		"next": str(raw.get("next", "")),
 	}
 	var groups := raw.get("choices", []) as Array
 	if not groups.is_empty():
@@ -169,24 +192,31 @@ func _resolve_dialog(raw: Dictionary) -> Dictionary:
 func _ensure_theater() -> void:
 	if _theater != null and is_instance_valid(_theater):
 		return
+	# The fade lives on its own canvas layer so it also covers the explore UI.
+	_theater_layer = CanvasLayer.new()
+	_theater_layer.name = "NarrativeTheaterLayer"
+	_theater_layer.layer = THEATER_LAYER
+	_theater_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	_theater = ColorRect.new()
 	_theater.name = "NarrativeTheater"
 	_theater.color = Color(0, 0, 0, 0)
 	_theater.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_theater.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_theater.process_mode = Node.PROCESS_MODE_ALWAYS
+	_theater_layer.add_child(_theater)
 	call_deferred("_add_theater_deferred")
 
 
 func _add_theater_deferred() -> void:
-	if _theater == null:
+	if _theater_layer == null or _theater_layer.is_inside_tree():
 		return
-	get_tree().root.add_child(_theater)
+	get_tree().root.add_child(_theater_layer)
 
 
 func _remove_theater() -> void:
-	if _theater != null and is_instance_valid(_theater):
-		_theater.queue_free()
+	if _theater_layer != null and is_instance_valid(_theater_layer):
+		_theater_layer.queue_free()
+	_theater_layer = null
 	_theater = null
 
 
@@ -261,6 +291,16 @@ func _execute_step(step: Dictionary) -> void:
 			_step_sfx(step)
 		"music":
 			_step_music(step)
+		"title_card":
+			await _step_title_card(step)
+		"play_cutscene":
+			_step_play_cutscene(step)
+		"set_objective":
+			GameState.set_objective(str(step.get("text", "")))
+		"give_item":
+			_step_give_item(step)
+		"party_join":
+			GameState.add_party_member(str(step.get("character_id", "")))
 		_:
 			push_warning("NarrativeDirector: unknown step type %s" % step_type)
 			await get_tree().process_frame
@@ -415,7 +455,10 @@ func _step_actor_say(step: Dictionary) -> void:
 	actor_said.emit(speaker_id, text)
 	if duration <= 0.0:
 		var char_count := text.length()
-		duration = clampf(0.04 * float(char_count), 1.2, 4.0)
+		duration = clampf(0.06 * float(char_count), 1.6, 4.5)
+	if _captions != null:
+		var internal := speaker_id == "internal" or bool(step.get("internal", false))
+		_captions.show_line(get_speaker_meta(speaker_id), text, internal, duration)
 	await get_tree().create_timer(duration).timeout
 
 
@@ -488,10 +531,51 @@ func _step_sfx(step: Dictionary) -> void:
 
 
 func _step_music(step: Dictionary) -> void:
+	if MusicManager == null:
+		return
+	if bool(step.get("stop", false)):
+		MusicManager.stop_music(float(step.get("fade", -1.0)))
+		return
 	var track_id := str(step.get("track", ""))
-	if track_id.is_empty() or MusicManager == null:
+	if track_id.is_empty():
 		return
 	MusicManager.play_track(track_id, bool(step.get("force", false)))
+
+
+func _step_title_card(step: Dictionary) -> void:
+	if _captions == null:
+		return
+	await _captions.show_title_card(
+		str(step.get("overline", "")),
+		str(step.get("title", "")),
+		str(step.get("subline", "")),
+		float(step.get("hold", 2.4)),
+		float(step.get("fade", 0.9)),
+	)
+
+
+## Inlines another cutscene's steps at the current position, so title cards or
+## shared beats can be reused without a second CutscenePlayer.
+func _step_play_cutscene(step: Dictionary) -> void:
+	var cutscene_id := str(step.get("cutscene_id", ""))
+	var all_cutscenes := DataLoader.load_json_object("res://data/cutscenes.json")
+	if not all_cutscenes.has(cutscene_id):
+		push_error("NarrativeDirector: play_cutscene target not found: %s" % cutscene_id)
+		return
+	var steps := ((all_cutscenes[cutscene_id] as Dictionary).get("steps", []) as Array).duplicate()
+	var head := _cutscene_script.slice(0, _cutscene_index)
+	var tail := _cutscene_script.slice(_cutscene_index)
+	_cutscene_script = head + steps + tail
+
+
+func _step_give_item(step: Dictionary) -> void:
+	var item_id := str(step.get("item_id", ""))
+	if item_id.is_empty():
+		return
+	var count := maxi(int(step.get("count", 1)), 1)
+	GameState.grant_item(item_id, count)
+	if not bool(step.get("silent", false)):
+		SfxManager.play("pickup")
 
 
 func _find_explore_controller() -> Node:

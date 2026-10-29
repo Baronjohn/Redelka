@@ -121,6 +121,25 @@ static func get_area_theme(area_id: String) -> AreaTheme:
 			theme.wall_tint = Color(0.26, 0.2, 0.15)
 			theme.wall_uv = Vector3(3.0, 2.0, 1.0)
 			theme.door_tint = Color(0.4, 0.3, 0.22)
+		"mira_intake_alcove":
+			theme.floor_pattern = Pattern.COBBLE
+			theme.floor_tint = Color(0.3, 0.29, 0.28)
+			theme.floor_uv = Vector3(5.0, 1.0, 5.0)
+			theme.wall_pattern = Pattern.PLASTER
+			theme.wall_tint = Color(0.27, 0.26, 0.25)
+			theme.door_tint = Color(0.3, 0.22, 0.16)
+		"mira_chapel_lane":
+			theme.floor_pattern = Pattern.COBBLE
+			theme.floor_tint = Color(0.26, 0.26, 0.27)
+			theme.floor_uv = Vector3(2.0, 1.0, 9.0)
+			theme.wall_pattern = Pattern.STONE
+			theme.wall_tint = Color(0.24, 0.24, 0.25)
+			theme.door_tint = Color(0.3, 0.22, 0.16)
+		"mira_woods_edge":
+			theme.floor_pattern = Pattern.DIRT
+			theme.floor_tint = Color(0.22, 0.24, 0.19)
+			theme.floor_uv = Vector3(6.0, 1.0, 6.0)
+			theme.door_tint = Color(0.34, 0.28, 0.2)
 		_:
 			pass
 	return theme

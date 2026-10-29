@@ -93,6 +93,11 @@ func _on_item_selected(index: int) -> void:
 	_selected_item_id = str(_list.get_item_metadata(index))
 	_awaiting_target = false
 	_target_list.visible = false
+	var items := DataLoader.load_items()
+	if items.has(_selected_item_id):
+		var description := (items[_selected_item_id] as ItemData).description
+		if not description.is_empty():
+			menu.call("show_message", description)
 
 
 func _on_use_pressed() -> void:

@@ -10,7 +10,8 @@
 	  "main_menu": "res://assets/audio/bgm/main_menu.ogg",
 	  "overworld": "res://assets/audio/bgm/overworld.ogg",
 	  "battle": "res://assets/audio/bgm/battle.ogg",
-	  "intro": "res://assets/audio/bgm/overworld.ogg"
+	  "intro": "res://assets/audio/bgm/intro_dawn.ogg",
+	  "intro_lane": "res://assets/audio/bgm/intro_lane.ogg"
 	}
   },
   "sfx": {
@@ -24,7 +25,10 @@
 	  "menu_confirm": "res://assets/audio/sfx/menu_confirm.ogg",
 	  "pickup": "res://assets/audio/sfx/pickup.ogg",
 	  "door_open": "res://assets/audio/sfx/door_open.ogg",
-	  "closet_open": "res://assets/audio/sfx/closet_open.ogg"
+	  "closet_open": "res://assets/audio/sfx/closet_open.ogg",
+	  "bell_toll": "res://assets/audio/sfx/bell_toll.ogg",
+	  "shutter_slam": "res://assets/audio/sfx/shutter_slam.ogg",
+	  "branch_snap": "res://assets/audio/sfx/branch_snap.ogg"
 	},
 	"walk_step": {
 	  "min_speed_ratio": 0.12,

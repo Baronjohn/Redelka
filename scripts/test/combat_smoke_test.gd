@@ -16,6 +16,18 @@ func _get_setup_weapon(character_id: String) -> WeaponData:
 	return DataLoader.load_weapons()[weapon_id] as WeaponData
 
 
+## A new game starts with Mira alone; most combat tests want the full four-person party,
+## so they recruit the others the same way the story does.
+func _recruit_all(gs: Node) -> void:
+	for character_id: String in ["ally_1", "ally_3", "ally_4"]:
+		gs.call("add_party_member", character_id)
+
+
+func _reset_full_party(gs: Node) -> void:
+	gs.call("reset_party_to_default")
+	_recruit_all(gs)
+
+
 func _initialize() -> void:
 	var errors: PackedStringArray = []
 	errors.append_array(_test_data_loading())
@@ -240,7 +252,7 @@ func _test_explore_handoff() -> PackedStringArray:
 	if room_encounter.enemies.size() != 3:
 		errors.append("Encounter test_room_wretch should have three enemies.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	if int(gs.get("party_members").size()) != 4:
 		errors.append("Party init should create four members.")
 
@@ -287,14 +299,14 @@ func _test_explore_handoff() -> PackedStringArray:
 	if after_defeat == null or after_defeat.current_hp != 1:
 		errors.append("Defeat should not restore party from removed session checkpoint.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_character_menu_system() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 
 	var equipment := DataLoader.load_equipment()
 	if equipment.is_empty():
@@ -439,14 +451,14 @@ func _test_character_menu_system() -> PackedStringArray:
 	if bool(blocked_result.get("ok", false)):
 		errors.append("Formation should reject tiles outside the first two rows.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_pickups_and_loot() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 
 	var area := DataLoader.load_area("test_room")
 	if area.pickups.is_empty():
@@ -495,7 +507,7 @@ func _test_pickups_and_loot() -> PackedStringArray:
 	seed(0)
 	var got_loot := false
 	for _attempt: int in range(32):
-		gs.call("reset_party_to_default")
+		_reset_full_party(gs)
 		var loot: Array = gs.call("roll_encounter_loot", "test_room_wretch")
 		if not loot.is_empty():
 			got_loot = true
@@ -503,14 +515,14 @@ func _test_pickups_and_loot() -> PackedStringArray:
 	if not got_loot:
 		errors.append("Encounter loot roll should eventually grant drops.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_progression() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 
 	var enemies := DataLoader.load_enemies()
 	if (enemies["enemy_2"] as EnemyData).xp_reward <= 0:
@@ -593,7 +605,7 @@ func _test_progression() -> PackedStringArray:
 	if effective.str <= bran_char.stats.str:
 		errors.append("Effective stats should reflect progression and equipment.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	gs.set("current_encounter_id", "test_4v3")
 	gs.call("grant_xp_to_party", 200)
 	if not bool(gs.call("has_pending_level_ups")):
@@ -605,15 +617,15 @@ func _test_progression() -> PackedStringArray:
 	if not bool(gs.call("has_pending_level_ups")):
 		errors.append("Duplicate resolve_battle should not clear pending level-up queue.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_save_load() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
 	gs.call("start_new_game", GameState.Difficulty.NORMAL)
+	_recruit_all(gs)
 	gs.set("current_area_id", "test_room")
 	gs.set("return_position", Vector3(3, 0, 4))
 	gs.set("return_rotation_y", 1.25)
@@ -698,14 +710,14 @@ func _test_save_load() -> PackedStringArray:
 	elif gs.get("return_position") != DataLoader.load_area("test_room").default_spawn:
 		errors.append("A malformed return_position should fall back to the area default spawn.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_weapon_durability_and_ammo() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 
 	var weapons := DataLoader.load_weapons()
 	var sword: WeaponData = weapons["iron_sword"]
@@ -771,7 +783,7 @@ func _test_weapon_durability_and_ammo() -> PackedStringArray:
 		errors.append("Switch weapon should equip the selected weapon.")
 
 	var save_data: Dictionary = gs.call("build_save_data", Vector3.ZERO, 0.0)
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	if not bool(gs.call("apply_save_dict", save_data)):
 		errors.append("Save roundtrip should restore weapon durability and ammo state.")
 	if int(gs.call("get_weapon_loaded_ammo", "ally_3", "short_bow")) != bow.magazine_size:
@@ -779,14 +791,14 @@ func _test_weapon_durability_and_ammo() -> PackedStringArray:
 	if str(gs.call("get_loadout", "ally_1").get("weapon", "")) != "iron_sword":
 		errors.append("Save roundtrip should restore switched weapon.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_unarmed_combat() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 
 	var characters := DataLoader.load_characters()
 	var bran: CharacterData = characters["ally_1"]
@@ -869,14 +881,14 @@ func _test_unarmed_combat() -> PackedStringArray:
 		if unarmed_spawn.attack_range != 1:
 			errors.append("Unarmed spawn should default attack range to 1 for %s." % character_id)
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
 func _test_mastery_and_spell_tiers() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 
 	if int(gs.call("get_weapon_mastery_level", "ally_1", "sword")) != 1:
 		errors.append("Weapon mastery should start at level 1.")
@@ -927,7 +939,7 @@ func _test_mastery_and_spell_tiers() -> PackedStringArray:
 	if int(effective.get("tier_base", 0)) <= int(DataLoader.load_spells()["firebolt"].tier_base):
 		errors.append("Higher spell tiers should increase spell power.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	gs.set("current_encounter_id", "test_4v3")
 	gs.call("resolve_battle", GameState.BattleOutcomeCode.VICTORY)
 	if int(gs.call("get_spell_tier", "ally_4", "firebolt")) != 1:
@@ -936,7 +948,7 @@ func _test_mastery_and_spell_tiers() -> PackedStringArray:
 	for _i: int in range(25):
 		gs.call("award_weapon_mastery_xp", "ally_1", "sword")
 	var save_data: Dictionary = gs.call("build_save_data", Vector3.ZERO, 0.0)
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	if not bool(gs.call("apply_save_dict", save_data)):
 		errors.append("Save roundtrip should restore mastery state.")
 	if int(gs.call("get_weapon_mastery_level", "ally_1", "sword")) != 2:
@@ -952,7 +964,7 @@ func _test_mastery_and_spell_tiers() -> PackedStringArray:
 	if bran_snapshot == null or not (bran_snapshot.weapon_mastery as Dictionary).has("sword"):
 		errors.append("Save roundtrip should restore weapon mastery map.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
@@ -1014,7 +1026,7 @@ func _test_chapter_data() -> PackedStringArray:
 	if alcove.scene_path != "res://scenes/explore/mira_intake_alcove.tscn":
 		errors.append("Intro alcove should reference the intake scene.")
 
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors
 
 
@@ -1061,7 +1073,7 @@ func _test_character_models() -> PackedStringArray:
 func _test_battle_reload_keeps_item_usage() -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var gs: Node = get_root().get_node("GameState")
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	gs.call("set_standalone_battle")
 	var battle := (load("res://scenes/battle/battle.tscn") as PackedScene).instantiate()
 	get_root().add_child(battle)
@@ -1088,5 +1100,5 @@ func _test_battle_reload_keeps_item_usage() -> PackedStringArray:
 			errors.append("Reloading in battle should spend arrows from the battle inventory.")
 	battle.queue_free()
 	await process_frame
-	gs.call("reset_party_to_default")
+	_reset_full_party(gs)
 	return errors

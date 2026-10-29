@@ -240,21 +240,21 @@ sequenceDiagram
 | **UI** | `scenes/narrative/dialog_ui.tscn` (portrait + name + line + choice box) |
 | **Protagonist** | Mira (default `ally_2`); explore avatar swaps via `protagonist_character_id` |
 | **State** | `GameState.story_flags` + `chapter1_intro_seen`; persisted in save/load |
-| **Scenes** | `scenes/explore/mira_intake_alcove.tscn` (intro start), `scenes/explore/mira_woods_edge.tscn` (hook) |
-| **Audio cue** | `intro` track in `data/audio.json` (re-uses overworld cue pending dedicated dawn BGM) |
+| **Scenes** | `mira_intake_alcove.tscn` (intro start), `mira_chapel_lane.tscn`, `mira_woods_edge.tscn` (hook) in `scenes/explore/` |
+| **Audio cue** | Dedicated `intro` (doorway) and `intro_lane` tracks plus `bell_toll`, `shutter_slam` and `branch_snap` SFX; the woods are silent |
 | **Tests** | `scripts/test/narrative_smoke_test.gd` (data, speaker meta, story flags, save/load roundtrip, routing) |
 
 ### Mira-only Chapter 1 flow
 
-1. **New game** → `SceneTransition.go_to_explore()` routes to `mira_intake_alcove` (gated by `chapter1_intro_seen`).
-2. **Title cards** play as cutscenes (`title_redelka` → `title_chapter`) with fade.
-3. **`mira_dawn` cutscene** auto-plays: camera reframes, internal lines, ends with `hand_control_back`. Sets `story_flag intro_dawn_seen`.
-4. **Free explore** in the alcove. Player talks with Tom and Elsa (`orphan_morning_chat` dialog with two flavor choices), then walks to Lily's blanket.
-5. **`BlanketLilyTrigger`** (Area3D, requires `intro_dawn_seen`) fires **`mira_finds_empty_spot`**: camera reframes, internal line, ends with `hand_control_back`. Sets `intro_empty_spot_seen`.
-6. Player walks to Mr. Holt's doorway. **`NeighborHoltTrigger`** (requires `intro_empty_spot_seen`) plays **`neighbor_testimony`** with two flavor choices; each choice chains to a follow-up dialog.
-7. **AlcoveIntroDirector** listens to `dialog_ended("neighbor_testimony", _)` and auto-plays **`mira_to_woods`**: fade to black, `goto_area mira_woods_edge`.
-8. **mira_woods_edge** loads; **`mira_woods_hook`** auto-plays: tall silhouette reveals, internal lines, fade, `goto_area village_square`. Sets `chapter1_intro_seen = true`.
-9. **Free explore** in `village_square`. Subsequent saves load directly here.
+**Oct 2026 expansion:** the intro is now an 8–12 minute prologue across three areas. The full script and area layouts are in [chapter-1-intro.md](chapter-1-intro.md).
+
+1. **New game** → `SceneTransition.go_to_explore()` routes to `mira_intake_alcove` (gated by `chapter1_intro_seen`). The party is **Mira alone**.
+2. **`mira_dawn`** auto-plays. It inlines the gothic title cards (`title_redelka`, `title_chapter`) with `play_cutscene`, then shows Mira waking. Objective: *Talk to Tom.*
+3. **Doorway (free explore):** examinables tell Mira's story (blanket, tin, lantern, chalk birds, boarded door, barrel). Talking to Tom plays `mira_talk_tom` (`orphan_morning_chat`). Lily's corner then fires `mira_finds_empty_spot` (her shoes, the missing bird), which chains into `elsa_blame` (three options, each recording a flag). Holt's doorway fires `mira_holt` (`neighbor_testimony`, three options). Holt goes inside, his window goes dark, and the handcart is cleared from the lane gap.
+4. **Chapel Lane (`mira_chapel_lane`, new):** a chapel bell on entry, six examinables (notice, well, milk jug, door mark, bread and salt, chapel window), the voice behind a shutter (`mira_lane_shutter`) and the footprints (`mira_lane_footprints`: "Holt said boots.").
+5. **Pine Edge (`mira_woods_edge`):** `mira_woods_hook` (the tall man, then gone). Examining the stump plays `mira_finds_bird`, which grants the **Carved Wooden Bird**, sets `chapter1_intro_seen` and goes to `village_square`. Objective: *Find out who the tall man is.*
+
+The `AlcoveIntroDirector` helper was removed. Its chaining now lives in the cutscene data.
 
 ### Deferred (chapter 1.5 +)
 

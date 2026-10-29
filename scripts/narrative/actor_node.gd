@@ -9,6 +9,8 @@ signal clicked
 @export var portrait_path: String = ""
 @export var default_color: Color = Color(1, 1, 1, 1)
 @export var start_hidden: bool = false
+## Hide the actor on scene load once this story flag is set (e.g. someone who has left).
+@export var hide_when_flag: String = ""
 
 var _model: Node3D = null
 var _initial_position: Vector3 = Vector3.ZERO
@@ -22,6 +24,8 @@ func _ready() -> void:
 	_initial_position = global_position
 	_initial_rotation_y = rotation.y
 	if start_hidden:
+		visible = false
+	if not hide_when_flag.is_empty() and NarrativeDirector.get_flag(hide_when_flag):
 		visible = false
 	add_to_group("narrative_actors")
 
@@ -39,10 +43,18 @@ func move_to(target: Vector3, duration: float) -> void:
 	if duration <= 0.001:
 		global_position = target
 		return
+	face_to(target)
+	_set_walking(true)
 	var tween := create_tween()
 	tween.set_process_mode(Tween.TWEEN_PROCESS_IDLE)
 	tween.tween_property(self, "global_position", target, duration)
 	await tween.finished
+	_set_walking(false)
+
+
+func _set_walking(walking: bool) -> void:
+	if _model != null and _model.has_method("update_animation"):
+		_model.call("update_animation", 0.0, 0.8 if walking else 0.0)
 
 
 func face_to(target_position: Vector3, duration: float = 0.0) -> void:

@@ -16,13 +16,16 @@ godot --path .
 godot --headless --path . --script res://scripts/test/combat_smoke_test.gd
 godot --headless --path . --script res://scripts/test/narrative_smoke_test.gd
 
-# Regenerate procedural audio (needs ffmpeg; writes .ogg into assets/audio/{bgm,sfx})
-python3 tools/generate_bgm.py
-python3 tools/generate_sfx.py
+# Regenerate procedural audio (needs ffmpeg; writes .ogg into assets/audio/{bgm,sfx}); pass ids to limit
+python3 tools/generate_bgm.py [intro_dawn intro_lane ...]
+python3 tools/generate_sfx.py [bell_toll ...]
 
 # Regenerate character/enemy models (needs Blender 4.2+; writes assets/models/<id>.glb), then reimport
 blender --background --factory-startup --python tools/generate_models.py [-- bran hollow ...]
 godot --headless --path . --import
+
+# Regenerate the Chapter 1 intro explore scenes (writes scenes/explore/<area_id>.tscn), then reimport
+python3 tools/generate_scenes.py [mira_chapel_lane ...]
 
 # Render every model (front, side, back, close-ups) to PNGs for a visual check
 godot --path . res://scenes/tools/character_preview.tscn [-- <output_dir>]
@@ -36,9 +39,9 @@ There's no test framework. Each smoke test is an `extends SceneTree` script whos
 Almost all content lives in `data/*.json`: characters, enemies, weapons, spells, skills, items (consumables, keys and ammo), encounters, areas, formation, progression, the new-game setup, audio and debug values, plus the narrative files `cutscenes.json`, `dialogs.json` and `actors.json`. `DataLoader` (`scripts/data/data_loader.gd`, a static `class_name`) parses these files into typed `RefCounted` classes in `scripts/data/`. Each class has a `static func from_dict()`, for example `WeaponData` and `EnemyData`. To add content, edit the JSON. You only need to change the loader or data classes when you add a new field.
 
 ### Autoloads (see `project.godot`)
-- **GameState**: the single source of truth for runtime state. It holds the party, inventory, equipment, durability and ammo, story flags, defeated enemies and collected pickups, and the current or return area. It also builds save payloads and bridges explore and battle (`battle_source`, `return_area_id`/`return_position`, `last_battle_*`).
+- **GameState**: the single source of truth for runtime state. It holds the party (a new game starts with Mira alone; `add_party_member()` recruits), inventory, equipment, durability and ammo, story flags, defeated enemies and collected pickups, and the current or return area. It also builds save payloads and bridges explore and battle (`battle_source`, `return_area_id`/`return_position`, `last_battle_*`).
 - **SceneTransition**: scene changes with a fade (`go_to_battle`, `go_to_explore`, `go_to_main_menu`). `go_to_explore()` resolves the target area. A new game goes to the Mira intro (`mira_intake_alcove`) until `chapter1_intro_seen` is set.
-- **NarrativeDirector**: runs cutscenes as step lists from `cutscenes.json`. Step types include camera cut/blend, actor move/face/say, dialog, fade, `goto_area`, sfx, music and `hand_control_back`. It also runs branching dialogs from `dialogs.json` and stores story flags in `GameState`. Scene-side helpers live in `scripts/narrative/`; for example, `NarrativeTrigger` is an Area3D gated on flags.
+- **NarrativeDirector**: runs cutscenes as step lists from `cutscenes.json`. Step types include camera cut/blend, actor move/face/say, dialog, fade, `goto_area`, sfx, music and `hand_control_back`. It also runs branching dialogs from `dialogs.json` and stores story flags in `GameState`. Scene-side helpers live in `scripts/narrative/`; for example, `NarrativeTrigger` is an Area3D gated on flags, and `ExploreExaminable` (`scripts/explore/`) is a press-E examine point.
 - **MusicManager / SfxManager / AudioSettings**: track and SFX ids are mapped to files in `data/audio.json`.
 - **Settings**: saves to `user://settings.cfg`. **DebugSettings**: lighting and battle-speed values from `data/debug.json`.
 - **Saves**: `SaveManager` (`scripts/data/save_manager.gd`) writes JSON slots and an autosave under `user://saves/`.

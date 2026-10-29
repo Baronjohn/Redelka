@@ -10,6 +10,12 @@
 	"type": "key"
   },
   {
+	"id": "wooden_bird",
+	"name": "Carved Wooden Bird",
+	"type": "key",
+	"description": "A small bird whittled from pine. Mira made it for Lily. Lily slept holding it."
+  },
+  {
 	"id": "memory_tape",
 	"name": "Memory Tape",
 	"type": "save_resource"

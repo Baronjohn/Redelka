@@ -996,6 +996,189 @@ def build_elara() -> None:
     fig.finish(0.97)
 
 
+# --- Narrative NPCs (Chapter 1 intro; see game-design/chapter-1-intro.md) -------------------
+
+CHILD_PROPORTIONS = dict(hip_y=0.68, leg_splay=0.075, upper_leg=0.3, lower_leg=0.26, torso=0.36, shoulder_y=0.31,
+                         shoulder_x=0.14, upper_arm=0.2, fore_arm=0.18, hand=0.07, neck=0.05)
+
+
+def flat_cap(fig: Figure, col, *, brim_z: float = 0.12) -> None:
+    h = fig.head.y
+    rings = [Ring(V(0, h + dy, z - 0.004), rx + 0.018, rz + 0.018, shade(col, 0.9 + dy), fn=jagged(0.03, 5))
+             for dy, rx, rz, z in [(0.13, *lerp_profile(fig.head_profile, 0.13)),
+                                   (0.17, *lerp_profile(fig.head_profile, 0.17)),
+                                   (0.205, *lerp_profile(fig.head_profile, 0.205))]]
+    fig.mb.loft(rings, "Head", sides=12, tile="cloth", cap_bottom=False, cap_top=V(0, h + 0.236, 0.0),
+                two_sided=True)
+    fig.mb.box(V(0.0, h + 0.13, brim_z), V(0.15, 0.014, 0.075), shade(col, 0.85), "Head", tile="cloth",
+               rot=Matrix.Rotation(math.radians(12.0), 3, "X"))
+
+
+def build_orphan_tom() -> None:
+    """Thin street boy of about ten: an adult's patched coat with rolled sleeves, flat cap, bare shins and feet."""
+    skin, hair = hex_color("d4b597"), hex_color("4a3626")
+    coat, patch, shirt = hex_color("4b4237"), hex_color("6b5a3e"), hex_color("8a8070")
+    pants, cap = hex_color("3a332c"), hex_color("3f3d3a")
+    p = Proportions(**CHILD_PROPORTIONS)
+    fig = Figure("orphan_tom", p, 55, width=0.74, depth=0.74, girth=0.68, hip_width=0.9)
+    fig.walk_swing = 1.2
+
+    fig.legs(pants, thigh=0.95)
+    # Bare, dirty shins and feet below rolled trouser legs.
+    fig.boots(shade(skin, 0.72), shaft=0.17, width=0.8, toe=0.1, tile="plain", cuff=False)
+    fig.pelvis(pants)
+    fig.torso(shirt, chest=0.92)
+    fig.neck_mesh(skin)
+    # Sleeves far too wide for him, rolled back at the wrist.
+    fig.arms(coat, skin, cuff=shade(coat, 1.2), thickness=1.25)
+    sy = fig.spine.y
+    fig.jacket(coat, opening=0.5, pad=0.03)
+    fig.skirt(coat, top_y=sy - 0.02, bottom_y=fig.hips.y - 0.3, top_r=(0.13, 0.105), bottom_r=(0.17, 0.14),
+              opening=0.45, rough=0.08, follow=0.5, rows=3)
+    for centre, size in ((V(-0.07, sy + 0.12, 0.105), V(0.05, 0.06, 0.008)),
+                         (V(0.09, sy - 0.12, 0.12), V(0.06, 0.05, 0.008)),
+                         (V(-0.02, sy + 0.18, -0.12), V(0.07, 0.07, 0.008))):
+        fig.mb.box(centre, size, patch, fig.torso_w(), tile="cloth")
+    fig.belt(hex_color("5b4a30"), y=sy - 0.02, height=0.025, pad=0.03)
+
+    fig.head_mesh(skin=skin, profile=[(dy, rx * 0.94, rz * 0.94, z) for dy, rx, rz, z in HUMAN_HEAD])
+    fig.paint_face(skin, hair, eyes=(0.3, 0.26, 0.2), freckles=True, hairline=0.15, brow=0.8)
+    h = fig.head.y
+    fig.face.speckle(0.25, h + 0.04, 0.2, 0.02, shade(skin, 0.7), 0.3, 0.5)  # grime on one cheek
+    fig.hair_cap(hair, front_y=0.12, back_y=0.03, rough=0.14)
+    flat_cap(fig, cap)
+    fig.finish(1.0)
+
+
+def build_orphan_elsa() -> None:
+    """Lanky girl of about fourteen: dark shawl over head and shoulders, long braid, sack skirt, wrapped feet."""
+    skin, hair = hex_color("d8bea4"), hex_color("2a1e18")
+    shawl, blouse, skirt = hex_color("2c2a30"), hex_color("7a6e60"), hex_color("6a5a42")
+    wraps = hex_color("4e463c")
+    p = Proportions(hip_y=0.8, leg_splay=0.08, upper_leg=0.36, lower_leg=0.31, torso=0.41, shoulder_y=0.355,
+                    shoulder_x=0.15, upper_arm=0.24, fore_arm=0.22, hand=0.08, neck=0.065)
+    fig = Figure("orphan_elsa", p, 66, width=0.82, depth=0.8, girth=0.74, hip_width=0.95)
+    fig.walk_swing = 0.8
+
+    fig.legs(skin, thigh=0.9)
+    fig.boots(wraps, shaft=0.12, width=0.86, toe=0.11, tile="cloth", cuff=False)
+    fig.pelvis(skirt)
+    fig.torso(blouse, chest=0.95)
+    fig.neck_mesh(skin)
+    fig.arms(blouse, skin, cuff=shade(blouse, 0.8), thickness=0.9)
+    sy = fig.spine.y
+    fig.belt(hex_color("3e3226"), y=sy + 0.0, height=0.03, pad=0.01)
+    # Coarse sack skirt down to the shins, hem frayed.
+    fig.skirt(skirt, top_y=sy + 0.0, bottom_y=0.2, top_r=(0.122, 0.094), bottom_r=(0.2, 0.18), rows=5,
+              rough=0.06, follow=0.55, back_push=0.02, sides=14, tile="cloth")
+
+    fig.head_mesh(skin=skin, profile=[(dy, rx * 0.95, rz * 0.96, z) for dy, rx, rz, z in HUMAN_HEAD])
+    fig.paint_face(skin, hair, eyes=(0.22, 0.2, 0.18), lips=hex_color("a07068"), lashes=True, hairline=0.14,
+                   brow=1.1)
+    h = fig.head.y
+    fig.face.band(h + 0.09, h + 0.15, shade(skin, 0.6), 0.4, theta_from=-1.2, theta_to=1.2)
+    fig.hair_cap(hair, front_y=0.12, back_y=0.03, rough=0.05)
+    # Long braid hanging down the back from under the shawl.
+    braid = [V(0.0, h + 0.05, -0.1), V(0.01, h - 0.08, -0.11), V(0.0, sy + 0.25, -0.125), V(0.005, sy + 0.1, -0.12)]
+    fig.mb.loft(path_rings(braid, 0.022, 0.02, [hair, shade(hair, 0.85), hair, shade(hair, 0.8)]),
+                chain_y([("Head", 0), ("Neck", h - 0.02), ("Spine", fig.neck.y)], 0.03), sides=5, tile="hair",
+                smooth=False, cap_bottom=False, cap_top=True)
+    fig.hood(shawl, opening=0.95, mantle=0.15, pad=0.03, overhang=0.015)
+    fig.finish(1.0)
+
+
+def build_neighbor_holt() -> None:
+    """Stooped man in his sixties: nightshirt under an open wool coat, bald crown with grey sides, a lit lamp."""
+    skin, hair = hex_color("c9a588"), hex_color("8d8a84")
+    nightshirt, coat = hex_color("bdb4a2"), hex_color("3b3d35")
+    shins, slippers = hex_color("b8977c"), hex_color("3a2e24")
+    lamp_metal = hex_color("4a4238")
+    p = Proportions(shoulder_x=0.18, shoulder_y=0.38)
+    fig = Figure("neighbor_holt", p, 77, width=1.02, depth=1.05, girth=0.92, hip_width=1.0)
+    fig.walk_swing = 0.6
+    fig.glow = (1.0, 0.72, 0.35)
+    fig.bias = {"Spine": (12, 0, 0), "Neck": (8, 0, 0), "Head": (-14, 0, 0)}
+
+    fig.legs(shins, thigh=0.9)
+    fig.boots(slippers, shaft=0.05, width=1.0, toe=0.12, cuff=False)
+    fig.pelvis(nightshirt)
+    fig.torso(nightshirt, chest=0.98, belly=1.08)
+    fig.neck_mesh(skin)
+    fig.arms(coat, skin, cuff=shade(coat, 0.85))
+    sy = fig.spine.y
+    # Nightshirt to mid-shin under the open coat.
+    fig.skirt(nightshirt, top_y=sy, bottom_y=0.3, top_r=(0.14, 0.11), bottom_r=(0.18, 0.16), rows=4,
+              follow=0.5, sides=12, rough=0.02)
+    fig.jacket(coat, opening=0.55, pad=0.03)
+    fig.skirt(coat, top_y=sy - 0.02, bottom_y=0.42, top_r=(0.165, 0.135), bottom_r=(0.215, 0.19), opening=0.6,
+              rough=0.04, follow=0.45, rows=4, back_push=0.03)
+
+    fig.head_mesh(skin=skin)
+    fig.paint_face(skin, skin, eyes=(0.3, 0.3, 0.28), brow=1.3, stubble=0.45, hairline=0.3)
+    h = fig.head.y
+    # Grey fringe round the sides and back only; the crown stays bare.
+    fig.face.band(h + 0.07, h + 0.15, hair, theta_from=-math.pi, theta_to=-1.7)
+    fig.face.band(h + 0.07, h + 0.15, hair, theta_from=1.7, theta_to=math.pi)
+    fig.face.ellipse(0.37, h + 0.118, 0.15, 0.005, hair, 1.0, mirror=True)
+    fig.face.band(h - 0.0, h + 0.03, shade(skin, 0.8), 0.3)  # sagging jowls
+    for side in (-1.0, 1.0):
+        fig.mb.box(V(side * 0.086, h + 0.11, -0.03), V(0.014, 0.06, 0.07), hair, "Head", tile="hair")
+    # Oil lamp held low in the left hand.
+    fig.in_hand("L", 0.0, V(0.0, -0.08, 0.04))
+    fig.mb.loft([Ring(V(0, 0.0, 0), 0.006, 0.006, lamp_metal), Ring(V(0, -0.07, 0), 0.006, 0.006, lamp_metal)],
+                "HandL", sides=4, tile="metal", smooth=False)
+    fig.mb.box(V(0, -0.08, 0), V(0.07, 0.012, 0.07), lamp_metal, "HandL", tile="metal")
+    sphere(fig.mb, V(0, -0.13, 0), V(0.03, 0.04, 0.03), (1.0, 1.0, 1.0), "HandL", lat=3, sides=6,
+           material=MATERIAL_GLOW)
+    for dx, dz in ((-0.032, -0.032), (0.032, -0.032), (-0.032, 0.032), (0.032, 0.032)):
+        fig.mb.box(V(dx, -0.13, dz), V(0.008, 0.1, 0.008), lamp_metal, "HandL", tile="metal")
+    fig.mb.box(V(0, -0.185, 0), V(0.08, 0.014, 0.08), lamp_metal, "HandL", tile="metal")
+    fig.reset_xform()
+    fig.finish(0.98)
+
+
+def build_tall_man() -> None:
+    """The figure at the woods edge: too tall, ankle-length dark coat, wide-brim hat, arms a little too long.
+    The face is a shadowed void: no features are modelled or painted."""
+    coat, hat = hex_color("1a1a1d"), hex_color("141416")
+    void = hex_color("050506")
+    hands = hex_color("6e675e")
+    p = Proportions(hip_y=1.2, leg_splay=0.1, upper_leg=0.55, lower_leg=0.5, torso=0.6, shoulder_y=0.53,
+                    shoulder_x=0.2, upper_arm=0.42, fore_arm=0.4, hand=0.11, neck=0.1)
+    fig = Figure("tall_man", p, 88, width=0.92, depth=0.85, girth=0.78, hip_width=0.95)
+    fig.walk_swing = 0.55
+    fig.bias = {"Head": (6, 0, 0), "UpperArmL": (0, 0, 3), "UpperArmR": (0, 0, -3)}
+
+    fig.legs(coat, thigh=0.9)
+    fig.boots(hex_color("0f0e0d"), shaft=0.2, width=1.05, toe=0.16)
+    fig.pelvis(coat)
+    fig.torso(coat, chest=0.95, sides=12)
+    fig.neck_mesh(void)
+    fig.arms(coat, hands, cuff=shade(coat, 0.8), thickness=0.9)
+    sy = fig.spine.y
+    fig.jacket(coat, opening=0.08, pad=0.02)
+    # The coat falls straight to the ankles.
+    fig.skirt(coat, top_y=sy - 0.02, bottom_y=0.1, top_r=(0.15, 0.115), bottom_r=(0.24, 0.21), rows=5,
+              opening=0.12, rough=0.03, follow=0.45, back_push=0.03, sides=14)
+    n = fig.neck.y
+    fig.mb.loft([Ring(V(0, n - 0.04, -0.005), 0.11, 0.1, coat), Ring(V(0, n + 0.08, -0.01), 0.1, 0.095,
+                                                                    shade(coat, 1.1))],
+                chain_y([("Neck", 0), ("Spine", n)], 0.03), sides=12, arc=(0.4, 2.0 * math.pi - 0.4),
+                tile="cloth", two_sided=True)
+
+    fig.head_mesh(skin=void, nose=False, ears=False)
+    fig.atlas.fill_face(void, noise=0.0)
+    # Wide-brim hat: a flat brim disc and a low crown, both on the head bone.
+    h = fig.head
+    fig.mb.loft([Ring(V(0, h.y + 0.15, 0.0), 0.26, 0.26, shade(hat, 0.8)),
+                 Ring(V(0, h.y + 0.165, 0.0), 0.27, 0.27, hat)],
+                "Head", sides=16, tile="cloth", cap_bottom=V(0, h.y + 0.15, 0.0), cap_top=False, two_sided=True)
+    fig.mb.loft([Ring(V(0, h.y + 0.16, -0.005), 0.1, 0.108, hat),
+                 Ring(V(0, h.y + 0.29, -0.01), 0.092, 0.1, shade(hat, 1.1))],
+                "Head", sides=12, tile="cloth", cap_bottom=False, cap_top=V(0, h.y + 0.3, -0.01))
+    fig.finish(1.0)
+
+
 # --- Enemies ----------------------------------------------------------------------
 
 def build_hollow() -> None:
@@ -1354,6 +1537,10 @@ BUILDERS = {
     "wretch": build_wretch,
     "shade": build_shade,
     "pale_warden": build_pale_warden,
+    "orphan_tom": build_orphan_tom,
+    "orphan_elsa": build_orphan_elsa,
+    "neighbor_holt": build_neighbor_holt,
+    "tall_man": build_tall_man,
 }
 
 

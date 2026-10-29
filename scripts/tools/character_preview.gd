@@ -1,6 +1,6 @@
 extends Node3D
 
-## Dev tool: renders every survivor and enemy model (front, back, heads) to PNGs.
+## Dev tool: renders every survivor, enemy and narrative NPC model (front, back, heads) to PNGs.
 ## Run: godot --path . res://scenes/tools/character_preview.tscn [-- <output_dir>]
 ## Output defaults to /tmp: redelka_preview.png plus _sides, _backs and _closeup_<n> (two models each).
 
@@ -17,6 +17,11 @@ func _ready() -> void:
 		paths.append(character.model_path)
 	for enemy: EnemyData in DataLoader.load_enemies().values():
 		paths.append(enemy.model_path)
+	# Narrative-only NPCs (actors.json) that have their own model.
+	for actor: Variant in DataLoader.load_json_object("res://data/actors.json").values():
+		var actor_model := str((actor as Dictionary).get("model", ""))
+		if not actor_model.is_empty() and not paths.has(actor_model):
+			paths.append(actor_model)
 	var start_x := -SPACING * float(paths.size() - 1) * 0.5
 	for index: int in paths.size():
 		var model := (load(paths[index]) as PackedScene).instantiate() as Node3D
