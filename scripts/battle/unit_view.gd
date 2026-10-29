@@ -1,10 +1,7 @@
 class_name UnitView
 extends Node3D
 
-const CharacterRigScript = preload("res://scripts/assets/characters/character_rig.gd")
-const SurvivorCharacterModelScript = preload("res://scripts/assets/characters/survivor_character_model.gd")
-const Ps1BlockModelScript = preload("res://scripts/assets/ps1_block_model.gd")
-const Ps1EnemyModelScript = preload("res://scripts/assets/ps1_enemy_model.gd")
+const CharacterModelScript = preload("res://scripts/assets/characters/character_model.gd")
 
 @onready var mesh: MeshInstance3D = $MeshInstance3D
 @onready var name_label: Label3D = $Label3D
@@ -16,7 +13,7 @@ const FLOATING_LABEL_FALLBACK_Y: float = 1.0
 var runtime_id: String = ""
 var combat_unit: CombatUnit = null
 var _is_active_turn: bool = false
-var _character_model: Node3D = null
+var _character_model: CharacterModelScript = null
 var _moving: bool = false
 
 
@@ -39,69 +36,41 @@ func set_turn_active(active: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	if _character_model is CharacterRigScript:
-		_update_rig_animation(_character_model as CharacterRigScript, delta)
-	elif _character_model is Ps1BlockModelScript:
-		_update_block_animation(_character_model as Ps1BlockModelScript, delta)
-
-
-func _update_block_animation(model: Ps1BlockModelScript, delta: float) -> void:
-	if model.is_action_playing():
+	if _character_model == null or _character_model.is_action_playing():
 		return
-	if model.is_chanting():
-		model.update_animation(delta, 0.0)
+	if _character_model.is_chanting():
+		_character_model.update_animation(delta, 0.0)
 		return
 	if _moving:
-		model.update_animation(delta, 1.0)
+		_character_model.update_animation(delta, 1.0)
 		return
 	if combat_unit != null and not combat_unit.is_ko:
-		model.update_animation(delta, 0.0)
-
-
-func _update_rig_animation(model: CharacterRigScript, delta: float) -> void:
-	if model.is_action_playing():
-		return
-	if model.is_chanting():
-		model.update_animation(delta, 0.0)
-		return
-	if _moving:
-		model.update_animation(delta, 1.0)
-		return
-	if combat_unit != null and not combat_unit.is_ko:
-		model.update_animation(delta, 0.0)
+		_character_model.update_animation(delta, 0.0)
 
 
 func play_attack_animation() -> void:
-	if _character_model is CharacterRigScript:
-		await (_character_model as CharacterRigScript).play_attack()
-	elif _character_model is Ps1BlockModelScript:
-		await (_character_model as Ps1BlockModelScript).play_attack()
+	if _character_model != null:
+		await _character_model.play_attack()
 
 
 func start_chant_animation() -> void:
-	if _character_model is CharacterRigScript:
-		(_character_model as CharacterRigScript).set_chanting(true)
-	elif _character_model is Ps1BlockModelScript:
-		(_character_model as Ps1BlockModelScript).set_chanting(true)
+	if _character_model != null:
+		_character_model.set_chanting(true)
 
 
 func stop_chant_animation() -> void:
-	if _character_model is CharacterRigScript:
-		(_character_model as CharacterRigScript).set_chanting(false)
-	elif _character_model is Ps1BlockModelScript:
-		(_character_model as Ps1BlockModelScript).set_chanting(false)
+	if _character_model != null:
+		_character_model.set_chanting(false)
 
 
 func play_chant_release_animation() -> void:
-	if _character_model is CharacterRigScript:
-		await (_character_model as CharacterRigScript).play_chant_release()
-	elif _character_model is Ps1BlockModelScript:
-		await (_character_model as Ps1BlockModelScript).play_chant_release()
+	if _character_model != null:
+		await _character_model.play_chant_release()
 
 
 func get_ground_y_offset() -> float:
-	if _character_model is CharacterRigScript:
-		return CombatConstants.TILE_FLOOR_Y
+	if _character_model != null:
+		return _character_model.get_ground_y_offset()
 	return CombatConstants.LEGACY_UNIT_Y
 
 
@@ -123,14 +92,8 @@ func move_to_world(world_pos: Vector3, instant: bool = false, duration: float = 
 	tween.tween_property(self, "position", world_pos, move_duration).set_trans(Tween.TRANS_QUAD)
 	tween.finished.connect(func() -> void:
 		_moving = false
-		if _character_model is CharacterRigScript:
-			var rig := _character_model as CharacterRigScript
-			if not rig.is_chanting():
-				rig.update_animation(0.0, 0.0)
-		elif _character_model is Ps1BlockModelScript:
-			var block_model := _character_model as Ps1BlockModelScript
-			if not block_model.is_chanting():
-				block_model.update_animation(0.0, 0.0)
+		if _character_model != null and not _character_model.is_chanting():
+			_character_model.update_animation(0.0, 0.0)
 	)
 
 
@@ -169,17 +132,14 @@ func _attach_unit_model(unit: CombatUnit) -> void:
 	if not model_path.is_empty() and ResourceLoader.exists(model_path):
 		var scene := load(model_path) as PackedScene
 		if scene != null:
-			_character_model = scene.instantiate() as Node3D
-
-	if _character_model == null:
-		if unit.is_ally:
-			_character_model = SurvivorCharacterModelScript.create(unit.source_id)
-		else:
-			_character_model = Ps1EnemyModelScript.create(unit.source_id)
+			_character_model = scene.instantiate() as CharacterModelScript
 
 	if _character_model == null:
 		mesh.visible = true
 		return
+	# Models face +Z; allies start on the low rows, so enemies turn around to face them.
+	if not unit.is_ally:
+		_character_model.rotation.y = PI
 	add_child(_character_model)
 
 
@@ -215,20 +175,7 @@ func _spawn_floating_label(text: String, color: Color) -> void:
 func _get_floating_label_base_y() -> float:
 	if _character_model == null:
 		return FLOATING_LABEL_FALLBACK_Y
-	if _character_model is CharacterRigScript:
-		return (_character_model as CharacterRigScript).get_model_top_y() + FLOATING_LABEL_OFFSET
-	var model := _character_model as Ps1BlockModelScript
-	if model == null:
-		return FLOATING_LABEL_FALLBACK_Y
-	var top := 0.0
-	var model_scale := _character_model.scale.y
-	for mesh_instance: MeshInstance3D in model.get_mesh_instances():
-		if mesh_instance.mesh == null:
-			continue
-		var half_height := mesh_instance.mesh.get_aabb().size.y * 0.5
-		var mesh_top := (mesh_instance.position.y + half_height) * model_scale
-		top = maxf(top, mesh_top)
-	return top
+	return _character_model.get_model_top_y() + FLOATING_LABEL_OFFSET
 
 
 func _apply_visual_state() -> void:
@@ -252,10 +199,7 @@ func _apply_character_visual_state() -> void:
 	if combat_unit.is_ko:
 		rotation.z = deg_to_rad(90.0)
 		scale = Vector3.ONE
-		if _character_model is CharacterRigScript:
-			(_character_model as CharacterRigScript).apply_ko_darken()
-		elif _character_model is Ps1BlockModelScript:
-			(_character_model as Ps1BlockModelScript).apply_ko_darken()
+		_character_model.apply_ko_darken()
 		return
 
 	rotation.z = 0.0
@@ -264,15 +208,9 @@ func _apply_character_visual_state() -> void:
 	)
 	var tint := _resolve_unit_color()
 	if _is_active_turn:
-		if _character_model is CharacterRigScript:
-			(_character_model as CharacterRigScript).apply_tint(tint, tint * 0.35)
-		elif _character_model is Ps1BlockModelScript:
-			(_character_model as Ps1BlockModelScript).apply_tint(tint, tint * 0.35)
+		_character_model.apply_tint(tint, tint * 0.35)
 	else:
-		if _character_model is CharacterRigScript:
-			(_character_model as CharacterRigScript).reset_materials()
-		elif _character_model is Ps1BlockModelScript:
-			(_character_model as Ps1BlockModelScript).reset_materials()
+		_character_model.reset_materials()
 
 
 func _resolve_unit_color() -> Color:

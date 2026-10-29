@@ -32,6 +32,7 @@ func _initialize() -> void:
 	errors.append_array(_test_mastery_and_spell_tiers())
 	errors.append_array(_test_chapter_data())
 	errors.append_array(await _test_battle_reload_keeps_item_usage())
+	errors.append_array(await _test_character_models())
 
 	if errors.is_empty():
 		print("Combat smoke test passed.")
@@ -1014,6 +1015,46 @@ func _test_chapter_data() -> PackedStringArray:
 		errors.append("Intro alcove should reference the intake scene.")
 
 	gs.call("reset_party_to_default")
+	return errors
+
+
+## Every character and enemy scene wraps a generated .glb (tools/generate_models.py).
+## Calls go through call() because CharacterModel uses autoloads this script compiles before.
+func _test_character_models() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var model_paths: Dictionary = {}
+	for character: CharacterData in DataLoader.load_characters().values():
+		model_paths[character.id] = character.model_path
+	for enemy: EnemyData in DataLoader.load_enemies().values():
+		model_paths[enemy.id] = enemy.model_path
+	var holder := Node3D.new()
+	get_root().add_child(holder)
+	for source_id: String in model_paths.keys():
+		var path := str(model_paths[source_id])
+		if not ResourceLoader.exists(path):
+			errors.append("Model scene for %s is missing: %s" % [source_id, path])
+			continue
+		var model := (load(path) as PackedScene).instantiate() as Node3D
+		holder.add_child(model)
+		if not model.has_method("play_attack"):
+			errors.append("Model for %s should use character_model.gd." % source_id)
+			continue
+		var player := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		if player == null:
+			errors.append("Model for %s should contain an AnimationPlayer." % source_id)
+		else:
+			for clip: String in ["idle", "walk", "attack", "chant", "chant_release"]:
+				if not player.has_animation(clip):
+					errors.append("Model for %s is missing the '%s' clip." % [source_id, clip])
+			if player.current_animation != "idle":
+				errors.append("Model for %s should start in idle." % source_id)
+		if (model.call("get_mesh_instances") as Array).is_empty():
+			errors.append("Model for %s should contain meshes." % source_id)
+		var top_y := float(model.call("get_model_top_y"))
+		if top_y < 0.9 or top_y > 2.6:
+			errors.append("Model for %s should stand 0.9-2.6 m tall (got %.2f)." % [source_id, top_y])
+	holder.queue_free()
+	await process_frame
 	return errors
 
 

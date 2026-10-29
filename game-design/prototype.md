@@ -45,8 +45,8 @@ Defines **Phase 1** (combat greybox) and **Phase 2** (exploration + handoff) sco
 **Implemented (Phase 1 build):**
 
 - Fixed **Camera3D** behind allies, looking toward enemies (~55° FOV); no player camera control.
-- Greybox **colored capsules** (blue allies, red enemies) with 3D name labels and HP bars; active unit **gold highlight + scale**.
-- Tile spacing via `CombatConstants.TILE_SIZE` (1.4 units); unit capsules sit 0.8 units above tile surface.
+- **Character models (Oct 2026):** skinned low-poly `.glb` models for all four survivors and four enemies, generated in Blender by `tools/generate_models.py`. Each model has vertex colours plus a small nearest-filtered atlas (painted faces, cloth/leather/metal/flesh/hair tiles) and the clips idle/walk/attack/chant/chant_release. They are wrapped by `CharacterModel`. The active unit gets a **gold highlight + scale**; KO units are darkened. Colored capsules remain only as a fallback when a unit has no model.
+- Tile spacing via `CombatConstants.TILE_SIZE` (1.4 units); models stand on the tile surface (`TILE_FLOOR_Y`).
 - **Frontline movement:** allies cannot enter an enemy’s row or beyond; enemies cannot enter an ally’s row or beyond (`_get_movement_row_bounds()`).
 - **Attack paths:** melee = 8-direction adjacent (Chebyshev 1); ranged = straight/diagonal lines with unit blocking on intervening tiles.
 - **KO handling:** KO’d allies remain on the board; defeated **enemies** are removed after `ENEMY_REMOVE_DELAY` (2 s).
@@ -202,7 +202,7 @@ sequenceDiagram
 | Topic | Choice |
 |-------|--------|
 | **Entry scene** | `scenes/main.tscn` → `scenes/explore/village_square.tscn` (Chapter 1 hub); test rooms retained for smoke tests |
-| **Movement** | WASD `CharacterBody3D`; protagonist-only capsule in explore |
+| **Movement** | WASD `CharacterBody3D`; protagonist uses the same character model as in battle (walk/idle clips) |
 | **Cameras** | 3 `CameraZone` areas; `CameraRig` tracks player within zone |
 | **Battle bridge** | `GameState` party/inventory snapshot + `SceneTransition` fade (~0.4s) |
 | **Overworld enemy** | Contact trigger → `test_room_wretch` encounter (4 allies vs 1 Wretch) |

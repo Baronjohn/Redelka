@@ -3,8 +3,6 @@ extends CharacterBody3D
 
 signal contact_triggered
 
-const Ps1EnemyModelScript = preload("res://scripts/assets/ps1_enemy_model.gd")
-
 @export var enemy_id: String = ""
 @export var encounter_id: String = ""
 @export var contact_radius: float = 1.2
@@ -30,21 +28,25 @@ func _ready() -> void:
 		queue_free()
 
 
+## The overworld id is per-area (e.g. "room_wretch"), so the model comes from
+## the encounter's first enemy, falling back to enemy_id for direct enemy ids.
 func _attach_enemy_model() -> void:
+	var model_enemy_id := enemy_id
+	if not encounter_id.is_empty():
+		var encounter := DataLoader.load_encounter(encounter_id)
+		if encounter != null and not encounter.enemies.is_empty():
+			model_enemy_id = str(encounter.enemies[0].get("enemy_id", enemy_id))
 	var model_path := ""
 	var enemies := DataLoader.load_enemies()
-	if enemies.has(enemy_id):
-		model_path = (enemies[enemy_id] as EnemyData).model_path
+	if enemies.has(model_enemy_id):
+		model_path = (enemies[model_enemy_id] as EnemyData).model_path
 
-	var model: Node3D = null
-	if not model_path.is_empty() and ResourceLoader.exists(model_path):
-		var scene := load(model_path) as PackedScene
-		if scene != null:
-			model = scene.instantiate() as Node3D
-	if model == null:
-		model = Ps1EnemyModelScript.create(enemy_id)
-	model.position = Vector3(0.0, 0.9, 0.0)
-	add_child(model)
+	if model_path.is_empty() or not ResourceLoader.exists(model_path):
+		push_warning("Overworld enemy '%s' has no model" % enemy_id)
+		return
+	var scene := load(model_path) as PackedScene
+	if scene != null:
+		add_child(scene.instantiate() as Node3D)
 
 
 func _on_body_entered(body: Node3D) -> void:

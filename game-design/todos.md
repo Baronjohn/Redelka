@@ -77,6 +77,19 @@ Prioritized work after Phase 2.5 (narrative runtime + Chapter 1 Mira-only intro)
 
 ---
 
+## 4b. Character and enemy models — done
+
+**Status (Oct 2026):** The procedural box/lathe models are replaced by Blender-generated, skinned low-poly models (“modern PS1”: ~1.7–2.9k tris, vertex colours + small pixel atlas).
+
+- [x] `tools/generate_models.py` + `tools/model_kit.py`: reproducible Blender pipeline (mesh, atlas, armature, clips, `.glb` export)
+- [x] Survivors: Bran, Mira, Owen, Elara; enemies: Hollow, Wretch, Shade, Pale Warden
+- [x] `CharacterModel` wrapper used by battle `UnitView`, explore protagonist, overworld enemies and narrative actors
+- [x] Overworld enemies show their encounter's first enemy (previously every overworld enemy rendered as a Hollow)
+- [x] Smoke test checks every model scene loads with all clips and a plausible height
+- [ ] Dedicated models for the narrative NPCs (Tom, Elsa, Mr. Holt currently reuse Mira/Bran via `data/actors.json`)
+
+---
+
 ## 5. Weapon durability & ammo
 
 **Why now:** Closes a documented resource-pressure mechanic that ties into the "enemy avoidance" horror pillar ([exploration.md](exploration.md)); currently weapons are permanent/infinite.

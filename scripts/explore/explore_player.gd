@@ -4,14 +4,14 @@ extends CharacterBody3D
 const MOVE_SPEED: float = 4.5
 const ACCELERATION: float = 18.0
 const FACE_SPEED: float = 14.0
-const CharacterRigScript = preload("res://scripts/assets/characters/character_rig.gd")
+const CharacterModelScript = preload("res://scripts/assets/characters/character_model.gd")
 
 @export var camera_rig_path: NodePath
 @export var protagonist_model: PackedScene
 
 var actor_id: String = ""
 var _camera_rig: Node3D
-var _walk_model: CharacterRigScript = null
+var _walk_model: CharacterModelScript = null
 var movement_enabled: bool = true
 
 
@@ -85,7 +85,7 @@ func _attach_protagonist_model() -> void:
 		return
 	var model := protagonist_model.instantiate() as Node3D
 	model_root.add_child(model)
-	_walk_model = model as CharacterRigScript
+	_walk_model = model as CharacterModelScript
 
 
 func _physics_process(delta: float) -> void:
