@@ -16,6 +16,7 @@
   },
   "mira_dawn": {
     "steps": [
+      {"type": "flag_branch", "key": "intro_dawn_seen", "value": false, "goto": 13},
       {"type": "play_cutscene", "cutscene_id": "title_redelka"},
       {"type": "play_cutscene", "cutscene_id": "title_chapter"},
       {"type": "camera_cut", "position": [3.6, 2.6, 1.2], "look_at": [-0.8, 0.9, -5.6]},
