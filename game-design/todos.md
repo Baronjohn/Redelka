@@ -86,7 +86,7 @@ Prioritized work after Phase 2.5 (narrative runtime + Chapter 1 Mira-only intro)
 - [x] New area `mira_chapel_lane`; alcove and woods rebuilt
 - [x] Dedicated intro music and SFX
 - [x] Party starts with Mira only; recruits join through `GameState.add_party_member()`
-- [ ] Rebalance the post-intro Chapter 1 hub for a solo Mira (or place recruitment before it). Its encounters were tuned for four allies, and the chapel's Pale Warden + Shade fight has no retreat.
+- [x] Rebalance the post-intro Chapter 1 hub for a solo Mira. See [combat.md — Solo balance](combat.md#solo-balance-chapter-1); measured with `tools/balance_sim.py`.
 - [ ] Encounter `spell_unlocks` for characters not yet in the party are skipped. Decide whether to defer them until the character joins.
 
 ## 4b. Character and enemy models — done

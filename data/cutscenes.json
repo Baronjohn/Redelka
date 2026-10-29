@@ -164,5 +164,13 @@
       {"type": "set_objective", "text": "Find out who the tall man is."},
       {"type": "goto_area", "area_id": "village_square", "spawn": [0.0, 0.0, 9.0], "rotation_y": 0.0}
     ]
+  },
+  "mira_chapel_warning": {
+    "steps": [
+      {"type": "wait", "seconds": 0.6},
+      {"type": "actor_say", "speaker": "internal", "text": "Something's breathing in here. Something big.", "duration": 3.0},
+      {"type": "actor_say", "speaker": "internal", "text": "It hasn't seen me yet. I don't have to go near it.", "duration": 3.4},
+      {"type": "hand_control_back"}
+    ]
   }
 }

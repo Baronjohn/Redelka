@@ -35,5 +35,14 @@
 	"attack_range": 1,
 	"durability_max": 30,
 	"stat_bonuses": { "dex": 4, "str": 3, "agi": 4 }
+  },
+  {
+	"id": "skinning_knife",
+	"name": "Skinning Knife",
+	"weapon_class": "dagger",
+	"damage_type": "physical",
+	"attack_range": 1,
+	"durability_max": 40,
+	"stat_bonuses": { "dex": 3, "str": 4, "agi": 3 }
   }
 ]

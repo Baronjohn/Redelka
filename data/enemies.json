@@ -6,10 +6,10 @@
 	"move_range": 2,
 	"xp_reward": 40,
 	"stats": {
-	  "hp": 45,
+	  "hp": 38,
 	  "agi": 8,
 	  "dex": 8,
-	  "vit": 8,
+	  "vit": 6,
 	  "res": 6,
 	  "fire_resist": 0
 	},
@@ -18,20 +18,20 @@
 		"id": "claw",
 		"name": "Claw",
 		"type": "attack",
-		"chance": 75,
+		"chance": 80,
 		"range": 1,
-		"damage_min": 5,
-		"damage_max": 9,
+		"damage_min": 10,
+		"damage_max": 14,
 		"damage_type": "physical"
 	  },
 	  {
 		"id": "howl",
 		"name": "Howl",
 		"type": "debuff",
-		"chance": 25,
+		"chance": 20,
 		"range": 3,
 		"stat": "str",
-		"amount": -3
+		"amount": -1
 	  }
 	],
 	"drops": [
@@ -46,10 +46,10 @@
 	"move_range": 3,
 	"xp_reward": 30,
 	"stats": {
-	  "hp": 38,
+	  "hp": 30,
 	  "agi": 11,
 	  "dex": 10,
-	  "vit": 6,
+	  "vit": 5,
 	  "res": 5,
 	  "fire_resist": 0
 	},
@@ -58,20 +58,20 @@
 		"id": "scratch",
 		"name": "Scratch",
 		"type": "attack",
-		"chance": 80,
+		"chance": 85,
 		"range": 1,
-		"damage_min": 4,
-		"damage_max": 8,
+		"damage_min": 7,
+		"damage_max": 11,
 		"damage_type": "physical"
 	  },
 	  {
 		"id": "howl",
 		"name": "Howl",
 		"type": "debuff",
-		"chance": 20,
+		"chance": 15,
 		"range": 2,
 		"stat": "str",
-		"amount": -2
+		"amount": -1
 	  }
 	],
 	"drops": [
@@ -85,10 +85,10 @@
 	"move_range": 2,
 	"xp_reward": 35,
 	"stats": {
-	  "hp": 40,
+	  "hp": 32,
 	  "agi": 9,
 	  "dex": 9,
-	  "vit": 7,
+	  "vit": 5,
 	  "res": 8,
 	  "fire_resist": -10
 	},
@@ -97,20 +97,20 @@
 		"id": "shadow_bolt",
 		"name": "Shadow Bolt",
 		"type": "attack",
-		"chance": 65,
+		"chance": 75,
 		"range": 2,
-		"damage_min": 6,
-		"damage_max": 10,
+		"damage_min": 8,
+		"damage_max": 12,
 		"damage_type": "physical"
 	  },
 	  {
 		"id": "wail",
 		"name": "Wail",
 		"type": "debuff",
-		"chance": 35,
+		"chance": 25,
 		"range": 3,
 		"stat": "str",
-		"amount": -3
+		"amount": -1
 	  }
 	],
 	"drops": [
@@ -124,10 +124,10 @@
 	"move_range": 2,
 	"xp_reward": 120,
 	"stats": {
-	  "hp": 95,
+	  "hp": 180,
 	  "agi": 7,
-	  "dex": 9,
-	  "vit": 12,
+	  "dex": 12,
+	  "vit": 8,
 	  "res": 10,
 	  "fire_resist": 5
 	},
@@ -136,29 +136,29 @@
 		"id": "crush",
 		"name": "Crush",
 		"type": "attack",
-		"chance": 55,
+		"chance": 60,
 		"range": 1,
-		"damage_min": 9,
-		"damage_max": 14,
+		"damage_min": 25,
+		"damage_max": 31,
 		"damage_type": "physical"
 	  },
 	  {
 		"id": "howl",
 		"name": "Howl",
 		"type": "debuff",
-		"chance": 30,
+		"chance": 20,
 		"range": 4,
 		"stat": "str",
-		"amount": -3
+		"amount": -2
 	  },
 	  {
 		"id": "backhand",
 		"name": "Backhand",
 		"type": "attack",
-		"chance": 15,
+		"chance": 20,
 		"range": 1,
-		"damage_min": 6,
-		"damage_max": 10,
+		"damage_min": 18,
+		"damage_max": 23,
 		"damage_type": "physical"
 	  }
 	],

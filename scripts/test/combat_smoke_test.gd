@@ -43,6 +43,7 @@ func _initialize() -> void:
 	errors.append_array(_test_unarmed_combat())
 	errors.append_array(_test_mastery_and_spell_tiers())
 	errors.append_array(_test_chapter_data())
+	errors.append_array(_test_solo_mira_balance())
 	errors.append_array(await _test_battle_reload_keeps_item_usage())
 	errors.append_array(await _test_character_models())
 
@@ -1101,4 +1102,37 @@ func _test_battle_reload_keeps_item_usage() -> PackedStringArray:
 	battle.queue_free()
 	await process_frame
 	_reset_full_party(gs)
+	return errors
+
+
+## Chapter 1 is played by Mira alone until others join; these guard the solo tuning
+## (see game-design/combat.md, "Solo balance"). The full numbers came from a Monte Carlo pass.
+func _test_solo_mira_balance() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var gs: Node = get_root().get_node("GameState")
+	gs.call("start_new_game", GameState.Difficulty.NORMAL)
+	var mira_str := int((gs.call("get_effective_stats", "ally_2") as StatBlock).str)
+	var enemies := DataLoader.load_enemies()
+	for encounter_id: String in [
+		"village_square_scuffle", "cottage_closet_ambush", "granary_patrol", "granary_loft", "cellar_guard",
+		"chapel_warden",
+	]:
+		var encounter := DataLoader.load_encounter(encounter_id)
+		if encounter.enemies.is_empty() or encounter.enemies.size() > 2:
+			errors.append("%s should field one or two enemies for a solo Mira." % encounter_id)
+		for entry: Dictionary in encounter.enemies:
+			var enemy: EnemyData = enemies[str(entry.get("enemy_id", ""))]
+			if mira_str - enemy.vit < 5:
+				errors.append("A level 1 Mira should hit %s for at least 5 (got %d)." % [enemy.id, mira_str - enemy.vit])
+			for action: EnemyActionData in enemy.actions:
+				if action.action_type == EnemyActionData.TYPE_DEBUFF and action.amount < -2:
+					errors.append("%s's %s stacks too hard for a solo fight (%d)." % [enemy.id, action.id, action.amount])
+	var granary := DataLoader.load_area("granary")
+	var has_knife := false
+	for pickup: Dictionary in granary.pickups:
+		if str(pickup.get("item_id", "")) == "skinning_knife":
+			has_knife = true
+	if not has_knife:
+		errors.append("The granary should hold a spare dagger so Mira can outlast her rusty one.")
+	gs.call("reset_party_to_default")
 	return errors

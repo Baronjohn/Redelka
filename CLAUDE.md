@@ -27,6 +27,9 @@ godot --headless --path . --import
 # Regenerate the Chapter 1 intro explore scenes (writes scenes/explore/<area_id>.tscn), then reimport
 python3 tools/generate_scenes.py [mira_chapel_lane ...]
 
+# Monte Carlo balance check of the Chapter 1 fights for a solo Mira (reads data/*.json)
+python3 tools/balance_sim.py [data_dir] [runs]
+
 # Render every model (front, side, back, close-ups) to PNGs for a visual check
 godot --path . res://scenes/tools/character_preview.tscn [-- <output_dir>]
 ```

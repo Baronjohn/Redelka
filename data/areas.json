@@ -223,9 +223,9 @@
 		"position": [4, 0, -3]
 	  },
 	  {
-		"id": "granary_arrow_pickup",
-		"item_id": "arrow",
-		"count": 6,
+		"id": "granary_knife_pickup",
+		"item_id": "skinning_knife",
+		"count": 1,
 		"position": [0, 0, 1]
 	  }
 	]

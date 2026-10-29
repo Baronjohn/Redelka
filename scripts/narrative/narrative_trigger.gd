@@ -10,6 +10,8 @@ extends Area3D
 @export var require_story_flag_value: bool = true
 @export var auto_disable: bool = true
 @export var trigger_radius: float = 0.0
+## Skip the trigger once this overworld enemy has been defeated (e.g. a warning about it).
+@export var requires_enemy_alive: String = ""
 
 signal triggered(payload: Dictionary)
 
@@ -29,6 +31,8 @@ func _ready() -> void:
 
 func try_fire() -> bool:
 	if _has_fired and one_shot:
+		return false
+	if not requires_enemy_alive.is_empty() and GameState.is_enemy_defeated(requires_enemy_alive):
 		return false
 	if not story_flag_required.is_empty():
 		if NarrativeDirector.get_flag(story_flag_required) != require_story_flag_value:
