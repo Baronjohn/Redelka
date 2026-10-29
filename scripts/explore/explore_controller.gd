@@ -6,7 +6,6 @@ const ExplorePickupScript = preload("res://scripts/explore/explore_pickup.gd")
 const EnvironmentMaterialsScript = preload("res://scripts/assets/environment_materials.gd")
 const CHARACTER_MENU_SCENE: PackedScene = preload("res://scenes/menu/character_menu.tscn")
 const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
-const OBJECTIVE_FONT: FontFile = preload("res://assets/fonts/im_fell_english_italic.ttf")
 const ENEMY_CONTACT_CLEAR_DISTANCE: float = 2.5
 
 @export var area_id: String = "test_room"
@@ -51,6 +50,9 @@ func _ready() -> void:
 		NarrativeDirector.cutscene_ended.connect(_on_narrative_cutscene_ended)
 	GameState.mark_area_visited(area_id)
 	_try_autosave_after_spawn()
+	prompt_label.theme_type_variation = &"HudLabel"
+	message_label.theme_type_variation = &"HudLabel"
+	message_label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	_build_objective_label()
 	if _area.enemies.is_empty():
 		_show_message(_area.display_name)
@@ -422,11 +424,7 @@ func _build_objective_label() -> void:
 	_objective_label.offset_bottom = 48.0
 	_objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_objective_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_objective_label.add_theme_font_override("font", OBJECTIVE_FONT)
-	_objective_label.add_theme_font_size_override("font_size", 24)
-	_objective_label.add_theme_color_override("font_color", Color(0.86, 0.82, 0.74))
-	_objective_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	_objective_label.add_theme_constant_override("outline_size", 6)
+	_objective_label.theme_type_variation = &"ObjectiveLabel"
 	explore_ui.add_child(_objective_label)
 	_update_objective_label()
 

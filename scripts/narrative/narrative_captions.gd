@@ -8,8 +8,8 @@ const TITLE_FONT: FontFile = preload("res://assets/fonts/unifraktur_maguntia.ttf
 const BODY_FONT: FontFile = preload("res://assets/fonts/im_fell_english.ttf")
 const ITALIC_FONT: FontFile = preload("res://assets/fonts/im_fell_english_italic.ttf")
 const SUBTITLE_FADE: float = 0.25
-const TITLE_COLOR: Color = Color(0.86, 0.82, 0.74, 1.0)
-const TITLE_RULE_COLOR: Color = Color(0.55, 0.12, 0.1, 1.0)
+const TITLE_COLOR: Color = UiPalette.BONE
+const TITLE_RULE_COLOR: Color = UiPalette.SCARF
 
 var _subtitle: Label
 var _title_root: VBoxContainer

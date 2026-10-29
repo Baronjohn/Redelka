@@ -260,7 +260,7 @@ func _populate_weapon_mastery(character_id: String) -> void:
 		_weapon_list.add_item("%s  —  Lv %d  (%s)" % [weapon_class.capitalize(), level, progress_text])
 		_weapon_list.set_item_icon(index, PlaceholderIconsScript.get_weapon_class_icon(weapon_class))
 		if xp_to_next <= 0:
-			_weapon_list.set_item_custom_fg_color(index, Color(0.75, 0.85, 0.55))
+			_weapon_list.set_item_custom_fg_color(index, UiPalette.GOOD)
 
 
 func _populate_spell_mastery(character_id: String) -> void:
@@ -273,7 +273,7 @@ func _populate_spell_mastery(character_id: String) -> void:
 		if tier <= 0:
 			_spell_list.add_item("%s  —  Locked" % display_name)
 			_spell_list.set_item_icon(index, PlaceholderIconsScript.get_spell_mastery_icon(mastery_id))
-			_spell_list.set_item_custom_fg_color(index, Color(0.55, 0.55, 0.55))
+			_spell_list.set_item_custom_fg_color(index, Color(UiPalette.FOG, 0.7))
 			continue
 		var xp_to_next := int(progress.get("xp_to_next", 0))
 		var xp := int(progress.get("xp", 0))
@@ -281,7 +281,7 @@ func _populate_spell_mastery(character_id: String) -> void:
 		_spell_list.add_item("%s  —  Tier %d  (%s)" % [display_name, tier, progress_text])
 		_spell_list.set_item_icon(index, PlaceholderIconsScript.get_spell_mastery_icon(mastery_id))
 		if xp_to_next <= 0:
-			_spell_list.set_item_custom_fg_color(index, Color(0.75, 0.85, 0.55))
+			_spell_list.set_item_custom_fg_color(index, UiPalette.GOOD)
 
 
 func _clear_stat_rows() -> void:
@@ -308,7 +308,8 @@ func _clear_derived_rows() -> void:
 func _add_grid_header(grid: GridContainer, text: String) -> void:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_color_override("font_color", Color(0.95, 0.82, 0.28))
+	label.theme_type_variation = &"OverlineLabel"
+	label.uppercase = true
 	grid.add_child(label)
 
 
@@ -329,7 +330,7 @@ func _format_bonus(value: int) -> String:
 func _add_derived_row(label_text: String, value_text: String) -> void:
 	var name_label := Label.new()
 	name_label.text = label_text
-	name_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+	name_label.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 	_derived_grid.add_child(name_label)
 
 	var value_label := Label.new()

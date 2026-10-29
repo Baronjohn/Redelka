@@ -166,7 +166,8 @@ func _add_grid_header_label(
 	var label := Label.new()
 	label.text = text
 	if not text.is_empty():
-		label.add_theme_color_override("font_color", Color(0.75, 0.78, 0.85))
+		label.theme_type_variation = &"OverlineLabel"
+		label.uppercase = true
 	if grid == allocation_grid:
 		var width := COL_STAT_WIDTH
 		if text == "Add":

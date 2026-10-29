@@ -3,33 +3,39 @@ extends Control
 const CONFIG_TAB := preload("res://scripts/menu/tabs/config_tab.gd")
 const SAVE_SLOT_PANEL_SCENE: PackedScene = preload("res://scenes/menu/save_slot_panel.tscn")
 
-@onready var main_buttons: VBoxContainer = $Center/VBox/MainButtons
-@onready var load_game_button: Button = $Center/VBox/MainButtons/LoadGameButton
-@onready var difficulty_panel: VBoxContainer = $Center/VBox/DifficultyPanel
-@onready var message_label: Label = $Center/VBox/MessageLabel
-@onready var title_label: Label = $Center/VBox/TitleLabel
+const DIFFICULTY_HINTS: Dictionary = {
+	"EasyButton": "Autosave at every door, on top of save points.",
+	"NormalButton": "Save only at save points.",
+	"HardButton": "Each save at a save point spends a Memory Tape.",
+}
+
+@onready var main_buttons: VBoxContainer = %MainButtons
+@onready var load_game_button: Button = %LoadGameButton
+@onready var difficulty_panel: VBoxContainer = %DifficultyPanel
+@onready var message_label: Label = %MessageLabel
+@onready var section_label: Label = %SectionLabel
 
 var _config_overlay: CanvasLayer = null
 var _save_panel: Control = null
 
 
 func _ready() -> void:
-	$Center/VBox/MainButtons/NewGameButton.pressed.connect(_on_new_game_pressed)
-	$Center/VBox/MainButtons/LoadGameButton.pressed.connect(_on_load_game_pressed)
-	$Center/VBox/MainButtons/ConfigButton.pressed.connect(_on_config_pressed)
-	$Center/VBox/MainButtons/QuitButton.pressed.connect(_on_quit_pressed)
-	$Center/VBox/DifficultyPanel/EasyButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.EASY))
-	$Center/VBox/DifficultyPanel/NormalButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.NORMAL))
-	$Center/VBox/DifficultyPanel/HardButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.HARD))
-	$Center/VBox/DifficultyPanel/DifficultyBackButton.pressed.connect(_show_main_buttons)
-	SfxManager.wire_menu_button($Center/VBox/MainButtons/NewGameButton)
-	SfxManager.wire_menu_button($Center/VBox/MainButtons/LoadGameButton)
-	SfxManager.wire_menu_button($Center/VBox/MainButtons/ConfigButton)
-	SfxManager.wire_menu_button($Center/VBox/MainButtons/QuitButton)
-	SfxManager.wire_menu_button($Center/VBox/DifficultyPanel/EasyButton, true)
-	SfxManager.wire_menu_button($Center/VBox/DifficultyPanel/NormalButton, true)
-	SfxManager.wire_menu_button($Center/VBox/DifficultyPanel/HardButton, true)
-	SfxManager.wire_menu_button($Center/VBox/DifficultyPanel/DifficultyBackButton)
+	%NewGameButton.pressed.connect(_on_new_game_pressed)
+	%LoadGameButton.pressed.connect(_on_load_game_pressed)
+	%ConfigButton.pressed.connect(_on_config_pressed)
+	%QuitButton.pressed.connect(_on_quit_pressed)
+	%EasyButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.EASY))
+	%NormalButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.NORMAL))
+	%HardButton.pressed.connect(_start_new_game.bind(GameState.Difficulty.HARD))
+	%DifficultyBackButton.pressed.connect(_show_main_buttons)
+	for button: Button in main_buttons.get_children():
+		SfxManager.wire_menu_button(button)
+	for button: Button in difficulty_panel.get_children():
+		SfxManager.wire_menu_button(button, button.name != "DifficultyBackButton")
+		if DIFFICULTY_HINTS.has(button.name):
+			var hint := str(DIFFICULTY_HINTS[button.name])
+			button.focus_entered.connect(show_message.bind(hint))
+			button.mouse_entered.connect(show_message.bind(hint))
 	_update_load_button_state()
 	_show_main_buttons()
 	set_process_unhandled_input(true)
@@ -50,16 +56,18 @@ func show_message(text: String) -> void:
 func _on_new_game_pressed() -> void:
 	main_buttons.visible = false
 	difficulty_panel.visible = true
-	title_label.text = "Choose Difficulty"
+	section_label.visible = true
 	show_message("")
+	%NormalButton.grab_focus()
 
 
 func _show_main_buttons() -> void:
 	main_buttons.visible = true
 	difficulty_panel.visible = false
-	title_label.text = "Redelka"
+	section_label.visible = false
 	show_message("")
 	_update_load_button_state()
+	%NewGameButton.grab_focus()
 
 
 func _update_load_button_state() -> void:
@@ -94,6 +102,10 @@ func _on_config_pressed() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 50
 	add_child(layer)
+	var dimmer := ColorRect.new()
+	dimmer.color = Color(UiPalette.INK, 0.8)
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(dimmer)
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	panel.offset_left = 120.0
@@ -114,6 +126,7 @@ func _on_config_pressed() -> void:
 	var header := HBoxContainer.new()
 	var title := Label.new()
 	title.text = "Config"
+	title.theme_type_variation = &"HeaderLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	var close_button := Button.new()
@@ -130,6 +143,7 @@ func _on_config_pressed() -> void:
 	config_tab.call("refresh")
 	var footer := Label.new()
 	footer.name = "ConfigMessageLabel"
+	footer.theme_type_variation = &"HintLabel"
 	root.add_child(footer)
 	_config_overlay = layer
 

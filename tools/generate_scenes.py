@@ -4,7 +4,7 @@ Run (all scenes, or only the listed area ids):
     python3 tools/generate_scenes.py
     python3 tools/generate_scenes.py mira_chapel_lane
 
-Writes scenes/explore/<area_id>.tscn. Re-running overwrites the scene, so make lasting
+Writes scenes/explore/<area_id>.tscn (and the main-menu backdrop to scenes/menu/). Re-running overwrites the scene, so make lasting
 layout changes here rather than in the editor. Then reimport: godot --headless --path . --import
 """
 
@@ -450,10 +450,63 @@ def build_mira_woods_edge() -> Scene:
     return sc
 
 
+def build_menu_backdrop() -> Scene:
+    """Main-menu backdrop: the pine edge at night, a drifting camera, someone far back in the fog."""
+    random.seed(23)
+    sc = Scene("MenuBackdrop", "uid://redelka_menu_backdrop")
+    script = sc.ext_res("Script", "res://scripts/menu/menu_backdrop.gd")
+    sc.node("MenuBackdrop", "Node3D", None, {"script": f'ExtResource("{script}")'})
+    environment(sc, ambient=(0.26, 0.3, 0.38), ambient_energy=0.42, fog_color=(0.2, 0.23, 0.27), fog_density=0.06)
+    sun(sc, yaw=180.0, pitch=-12.0, energy=0.25, col=(0.64, 0.7, 0.82))
+
+    grass = sc.material((0.25, 0.27, 0.2))
+    frost_grass = sc.material((0.42, 0.46, 0.44))
+    path = sc.material((0.24, 0.2, 0.16))
+    bark = sc.material((0.07, 0.06, 0.05))
+    pine = sc.material((0.035, 0.05, 0.04))
+    pine_dark = sc.material((0.02, 0.03, 0.025))
+    rail = sc.material((0.3, 0.25, 0.18))
+    stump = sc.material((0.34, 0.26, 0.17))
+
+    sc.node("Set", "Node3D", ".")
+    sc.box("Set", "Ground", (0, -0.2, -2.0), (30, 0.4, 30), grass)
+    sc.box("Set", "Frost", (0, 0.004, 5.0), (30, 0.01, 10.0), frost_grass)
+    sc.box("Set", "Path", (0.2, 0.008, 0.0), (1.6, 0.01, 24.0), path)
+    for i in range(6):
+        x = -8.0 + i * 2.0 if i < 3 else 2.0 + (i - 3) * 2.0
+        sc.box("Set", f"FencePost{i + 1}", (x, 0.55, 2.0), (0.14, 1.1, 0.14), rail)
+    sc.box("Set", "FenceRailW", (-5.0, 0.7, 2.0), (6.5, 0.08, 0.08), rail, roll=2.0)
+    sc.box("Set", "FenceRailE", (5.0, 0.6, 2.0), (6.5, 0.08, 0.08), rail, roll=-3.0)
+    sc.cyl("Set", "Stump", (0.6, 0.26, 0.0), 0.3, 0.52, stump, top=0.27, segments=9)
+    for row, z0 in enumerate((-4.0, -6.6, -9.0, -11.5)):
+        x = -13.0
+        while x < 13.0:
+            if abs(x - 0.4) < 1.0 and row < 3:
+                x += 1.3
+                continue
+            tx, tz = x + random.uniform(-0.4, 0.4), z0 + random.uniform(-0.6, 0.6)
+            h, r = random.uniform(7.0, 10.0), random.uniform(0.18, 0.3)
+            name = f"Pine{row}{int((x + 13) * 10):03d}"
+            sc.cyl("Set", name + "Trunk", (tx, h * 0.5, tz), r, h, bark, top=r * 0.6, segments=7)
+            for k, (y, cr) in enumerate(((h * 0.45, 1.5), (h * 0.65, 1.15), (h * 0.85, 0.7))):
+                sc.cyl("Set", f"{name}Bough{k + 1}", (tx, y, tz), cr * random.uniform(0.85, 1.1), h * 0.28,
+                       pine if k % 2 == 0 else pine_dark, top=0.05, segments=7)
+            x += random.uniform(1.4, 2.2)
+    watcher = sc.ext_res("PackedScene", "res://scenes/characters/tall_man.tscn")
+    sc.node("Watcher", None, ".", {"transform": transform((1.1, 0, -10.2), 180.0)}, instance=watcher)
+    sc.node("Camera", "Camera3D", ".", {"transform": transform((-1.2, 1.7, 9.0)), "fov": "55"})
+    return sc
+
+
 BUILDERS = {
     "mira_intake_alcove": build_mira_intake_alcove,
     "mira_chapel_lane": build_mira_chapel_lane,
     "mira_woods_edge": build_mira_woods_edge,
+    "menu_backdrop": build_menu_backdrop,
+}
+# Scenes that are not explore areas and live elsewhere.
+OUT_PATHS = {
+    "menu_backdrop": SCENE_DIR.parent / "menu" / "menu_backdrop.tscn",
 }
 
 
@@ -463,7 +516,7 @@ def main() -> None:
     if unknown:
         raise SystemExit(f"Unknown area ids: {unknown}. Known: {list(BUILDERS)}")
     for area_id in ids:
-        path = SCENE_DIR / f"{area_id}.tscn"
+        path = OUT_PATHS.get(area_id, SCENE_DIR / f"{area_id}.tscn")
         BUILDERS[area_id]().write(str(path))
         print(f"[scenes] wrote {path}")
 

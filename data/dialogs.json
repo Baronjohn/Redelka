@@ -9,8 +9,8 @@
     ],
     "choices": [
       {"after_line": 4, "options": [
-        {"id": "up_already", "label": "\"She's up already.\"", "flag": "intro_morning_choice_up_already", "next": "orphan_morning_up_already"},
-        {"id": "ask_her", "label": "\"Ask her yourself.\"", "flag": "intro_morning_choice_ask_her", "next": "orphan_morning_ask_her"}
+        {"id": "up_already", "label": "“She's up already.”", "flag": "intro_morning_choice_up_already", "next": "orphan_morning_up_already"},
+        {"id": "ask_her", "label": "“Ask her yourself.”", "flag": "intro_morning_choice_ask_her", "next": "orphan_morning_ask_her"}
       ]}
     ]
   },
@@ -38,9 +38,9 @@
     ],
     "choices": [
       {"after_line": 1, "options": [
-        {"id": "accept", "label": "\"I know.\"", "flag": "intro_elsa_choice_accept", "next": "elsa_blame_accept"},
-        {"id": "deflect", "label": "\"I'm not her mother.\"", "flag": "intro_elsa_choice_deflect", "next": "elsa_blame_deflect"},
-        {"id": "lash", "label": "\"So were you.\"", "flag": "intro_elsa_choice_lash", "next": "elsa_blame_lash"}
+        {"id": "accept", "label": "“I know.”", "flag": "intro_elsa_choice_accept", "next": "elsa_blame_accept"},
+        {"id": "deflect", "label": "“I'm not her mother.”", "flag": "intro_elsa_choice_deflect", "next": "elsa_blame_deflect"},
+        {"id": "lash", "label": "“So were you.”", "flag": "intro_elsa_choice_lash", "next": "elsa_blame_lash"}
       ]}
     ]
   },
@@ -82,9 +82,9 @@
     ],
     "choices": [
       {"after_line": 7, "options": [
-        {"id": "blame", "label": "\"Why didn't you wake me?\"", "flag": "intro_holt_choice_blame", "next": "neighbor_blame_response"},
-        {"id": "direction", "label": "\"Which way, exactly?\"", "flag": "intro_holt_choice_direction", "next": "neighbor_direction_response"},
-        {"id": "who", "label": "\"Who was he?\"", "flag": "intro_holt_choice_who", "next": "neighbor_who_response"}
+        {"id": "blame", "label": "“Why didn't you wake me?”", "flag": "intro_holt_choice_blame", "next": "neighbor_blame_response"},
+        {"id": "direction", "label": "“Which way, exactly?”", "flag": "intro_holt_choice_direction", "next": "neighbor_direction_response"},
+        {"id": "who", "label": "“Who was he?”", "flag": "intro_holt_choice_who", "next": "neighbor_who_response"}
       ]}
     ]
   },

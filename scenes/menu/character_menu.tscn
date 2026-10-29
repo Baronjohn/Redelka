@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.09, 0.12, 1)
+color = Color(0.045, 0.05, 0.062, 0.97)
 
 [node name="ScreenMargin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -27,10 +27,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 28
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 56
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 56
+theme_override_constants/margin_bottom = 32
 
 [node name="Root" type="VBoxContainer" parent="ScreenMargin"]
 layout_mode = 2
@@ -42,15 +42,33 @@ theme_override_constants/separation = 16
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="ScreenMargin/Root/Header"]
+[node name="Titles" type="VBoxContainer" parent="ScreenMargin/Root/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 28
-text = "Party Menu"
+theme_override_constants/separation = 0
+
+[node name="AreaLabel" type="Label" parent="ScreenMargin/Root/Header/Titles"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"OverlineLabel"
+uppercase = true
+
+[node name="TitleLabel" type="Label" parent="ScreenMargin/Root/Header/Titles"]
+layout_mode = 2
+theme_type_variation = &"HeaderLabel"
+text = "Party"
 
 [node name="HintLabel" type="Label" parent="ScreenMargin/Root/Header"]
 layout_mode = 2
+size_flags_vertical = 8
+theme_type_variation = &"HintLabel"
 text = "Esc or I to close"
+
+[node name="HeaderRule" type="ColorRect" parent="ScreenMargin/Root"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.22, 0.23, 0.26, 1)
 
 [node name="Body" type="HBoxContainer" parent="ScreenMargin/Root"]
 layout_mode = 2
@@ -58,7 +76,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 40
 
 [node name="PartySidebar" type="VBoxContainer" parent="ScreenMargin/Root/Body"]
-custom_minimum_size = Vector2(260, 0)
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 
@@ -69,9 +87,13 @@ theme_override_constants/separation = 12
 
 [node name="TabBar" type="HBoxContainer" parent="ScreenMargin/Root/Body/Content"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 
-[node name="TabContent" type="Control" parent="ScreenMargin/Root/Body/Content"]
+[node name="TabPanel" type="PanelContainer" parent="ScreenMargin/Root/Body/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TabContent" type="Control" parent="ScreenMargin/Root/Body/Content/TabPanel"]
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -81,4 +103,5 @@ layout_mode = 2
 [node name="MessageLabel" type="Label" parent="ScreenMargin/Root/Footer"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"HintLabel"
 text = " "

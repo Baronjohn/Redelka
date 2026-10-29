@@ -1,8 +1,8 @@
 extends Control
 
 const LINE_THICKNESS: float = 3.0
-const LINE_COLOR: Color = Color(0.35, 0.38, 0.42, 0.85)
-const LOCKED_LINE_COLOR: Color = Color(0.82, 0.52, 0.18, 0.95)
+const LINE_COLOR: Color = Color(0.4, 0.42, 0.46, 0.85)
+const LOCKED_LINE_COLOR: Color = UiPalette.DANGER
 const ALIGN_EPSILON: float = 4.0
 const MIN_ZOOM: float = 0.5
 const MAX_ZOOM: float = 2.0
@@ -252,10 +252,11 @@ func _draw_locked_marker(start: Vector2, end: Vector2, required_item_id: String)
 	var marker := Label.new()
 	marker.text = "Locked"
 	marker.add_theme_color_override("font_color", LOCKED_LINE_COLOR)
-	marker.add_theme_font_size_override("font_size", 11)
+	marker.add_theme_font_size_override("font_size", 15)
+	marker.add_theme_stylebox_override("normal", UiPalette.box(UiPalette.INK, UiPalette.DANGER, 1, 4, 0))
 	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	marker.custom_minimum_size = Vector2(52.0, 16.0)
+	marker.custom_minimum_size = Vector2(64.0, 20.0)
 	marker.position = marker_pos - marker.custom_minimum_size * 0.5
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	marker.tooltip_text = "Requires %s" % _get_item_display_name(required_item_id)
@@ -273,25 +274,23 @@ func _create_room_panel(area: AreaData) -> PanelContainer:
 	var room := PanelContainer.new()
 	room.position = area.map_position
 	room.custom_minimum_size = area.map_size
-	var style := StyleBoxFlat.new()
-	style.set_border_width_all(2)
+	# Current room: lamp. Unvisited: barely there. Cleared: quiet bone. Still dangerous: scarf.
+	var style: StyleBoxFlat
 	if area.id == GameState.current_area_id:
-		style.border_color = Color(0.95, 0.82, 0.28, 0.95)
-		style.bg_color = Color(0.95, 0.82, 0.28, 0.18)
+		style = UiPalette.box(Color(UiPalette.LAMP, 0.16), UiPalette.LAMP, 2, 0, 0)
 	elif not GameState.is_area_visited(area.id):
-		style.border_color = Color(0.18, 0.2, 0.24, 0.9)
-		style.bg_color = Color(0.1, 0.11, 0.13, 0.85)
+		style = UiPalette.box(Color(UiPalette.INK, 0.85), Color(UiPalette.RULE, 0.8), 1, 0, 0)
 	elif GameState.is_area_cleared(area.id):
-		style.border_color = Color(0.28, 0.42, 0.58, 0.9)
-		style.bg_color = Color(0.18, 0.28, 0.38, 0.55)
+		style = UiPalette.box(Color(UiPalette.BONE, 0.07), UiPalette.BONE_DIM, 1, 0, 0)
 	else:
-		style.border_color = Color(0.52, 0.28, 0.28, 0.9)
-		style.bg_color = Color(0.34, 0.18, 0.18, 0.55)
+		style = UiPalette.box(Color(UiPalette.SCARF, 0.18), UiPalette.SCARF, 2, 0, 0)
 	room.add_theme_stylebox_override("panel", style)
 	var label := Label.new()
 	label.text = area.display_name
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 17)
 	room.add_child(label)
 	return room

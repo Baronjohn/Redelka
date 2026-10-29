@@ -68,21 +68,13 @@ func _update_cells() -> void:
 
 
 func _apply_cell_style(button: Button, occupant: String, selected_id: String) -> void:
-	var style := StyleBoxFlat.new()
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
-	style.set_border_width_all(1)
+	var style: StyleBoxFlat
 	if occupant == selected_id:
-		style.bg_color = Color(0.95, 0.82, 0.28, 0.22)
-		style.border_color = Color(0.95, 0.82, 0.28, 0.95)
+		style = UiPalette.highlight_card()
 	elif not occupant.is_empty():
-		style.bg_color = Color(0.22, 0.35, 0.55, 0.85)
-		style.border_color = Color(0.35, 0.55, 0.85, 0.95)
+		style = UiPalette.box(Color(UiPalette.BONE, 0.1), UiPalette.BONE_DIM, 1)
 	else:
-		style.bg_color = Color(0.14, 0.15, 0.18, 0.95)
-		style.border_color = Color(0.28, 0.3, 0.36, 0.9)
+		style = UiPalette.plain_card()
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)

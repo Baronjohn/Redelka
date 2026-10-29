@@ -245,6 +245,7 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="TitleLabel" type="Label" parent="UI/ResultPanel/Panel/VBox"]
+theme_type_variation = &"HeaderLabel"
 layout_mode = 2
 text = "Victory"
 horizontal_alignment = 1

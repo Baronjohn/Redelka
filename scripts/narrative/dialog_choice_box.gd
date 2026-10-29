@@ -18,6 +18,7 @@ func set_choices(choices: Array) -> void:
 	for entry: Dictionary in choices:
 		var button := Button.new()
 		button.text = str(entry.get("label", ""))
+		button.theme_type_variation = &"ChoiceButton"
 		button.focus_mode = Control.FOCUS_ALL
 		button.process_mode = Node.PROCESS_MODE_ALWAYS
 		button.pressed.connect(_on_button_pressed.bind(entry))

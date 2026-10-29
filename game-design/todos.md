@@ -89,6 +89,16 @@ Prioritized work after Phase 2.5 (narrative runtime + Chapter 1 Mira-only intro)
 - [x] Rebalance the post-intro Chapter 1 hub for a solo Mira. See [combat.md — Solo balance](combat.md#solo-balance-chapter-1); measured with `tools/balance_sim.py`.
 - [ ] Encounter `spell_unlocks` for characters not yet in the party are skipped. Decide whether to defer them until the character joins.
 
+## 4c. Gothic UI overhaul — done
+
+**Status (Oct 2026):** One project theme covers the main menu (now over a live pine-edge backdrop), the party menu and its tabs, the save panel, dialog and choices, and the battle and explore HUDs. See [presentation.md — UI and readability](presentation.md#ui-and-readability).
+
+- [x] `UiTheme` builder and `assets/ui/redelka_theme.tres` set as the project theme; `UiPalette` replaces hard-coded UI colours
+- [x] Main menu redesign: wordmark, chapter overline, difficulty hints, live backdrop
+- [x] Party menu: area overline, toggle tabs, themed cards, map and formation colours
+- [x] Dialog: IM FELL lines, framed choices, typographic quotes, no empty portrait column
+- [ ] Battle HUD layout pass (turn timeline, command bar) once the combat UI design is decided
+
 ## 4b. Character and enemy models — done
 
 **Status (Oct 2026):** The procedural box/lathe models are replaced by Blender-generated, skinned low-poly models (“modern PS1”: ~1.7–2.9k tris, vertex colours + small pixel atlas).

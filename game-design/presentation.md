@@ -12,7 +12,6 @@
 
 - Target resolution and aspect ratio
 - Character model fidelity vs. environment fidelity
-- UI style (diegetic vs. minimal overlay)
 - Combat grid visual language (tile highlights, timeline UI)
 
 ## Audio direction
@@ -86,11 +85,19 @@ Honors the original’s restraint while allowing **modern dynamic mixing** and c
 
 ## UI and readability
 
+**Decided (Oct 2026): gothic overlay UI** matching the title cards. Every screen uses one project theme: the main menu, the party menu, the save panel, dialog and choices, the battle HUD and the explore HUD.
+
+- **Type:** UnifrakturMaguntia blackletter for the "Redelka" wordmark only. IM FELL English for headings, tabs, buttons and spoken dialog lines. Alegreya Sans for stats, lists and helper text, so numbers stay legible. All three are OFL, in `assets/fonts/`.
+- **Colour:** the night palette in `UiPalette` (`scripts/ui/ui_palette.gd`): ink and fog greys, bone text, **Holt's lamp amber** for "the one in use" (active unit, selected character, current map room), and **Mira's scarf red** for focus, the selected tab or row, and rules under headings.
+- **Shapes:** square, thin-ruled panels with no rounded corners. Main-menu entries are bare text with a red bar when pointed at. Tabs are underlined.
+- **Main menu:** a live backdrop of the pine edge at night (`scenes/menu/menu_backdrop.tscn`) with a slow camera drift and the tall man barely visible in the fog. Difficulty choices explain their save rules.
+- **Building it:** `UiTheme` (`scripts/ui/ui_theme.gd`) builds `assets/ui/redelka_theme.tres`, which `project.godot` sets as `gui/theme/custom`. Nodes opt into roles with `theme_type_variation` (`HeaderLabel`, `TabButton`, `ChoiceButton`, `DialogLine`, …; the full list is in the script header).
+
 **TBD:**
 
 - Combat: CTB timeline, grid cursor, action menu layout
 - Exploration: interaction prompts, inventory, map
-- Subtitles for all dialogue; horror-appropriate font choices
+- Colourblind-safe highlights (lamp vs. scarf relies on hue and weight)
 
 ## Platform presentation
 

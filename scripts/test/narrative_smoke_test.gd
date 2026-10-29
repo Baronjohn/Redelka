@@ -16,6 +16,7 @@ func _initialize() -> void:
 	errors.append_array(await _test_play_cutscene_inlines_steps())
 	errors.append_array(await _test_choice_flags_and_chaining())
 	errors.append_array(await _test_examinable_gating())
+	errors.append_array(_test_ui_theme())
 	errors.append_array(await _test_dialog_releases_control())
 	errors.append_array(await _test_goto_area_releases_control())
 	errors.append_array(await _test_goto_area_hands_off_to_autoplay())
@@ -516,4 +517,26 @@ func _test_examinable_gating() -> PackedStringArray:
 		errors.append("hide_when_flag should switch the examinable off.")
 	examinable.queue_free()
 	gs.call("reset_party_to_default")
+	return errors
+
+
+## The gothic UI theme is the project default and carries every variation the scenes ask for.
+func _test_ui_theme() -> PackedStringArray:
+	var errors: PackedStringArray = []
+	var path := str(ProjectSettings.get_setting("gui/theme/custom", ""))
+	if path != "res://assets/ui/redelka_theme.tres":
+		errors.append("project.godot should set gui/theme/custom to the Redelka theme (got %s)." % path)
+		return errors
+	var theme := load(path) as Theme
+	if theme == null:
+		errors.append("The UI theme should load.")
+		return errors
+	for variation: String in [
+		"WordmarkLabel", "HeaderLabel", "SubheaderLabel", "OverlineLabel", "HintLabel", "HudLabel",
+		"ObjectiveLabel", "MainMenuButton", "TabButton", "ChoiceButton", "DialogLine",
+	]:
+		if theme.get_type_variation_base(variation) == &"":
+			errors.append("UI theme is missing the %s variation; rebuild it with scripts/tools/build_ui_theme.gd." % variation)
+	if theme.default_font == null:
+		errors.append("UI theme should set a default font.")
 	return errors

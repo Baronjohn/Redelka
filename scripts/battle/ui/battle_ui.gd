@@ -195,11 +195,7 @@ func update_ally_status(allies: Array[CombatUnit], active_runtime_id: String = "
 		row.add_child(label)
 		if ally.runtime_id == active_runtime_id:
 			var panel := PanelContainer.new()
-			var style := StyleBoxFlat.new()
-			style.bg_color = Color(0.95, 0.82, 0.28, 0.25)
-			style.set_border_width_all(2)
-			style.border_color = Color(0.95, 0.82, 0.28, 0.9)
-			panel.add_theme_stylebox_override("panel", style)
+			panel.add_theme_stylebox_override("panel", UiPalette.highlight_card(6.0))
 			panel.add_child(row)
 			ally_status_box.add_child(panel)
 		else:

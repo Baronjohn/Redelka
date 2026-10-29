@@ -11,13 +11,16 @@ const CONFIG_TAB := preload("res://scripts/menu/tabs/config_tab.gd")
 
 @onready var party_sidebar: VBoxContainer = $ScreenMargin/Root/Body/PartySidebar
 @onready var tab_buttons: HBoxContainer = $ScreenMargin/Root/Body/Content/TabBar
-@onready var tab_content: Control = $ScreenMargin/Root/Body/Content/TabContent
+@onready var tab_content: Control = $ScreenMargin/Root/Body/Content/TabPanel/TabContent
+@onready var area_label: Label = %AreaLabel
 @onready var message_label: Label = $ScreenMargin/Root/Footer/MessageLabel
 
 var _tabs: Dictionary = {}
 var _tab_roots: Dictionary = {}
 var _active_tab_name: String = "items"
 var _selected_character_id: String = ""
+var _tab_group: ButtonGroup = ButtonGroup.new()
+var _tab_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -25,6 +28,7 @@ func _ready() -> void:
 	if _selected_character_id.is_empty() and not GameState.party_members.is_empty():
 		var first := GameState.party_members[0] as PartyMemberSnapshot
 		_selected_character_id = first.character_id
+	area_label.text = DataLoader.load_area(GameState.get_effective_current_area_id()).display_name
 	_build_party_sidebar()
 	_register_tab("Items", ITEMS_TAB)
 	_register_tab("Equipment", EQUIPMENT_TAB)
@@ -84,8 +88,12 @@ func set_selected_character(character_id: String) -> void:
 func _register_tab(label: String, script_type: Script) -> void:
 	var button := Button.new()
 	button.text = label
+	button.theme_type_variation = &"TabButton"
+	button.toggle_mode = true
+	button.button_group = _tab_group
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(_select_tab.bind(label))
+	_tab_buttons[label] = button
 	SfxManager.wire_menu_button(button)
 	tab_buttons.add_child(button)
 	var tab := Control.new()
@@ -109,6 +117,9 @@ func _register_tab(label: String, script_type: Script) -> void:
 
 func _select_tab(label: String) -> void:
 	_active_tab_name = label
+	if _tab_buttons.has(label):
+		# Through the setter so the ButtonGroup releases the previous tab.
+		(_tab_buttons[label] as Button).button_pressed = true
 	for tab_name: String in _tab_roots.keys():
 		var tab_root: Control = _tab_roots[tab_name] as Control
 		tab_root.visible = tab_name == label
@@ -132,7 +143,7 @@ func _build_party_sidebar() -> void:
 		var character: CharacterData = characters[snapshot.character_id]
 
 		var entry := Control.new()
-		entry.custom_minimum_size = Vector2(252, 72)
+		entry.custom_minimum_size = Vector2(272, 82)
 		entry.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		entry.set_meta("character_id", snapshot.character_id)
 
@@ -169,9 +180,11 @@ func _build_party_sidebar() -> void:
 		info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var name_label := Label.new()
 		name_label.text = character.display_name
+		name_label.theme_type_variation = &"SubheaderLabel"
 		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var bars := Label.new()
 		bars.text = _format_member_stats(snapshot)
+		bars.add_theme_color_override("font_color", UiPalette.BONE_DIM)
 		bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		info.add_child(name_label)
 		info.add_child(bars)
@@ -207,20 +220,8 @@ func _refresh_party_sidebar() -> void:
 
 
 func _apply_entry_style(panel: PanelContainer, character_id: String) -> void:
-	var style := StyleBoxFlat.new()
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
 	var selected := character_id == get_selected_character_id()
-	if selected and _should_highlight_selection():
-		style.bg_color = Color(0.95, 0.82, 0.28, 0.18)
-		style.border_color = Color(0.95, 0.82, 0.28, 0.95)
-		style.set_border_width_all(2)
-	else:
-		style.bg_color = Color(0.14, 0.15, 0.18, 0.95)
-		style.border_color = Color(0.28, 0.3, 0.36, 0.9)
-		style.set_border_width_all(1)
+	var style := UiPalette.highlight_card() if selected and _should_highlight_selection() else UiPalette.plain_card()
 	panel.add_theme_stylebox_override("panel", style)
 
 

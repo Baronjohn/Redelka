@@ -88,6 +88,8 @@ func _show_current_line() -> void:
 	else:
 		var tex := load(portrait_path) as Texture2D
 		_portrait_rect.texture = tex
+	# Speakers without a portrait get the full width instead of an empty frame.
+	_portrait_rect.visible = _portrait_rect.texture != null
 	var color := speaker_meta.get("color", Color(1, 1, 1, 1)) as Color
 	_name_label.text = display_name
 	_name_label.modulate = color
